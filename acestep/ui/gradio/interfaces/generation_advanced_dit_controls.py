@@ -19,8 +19,24 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
         A component map containing DiT sampling, CFG interval, ADG, shift, and seed controls.
     """
 
-    with gr.Accordion(t("generation.advanced_dit_section"), open=True, elem_classes=["has-info-container"]):
+    with gr.Accordion(
+        t("generation.advanced_dit_section"),
+        open=True,
+        elem_classes=["has-info-container"],
+    ):
         create_help_button("generation_advanced")
+        dit_preset = gr.Dropdown(
+            choices=[
+                "Custom",
+                "Fast (8 steps, euler)",
+                "Balanced (15 steps, euler)",
+                "Quality (30 steps, heun)",
+            ],
+            value="Custom",
+            label=t("generation.dit_preset_label"),
+            info=t("generation.dit_preset_info"),
+            elem_classes=["has-info-container"],
+        )
         with gr.Row():
             inference_steps = gr.Slider(
                 minimum=ui_config["inference_steps_minimum"],
@@ -148,6 +164,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 elem_classes=["has-info-container"],
             )
     return {
+        "dit_preset": dit_preset,
         "inference_steps": inference_steps,
         "guidance_scale": guidance_scale,
         "infer_method": infer_method,

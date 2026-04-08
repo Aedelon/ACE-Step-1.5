@@ -88,7 +88,7 @@
     "source_audio": "אודיו מקור",
     "convert_codes_btn": "המר לקודים",
     "analyze_btn": "🔍 ניתוח",
-    "sample_btn": "🎲 לחץ עליי",
+    "sample_btn": "✨ טיוטת AI",
     "lm_codes_hints": "🎼 רמזי קודי LM",
     "lm_codes_label": "רמזי קודי LM",
     "lm_codes_placeholder": "<|audio_code_10695|><|audio_code_54246|>.",
@@ -115,7 +115,7 @@
     "simple_query_info": "הזן תיאור בשפה חופשית של המוזיקה שברצונך ליצור.",
     "simple_vocal_language_label": "שפת שירה",
     "simple_vocal_language_info": "בחר שפה מועדפת למילים. השתמש ב-'unknown' לכל שפה.",
-    "create_sample_btn": "צור דגימה",
+    "create_sample_btn": "✨ טיוטת AI",
     "caption_title": "📝 תיאור מוזיקלי (Caption)",
     "caption_label": "תיאור המוזיקה",
     "caption_placeholder": "מנגינת גיטרה אקוסטית שלווה עם שירה רכה.",
@@ -132,6 +132,8 @@
     "optional_music_props": "🎵 תכונות מוזיקה",
     "optional_gen_settings": "📐 הגדרות יצירה",
     "advanced_dit_section": "🎛️ דיפוזיית DiT",
+    "dit_preset_label": "הגדרת איכות",
+    "dit_preset_info": "הגדרות מהירות לאיכות ייצור. Fast = 8 צעדים, Balanced = 15 צעדים, Quality = 30 צעדים. בחר Custom להגדרה ידנית.",
     "advanced_lm_section": "🤖 יצירת LM",
     "advanced_output_section": "🔊 פלט אודיו ועיבוד פוסט",
     "advanced_automation_section": "⚡ אוטומציה ואצווה (Batch)",
@@ -276,6 +278,12 @@
     "batch_results_title": "📁 תוצאות אצווה ופרטי יצירה",
     "all_files_label": "📁 כל הקבצים שנוצרו (הורדה)",
     "generation_details": "פרטי יצירה"
+  },
+  "progress": {
+    "phase_preparing": "שלב 1/2: מכין יצירה...",
+    "phase_generating": "שלב 2/2: מייצר אודיו",
+    "phase_encoding": "מקודד קבצי אודיו...",
+    "complete": "היצירה הושלמה"
   },
   "messages": {
     "no_audio_to_save": "❌ אין אודיו לשמירה",

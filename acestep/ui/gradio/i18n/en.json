@@ -65,6 +65,7 @@
     "mlx_dit_info_disabled": "MLX not available. Requires: macOS + Apple Silicon (M1/M2/M3/M4) + mlx package installed. Install with: pip install mlx.",
     "init_btn": "Initialize Service",
     "status_label": "Status",
+    "status_info": "Click Initialize Service to load models. Shows loading progress and errors.",
     "language_label": "UI Language",
     "language_info": "Select interface language.",
     "gpu_auto_tier": "Auto-detected Tier",
@@ -88,7 +89,7 @@
     "source_audio": "Source Audio",
     "convert_codes_btn": "Convert to Codes",
     "analyze_btn": "🔍 Analyze",
-    "sample_btn": "🎲 Click Me",
+    "sample_btn": "✨ AI Draft",
     "lm_codes_hints": "🎼 LM Codes Hints",
     "lm_codes_label": "LM Codes Hints",
     "lm_codes_placeholder": "<|audio_code_10695|><|audio_code_54246|>.",
@@ -115,7 +116,7 @@
     "simple_query_info": "Enter a natural language description of the music you want to generate.",
     "simple_vocal_language_label": "Vocal Language",
     "simple_vocal_language_info": "Select preferred language(s) for lyrics. Use 'unknown' for any language.",
-    "create_sample_btn": "Create Sample",
+    "create_sample_btn": "✨ AI Draft",
     "caption_title": "📝 Music Caption",
     "caption_label": "Music Caption",
     "caption_placeholder": "A peaceful acoustic guitar melody with soft vocals.",
@@ -132,6 +133,8 @@
     "optional_music_props": "🎵 Music Properties",
     "optional_gen_settings": "📐 Generation Settings",
     "advanced_dit_section": "🎛️ DiT Diffusion",
+    "dit_preset_label": "Quality Preset",
+    "dit_preset_info": "Quick presets for inference quality. Fast = 8 steps (turbo), Balanced = 15 steps, Quality = 30 steps. Choose Custom to set manually.",
     "advanced_lm_section": "🤖 LM Generation",
     "advanced_output_section": "🔊 Audio Output & Post-processing",
     "advanced_automation_section": "⚡ Automation & Batch",
@@ -286,6 +289,12 @@
     "batch_results_title": "📁 Batch Results & Generation Details",
     "all_files_label": "📁 All Generated Files (Download)",
     "generation_details": "Generation Details"
+  },
+  "progress": {
+    "phase_preparing": "Phase 1/2: Preparing generation...",
+    "phase_generating": "Phase 2/2: Generating audio",
+    "phase_encoding": "Encoding audio files...",
+    "complete": "Generation Complete"
   },
   "messages": {
     "no_audio_to_save": "❌ No audio to save",

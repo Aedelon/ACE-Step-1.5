@@ -88,7 +88,7 @@
     "source_audio": "ソースオーディオ",
     "convert_codes_btn": "コードに変換",
     "analyze_btn": "🔍 分析",
-    "sample_btn": "🎲 お試し",
+    "sample_btn": "✨ AI下書き",
     "lm_codes_hints": "🎼 LM コードヒント",
     "lm_codes_label": "LM コードヒント",
     "lm_codes_placeholder": "<|audio_code_10695|><|audio_code_54246|>.",
@@ -115,7 +115,7 @@
     "simple_query_info": "生成したい音楽の自然言語の説明を入力。",
     "simple_vocal_language_label": "ボーカル言語",
     "simple_vocal_language_info": "歌詞の希望言語を選択。任意の言語の場合は'unknown'を使用。",
-    "create_sample_btn": "サンプル作成",
+    "create_sample_btn": "✨ AIドラフト",
     "caption_title": "📝 音楽キャプション",
     "caption_label": "音楽キャプション",
     "caption_placeholder": "柔らかいボーカルを伴う穏やかなアコースティックギターのメロディー.",
@@ -132,6 +132,8 @@
     "optional_music_props": "🎵 音楽プロパティ",
     "optional_gen_settings": "📐 生成設定",
     "advanced_dit_section": "🎛️ DiT 拡散パラメータ",
+    "dit_preset_label": "品質プリセット",
+    "dit_preset_info": "推論品質のクイックプリセット。Fast = 8ステップ, Balanced = 15ステップ, Quality = 30ステップ。Customで手動設定。",
     "advanced_lm_section": "🤖 LM 生成パラメータ",
     "advanced_output_section": "🔊 オーディオ出力と後処理",
     "advanced_automation_section": "⚡ 自動化とバッチ",
@@ -258,6 +260,12 @@
     "batch_results_title": "👇 クリックしてバッチ結果と生成詳細を表示",
     "all_files_label": "📁 すべての生成ファイル(ダウンロード)",
     "generation_details": "生成詳細"
+  },
+  "progress": {
+    "phase_preparing": "フェーズ 1/2: 生成準備中...",
+    "phase_generating": "フェーズ 2/2: オーディオ生成中",
+    "phase_encoding": "オーディオファイルをエンコード中...",
+    "complete": "生成完了"
   },
   "messages": {
     "no_audio_to_save": "❌ 保存するオーディオがありません",

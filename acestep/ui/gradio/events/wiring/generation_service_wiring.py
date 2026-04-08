@@ -50,7 +50,10 @@ def register_generation_service_handlers(
 
     generation_section["config_path"].change(
         fn=gen_h.update_model_type_settings,
-        inputs=[generation_section["config_path"], generation_section["generation_mode"]],
+        inputs=[
+            generation_section["config_path"],
+            generation_section["generation_mode"],
+        ],
         outputs=[
             generation_section["inference_steps"],
             generation_section["guidance_scale"],
@@ -155,6 +158,19 @@ def register_generation_service_handlers(
         inputs=[generation_section["mlx_vae_chunk_size"]],
     )
 
+    # ========== DiT Quality Preset ==========
+    from acestep.ui.gradio.events.generation.dit_presets import handle_dit_preset_change
+
+    generation_section["dit_preset"].change(
+        fn=handle_dit_preset_change,
+        inputs=[generation_section["dit_preset"]],
+        outputs=[
+            generation_section["inference_steps"],
+            generation_section["shift"],
+            generation_section["sampler_mode"],
+        ],
+    )
+
     # ========== Auto Checkbox Handlers ==========
     auto_field_map = {
         "bpm_auto": ("bpm", "bpm"),
@@ -165,7 +181,9 @@ def register_generation_service_handlers(
     }
     for auto_key, (field_name, comp_key) in auto_field_map.items():
         generation_section[auto_key].change(
-            fn=lambda checked, fn=field_name: gen_h.on_auto_checkbox_change(checked, fn),
+            fn=lambda checked, fn=field_name: gen_h.on_auto_checkbox_change(
+                checked, fn
+            ),
             inputs=[generation_section[auto_key]],
             outputs=[generation_section[comp_key]],
         )

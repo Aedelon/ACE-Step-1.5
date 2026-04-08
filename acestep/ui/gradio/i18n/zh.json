@@ -88,7 +88,7 @@
     "source_audio": "源音频",
     "convert_codes_btn": "转换为代码",
     "analyze_btn": "🔍 分析",
-    "sample_btn": "🎲 试试看",
+    "sample_btn": "✨ AI草稿",
     "lm_codes_hints": "🎼 LM 代码提示",
     "lm_codes_label": "LM 代码提示",
     "lm_codes_placeholder": "<|audio_code_10695|><|audio_code_54246|>.",
@@ -115,7 +115,7 @@
     "simple_query_info": "输入你想生成的音乐的自然语言描述。",
     "simple_vocal_language_label": "人声语言",
     "simple_vocal_language_info": "选择歌词的首选语言。使用 'unknown' 表示任意语言。",
-    "create_sample_btn": "创建样本",
+    "create_sample_btn": "✨ AI草稿",
     "caption_title": "📝 音乐描述",
     "caption_label": "音乐描述",
     "caption_placeholder": "一段平和的原声吉他旋律,配有柔和的人声.",
@@ -132,6 +132,8 @@
     "optional_music_props": "🎵 音乐属性",
     "optional_gen_settings": "📐 生成设置",
     "advanced_dit_section": "🎛️ DiT 扩散参数",
+    "dit_preset_label": "质量预设",
+    "dit_preset_info": "推理质量快速预设。Fast = 8步, Balanced = 15步, Quality = 30步。选择Custom手动设置。",
     "advanced_lm_section": "🤖 LM 生成参数",
     "advanced_output_section": "🔊 音频输出与后处理",
     "advanced_automation_section": "⚡ 自动化与批量",
@@ -258,6 +260,12 @@
     "batch_results_title": "👇 点击查看批量结果和生成详情",
     "all_files_label": "📁 所有生成的文件(下载)",
     "generation_details": "生成详情"
+  },
+  "progress": {
+    "phase_preparing": "阶段 1/2: 准备生成...",
+    "phase_generating": "阶段 2/2: 生成音频",
+    "phase_encoding": "编码音频文件...",
+    "complete": "生成完成"
   },
   "messages": {
     "no_audio_to_save": "❌ 没有要保存的音频",

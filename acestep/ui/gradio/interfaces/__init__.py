@@ -21,6 +21,7 @@ Layout:
   │  └───────────────┴────────────────┘  │
   └──────────────────────────────────────┘
 """
+
 import gradio as gr
 from acestep.ui.gradio.i18n import get_i18n, t
 from acestep.ui.gradio.interfaces.dataset import create_dataset_section
@@ -39,12 +40,15 @@ from acestep.ui.gradio.interfaces.result import create_results_section
 from acestep.ui.gradio.interfaces.training import create_training_section
 from acestep.ui.gradio.events import setup_event_handlers, setup_training_event_handlers
 from acestep.ui.gradio.help_content import create_help_button, HELP_MODAL_CSS
+from acestep.ui.gradio.theme import ACEStepDark
 
 
-def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_params=None, language='en') -> gr.Blocks:
+def create_gradio_interface(
+    dit_handler, llm_handler, dataset_handler, init_params=None, language="en"
+) -> gr.Blocks:
     """
     Create Gradio interface
-    
+
     Args:
         dit_handler: DiT handler instance
         llm_handler: LM handler instance
@@ -52,32 +56,41 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
         init_params: Dictionary containing initialization parameters and state.
                     If None, service will not be pre-initialized.
         language: UI language code ('en', 'zh', 'ja', default: 'en')
-        
+
     Returns:
         Gradio Blocks instance
     """
     # Update i18n with selected language
     i18n = get_i18n(language)
-    
+
     # Check if running in service mode (hide training tab)
-    service_mode = init_params is not None and init_params.get('service_mode', False)
-    
+    service_mode = init_params is not None and init_params.get("service_mode", False)
+
     with gr.Blocks(
         title=t("app.title"),
-        theme=gr.themes.Soft(),
-        head=get_audio_player_preferences_head() + ("" if service_mode else get_user_preferences_head()) + """
+        theme=ACEStepDark(),
+        head=get_audio_player_preferences_head()
+        + ("" if service_mode else get_user_preferences_head())
+        + """
         <script>
-        /* Flip tooltips upward when they would overflow the viewport bottom.
-           Handles both .has-info-container and .checkbox-container elements. */
+        /* Position fixed tooltips relative to their trigger element.
+           Since tooltips use position:fixed to escape stacking contexts,
+           we must set top/left from getBoundingClientRect on hover. */
         document.addEventListener('mouseover', function(e) {
-            var el = e.target.closest('.has-info-container, .checkbox-container');
-            if (!el) return;
-            var rect = el.getBoundingClientRect();
-            if (rect.bottom > window.innerHeight * 0.65) {
-                el.classList.add('tooltip-flip');
+            var info = e.target.closest('span[data-testid="block-info"]');
+            if (!info) return;
+            var tooltip = info.nextElementSibling;
+            if (!tooltip) return;
+            var rect = info.getBoundingClientRect();
+            var spaceBelow = window.innerHeight - rect.bottom;
+            if (spaceBelow < 200) {
+                tooltip.style.top = 'auto';
+                tooltip.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
             } else {
-                el.classList.remove('tooltip-flip');
+                tooltip.style.top = (rect.bottom + 6) + 'px';
+                tooltip.style.bottom = 'auto';
             }
+            tooltip.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 340)) + 'px';
         });
         </script>
         """,
@@ -86,9 +99,23 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
             text-align: center;
             margin-bottom: 2rem;
         }
+        /* Status bars - prominent and readable */
+        #acestep-status-output,
+        #acestep-init-status {
+            min-height: 100px !important;
+        }
+        #acestep-status-output textarea,
+        #acestep-init-status textarea {
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+            padding: 16px !important;
+            letter-spacing: 0.02em !important;
+            min-height: 80px !important;
+        }
         .section-header {
-            background: linear-gradient(90deg, #4CAF50, #45a049);
-            color: white;
+            background: var(--block-label-background-fill);
+            color: var(--body-text-color);
             padding: 10px;
             border-radius: 5px;
             margin: 10px 0;
@@ -147,22 +174,26 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
             contain: none !important;
         }
 
-        /* Ensure immediate flex parents (like rows, accordions) also allow overflow if they contain an info container */
+        /* Ensure ALL ancestor containers allow tooltip overflow. */
+        .has-info-container,
+        .has-info-container > *,
         .row:has(.has-info-container),
         .column:has(.has-info-container),
         .form:has(.has-info-container),
         .accordion:has(.has-info-container),
         .tabs:has(.has-info-container),
         .gr-block:has(.has-info-container),
-        .gr-box:has(.has-info-container) {
+        .gr-box:has(.has-info-container),
+        div:has(> .has-info-container),
+        div:has(> div > .has-info-container) {
             overflow: visible !important;
             contain: none !important;
         }
 
         /* Hide info text by default and format as tooltip.
-           In Gradio 6, info is often a div following the span[data-testid="block-info"].
-           Uses visibility/opacity (not display:none) so the tooltip remains interactive
-           and doesn't collapse when the user moves their mouse onto it to scroll. */
+           Uses position:fixed to escape ALL stacking contexts created by
+           Gradio's nested divs (transform, contain, opacity all create
+           new stacking contexts that trap z-index). */
         .has-info-container span[data-testid="block-info"] + div,
         .has-info-container span[data-testid="block-info"] + span,
         .checkbox-container + div {
@@ -170,8 +201,8 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
             opacity: 0;
             transition: opacity 0.1s ease, visibility 0.1s ease;
             transition-delay: 0.08s;
-            position: absolute;
-            background: rgba(25, 25, 25, 0.98);
+            position: fixed;
+            background: rgba(20, 20, 30, 0.98);
             color: #ffffff;
             padding: 12px 16px;
             border-radius: 10px;
@@ -182,10 +213,8 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
             box-shadow: 0 8px 25px rgba(0,0,0,0.5);
             pointer-events: none;
             line-height: 1.5;
-            margin-top: 6px;
             border: 1px solid rgba(255,255,255,0.15);
             backdrop-filter: blur(10px);
-            left: 0;
             font-weight: 400;
             text-transform: none;
         }
@@ -238,7 +267,7 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
             height: 14px;
             margin-left: 8px;
             vertical-align: middle;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a9eff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='16' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='16' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-size: contain;
             opacity: 0.6;
@@ -271,14 +300,7 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
             pointer-events: auto;
         }
 
-        /* Flip tooltip above when near the bottom of the viewport */
-        .has-info-container.tooltip-flip span[data-testid="block-info"] + div,
-        .has-info-container.tooltip-flip span[data-testid="block-info"] + span {
-            bottom: 100%;
-            top: auto;
-            margin-top: 0;
-            margin-bottom: 6px;
-        }
+        /* Tooltip flip is handled by JS positioning (position: fixed) */
 
         /* --- Auto-toggle checkbox row --- */
         /* Compact row of Auto checkboxes that mirrors the field row above */
@@ -308,9 +330,9 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
             width: 13px !important;
             height: 13px !important;
         }
-        """ + HELP_MODAL_CSS,
+        """
+        + HELP_MODAL_CSS,
     ) as demo:
-        
         gr.HTML(f"""
         <div class="main-header">
             <h1>{t("app.title")}</h1>
@@ -318,17 +340,17 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
         </div>
         """)
         create_help_button("getting_started")
-        
+
         # Dataset Explorer Section (hidden)
         dataset_section = create_dataset_section(dataset_handler)
-        
+
         # ═══════════════════════════════════════════
         # Top-level: Settings (contains Service Config + Advanced Settings)
         # ═══════════════════════════════════════════
         settings_section = create_advanced_settings_section(
             dit_handler, llm_handler, init_params=init_params, language=language
         )
-        
+
         # ═══════════════════════════════════════════
         # Tabs: Generation | Training
         # ═══════════════════════════════════════════
@@ -338,19 +360,19 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
                 gen_section = create_generation_tab_section(
                     dit_handler, llm_handler, init_params=init_params, language=language
                 )
-                
+
                 # Results Section (inside the Generation tab, wrapped for visibility control)
                 with gr.Column(visible=True) as results_wrapper:
                     results_section = create_results_section(dit_handler)
                 # Store the wrapper in gen_section so event handlers can toggle it
                 gen_section["results_wrapper"] = results_wrapper
-            
+
             # --- Training Tab ---
             with gr.Tab(t("training.tab_title"), visible=not service_mode):
                 training_section = create_training_section(
                     dit_handler, llm_handler, init_params=init_params
                 )
-        
+
         # ═══════════════════════════════════════════
         # Merge all generation-related component dicts for event wiring
         # ═══════════════════════════════════════════
@@ -359,13 +381,18 @@ def create_gradio_interface(dit_handler, llm_handler, dataset_handler, init_para
         generation_section = {}
         generation_section.update(settings_section)
         generation_section.update(gen_section)
-        
+
         # Connect event handlers
         setup_event_handlers(
-            demo, dit_handler, llm_handler, dataset_handler,
-            dataset_section, generation_section, results_section
+            demo,
+            dit_handler,
+            llm_handler,
+            dataset_handler,
+            dataset_section,
+            generation_section,
+            results_section,
         )
-        
+
         # Connect training event handlers
         setup_training_event_handlers(demo, dit_handler, llm_handler, training_section)
 

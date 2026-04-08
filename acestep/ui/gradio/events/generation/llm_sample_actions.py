@@ -18,6 +18,7 @@ def handle_create_sample(
     lm_top_k: int,
     lm_top_p: float,
     constrained_decoding_debug: bool = False,
+    switch_mode: bool = True,
 ):
     """Handle Simple-mode sample creation.
 
@@ -89,7 +90,9 @@ def handle_create_sample(
 
     gr.Info(t("messages.sample_created"))
     clamped_duration = clamp_duration_to_gpu_limit(result.duration, llm_handler)
-    audio_duration_value = clamped_duration if clamped_duration and clamped_duration > 0 else -1
+    audio_duration_value = (
+        clamped_duration if clamped_duration and clamped_duration > 0 else -1
+    )
     return (
         result.caption,
         result.lyrics,
@@ -105,5 +108,5 @@ def handle_create_sample(
         True,
         True,
         result.status_message,
-        gr.update(value="Custom"),
+        gr.update(value="Custom") if switch_mode else gr.skip(),
     )

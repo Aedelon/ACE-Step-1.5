@@ -2,6 +2,7 @@
 Gradio UI Results Section Module
 Contains results display section component definitions
 """
+
 import gradio as gr
 from acestep.ui.gradio.i18n import t
 from acestep.ui.gradio.help_content import create_help_button
@@ -9,7 +10,7 @@ from acestep.ui.gradio.help_content import create_help_button
 
 def _create_audio_column(n, visible=True):
     """Create a single audio sample column with all its sub-components.
-    
+
     Layout:
         Audio player
         Row: [Send To Cover] [Send To Repaint] [Save]
@@ -23,53 +24,60 @@ def _create_audio_column(n, visible=True):
             label=t("results.generated_music", n=n),
             type="filepath",
             interactive=False,
-            buttons=[]
+            buttons=[],
         )
         with gr.Row(equal_height=True):
             send_to_remix_btn = gr.Button(
-                t("results.send_to_remix_btn"),
-                variant="secondary", size="sm", scale=1
+                t("results.send_to_remix_btn"), variant="secondary", size="sm", scale=1
             )
             send_to_repaint_btn = gr.Button(
                 t("results.send_to_repaint_btn"),
-                variant="secondary", size="sm", scale=1
+                variant="secondary",
+                size="sm",
+                scale=1,
             )
             save_btn = gr.Button(
-                t("results.save_btn"),
-                variant="primary", size="sm", scale=1
+                t("results.save_btn"), variant="primary", size="sm", scale=1
             )
-        with gr.Accordion(t("results.details_accordion"), open=False, visible=True) as details_accordion:
+        with gr.Accordion(
+            t("results.details_accordion"), open=False, visible=True
+        ) as details_accordion:
             codes_display = gr.Textbox(
                 label=t("results.codes_label", n=n),
-                interactive=False, buttons=["copy"],
-                lines=4, max_lines=4, visible=True
+                interactive=False,
+                buttons=["copy"],
+                lines=4,
+                max_lines=4,
+                visible=True,
             )
             convert_to_codes_btn = gr.Button(
-                t("results.convert_to_codes_btn"),
-                variant="secondary", size="sm"
+                t("results.convert_to_codes_btn"), variant="secondary", size="sm"
             )
             score_display = gr.Textbox(
                 label=t("results.quality_score_label", n=n),
-                interactive=False, buttons=["copy"],
-                lines=6, max_lines=6, visible=True
+                interactive=False,
+                buttons=["copy"],
+                lines=6,
+                max_lines=6,
+                visible=True,
             )
             score_btn = gr.Button(
-                t("results.score_btn"),
-                variant="secondary", size="sm"
+                t("results.score_btn"), variant="secondary", size="sm"
             )
             lrc_display = gr.Textbox(
                 label=t("results.lrc_label", n=n),
-                interactive=True, buttons=["copy"],
-                lines=8, max_lines=8, visible=True
+                interactive=True,
+                buttons=["copy"],
+                lines=8,
+                max_lines=8,
+                visible=True,
             )
             with gr.Row(equal_height=True):
                 lrc_btn = gr.Button(
-                    t("results.lrc_btn"),
-                    variant="secondary", size="sm"
+                    t("results.lrc_btn"), variant="secondary", size="sm"
                 )
                 save_lrc_btn = gr.Button(
-                    t("results.save_lrc_btn"),
-                    variant="secondary", size="sm"
+                    t("results.save_lrc_btn"), variant="secondary", size="sm"
                 )
             lrc_download_file = gr.File(
                 label="LRC Download",
@@ -100,10 +108,10 @@ def create_results_section(dit_handler) -> dict:
         create_help_button("results")
         # Hidden state to store LM-generated metadata
         lm_metadata_state = gr.State(value=None)
-        
+
         # Hidden state to track if caption/metadata is from formatted source (LM/transcription)
         is_format_caption_state = gr.State(value=False)
-        
+
         # Batch management states
         current_batch_index = gr.State(value=0)
         total_batches = gr.State(value=1)
@@ -116,50 +124,68 @@ def create_results_section(dit_handler) -> dict:
             cols_1_4 = []
             for i in range(1, 5):
                 cols_1_4.append(_create_audio_column(i, visible=(i <= 2)))
-        
+
         # Row 2: samples 5-8 (initially hidden)
         with gr.Row(visible=False) as audio_row_5_8:
             cols_5_8 = []
             for i in range(5, 9):
                 cols_5_8.append(_create_audio_column(i, visible=True))
-        
+
         all_cols = cols_1_4 + cols_5_8
-        
-        status_output = gr.Textbox(label=t("results.generation_status"), interactive=False)
-        
+
+        status_output = gr.Textbox(
+            label=t("results.generation_status"),
+            interactive=False,
+            lines=2,
+            max_lines=3,
+            elem_id="acestep-status-output",
+        )
+
         # Batch navigation controls
         with gr.Row(equal_height=True):
             prev_batch_btn = gr.Button(
                 t("results.prev_btn"),
-                variant="secondary", interactive=False, scale=1, size="sm"
+                variant="secondary",
+                interactive=False,
+                scale=1,
+                size="sm",
             )
             batch_indicator = gr.Textbox(
                 label=t("results.current_batch"),
                 value=t("results.batch_indicator", current=1, total=1),
-                interactive=False, scale=3
+                interactive=False,
+                scale=3,
             )
             next_batch_status = gr.Textbox(
                 label=t("results.next_batch_status"),
-                value="", interactive=False, scale=3
+                value="",
+                interactive=False,
+                scale=3,
             )
             next_batch_btn = gr.Button(
                 t("results.next_btn"),
-                variant="primary", interactive=False, scale=1, size="sm"
+                variant="primary",
+                interactive=False,
+                scale=1,
+                size="sm",
             )
-        
+
         # One-click restore parameters button
         restore_params_btn = gr.Button(
             t("results.restore_params_btn"),
-            variant="secondary", interactive=False, size="sm"
+            variant="secondary",
+            interactive=False,
+            size="sm",
         )
-        
+
         with gr.Accordion(t("results.batch_results_title"), open=True):
             generated_audio_batch = gr.File(
                 label=t("results.all_files_label"),
-                file_count="multiple", interactive=False
+                file_count="multiple",
+                interactive=False,
             )
             generation_info = gr.Markdown(label=t("results.generation_details"))
-    
+
     # Build return dict from all_cols
     result = {
         "lm_metadata_state": lm_metadata_state,
@@ -179,7 +205,7 @@ def create_results_section(dit_handler) -> dict:
         "generated_audio_batch": generated_audio_batch,
         "generation_info": generation_info,
     }
-    
+
     for idx, col_data in enumerate(all_cols, start=1):
         result[f"generated_audio_{idx}"] = col_data["generated_audio"]
         result[f"audio_col_{idx}"] = col_data["audio_col"]
@@ -195,5 +221,5 @@ def create_results_section(dit_handler) -> dict:
         result[f"save_lrc_btn_{idx}"] = col_data["save_lrc_btn"]
         result[f"lrc_download_file_{idx}"] = col_data["lrc_download_file"]
         result[f"details_accordion_{idx}"] = col_data["details_accordion"]
-    
+
     return result
