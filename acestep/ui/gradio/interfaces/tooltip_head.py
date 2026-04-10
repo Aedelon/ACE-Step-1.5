@@ -393,43 +393,61 @@ _TOOLTIP_JS = """
     function upgradeHost(host) {
         if (host.dataset.acestepTtUpgraded === '1') return;
 
-        // Find info span where the closest acestep-tt ancestor is THIS host
+        // In Gradio 6, <span data-testid="block-info"> contains the LABEL
+        // (slot default). The info text lives in the NEXT sibling element
+        // (info-message component). Source: IconButtonWrapper-*.js
         const candidates = host.querySelectorAll('span[data-testid="block-info"]');
-        let infoSpan = null;
+        let labelSpan = null;
         for (const candidate of candidates) {
             if (candidate.closest(HOST_SELECTOR) === host) {
-                infoSpan = candidate;
+                labelSpan = candidate;
                 break;
             }
         }
-        if (!infoSpan) {
+        if (!labelSpan) {
             host.dataset.acestepTtUpgraded = '1';
             return;
         }
 
-        const text = (infoSpan.textContent || '').trim();
-        if (!text) {
+        // The info text is in the next sibling of labelSpan
+        // (could be a span, div, or another element)
+        let infoEl = labelSpan.nextElementSibling;
+        // Walk forward through text nodes / empty elements until we find content
+        let infoText = '';
+        if (infoEl) {
+            infoText = (infoEl.textContent || '').trim();
+        }
+
+        // If next sibling is empty, look deeper: maybe inside a wrapper
+        if (!infoText && infoEl) {
+            const nested = infoEl.querySelector('*');
+            if (nested) infoText = (nested.textContent || '').trim();
+        }
+
+        if (!infoText) {
             host.dataset.acestepTtUpgraded = '1';
             return;
         }
 
         host.dataset.acestepTtUpgraded = '1';
-        infoSpan.classList.add('acestep-tt-hidden');
 
-        // Find the label to attach the icon to
-        const label = host.querySelector('label, .label-wrap, .block-title');
-        if (!label) return;
-        if (label.querySelector('.acestep-info-icon')) return;
+        // Hide the info element (not the label!)
+        if (infoEl) {
+            infoEl.classList.add('acestep-tt-hidden');
+        }
 
-        // Try to extract a clean title from the label text
-        const labelText = (label.textContent || '').trim().replace(/\\s+/g, ' ');
+        // The label span IS the label — attach our icon next to it
+        if (labelSpan.querySelector('.acestep-info-icon')) return;
+
+        // Get the actual label text from the labelSpan
+        const labelText = (labelSpan.textContent || '').trim().replace(/\\s+/g, ' ');
 
         const icon = document.createElement('button');
         icon.type = 'button';
         icon.className = 'acestep-info-icon';
         icon.textContent = '?';
         icon.setAttribute('aria-label', 'Help: ' + labelText.substring(0, 50));
-        icon.setAttribute('data-tooltip', text);
+        icon.setAttribute('data-tooltip', infoText);
         icon.setAttribute('data-tooltip-title', labelText);
         icon.tabIndex = 0;
 
@@ -441,11 +459,12 @@ _TOOLTIP_JS = """
             if (bubble && bubble.classList.contains('visible') && activeBubbleTrigger === icon) {
                 hideBubble();
             } else {
-                showBubble(icon, text);
+                showBubble(icon, infoText);
             }
         });
 
-        label.appendChild(icon);
+        // Append the icon to the label span (next to the label text)
+        labelSpan.appendChild(icon);
     }
 
     function scanAndUpgrade(root) {
