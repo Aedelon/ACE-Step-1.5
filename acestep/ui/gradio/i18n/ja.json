@@ -277,7 +277,11 @@
     "lora_browse_btn": "📂 参照…",
     "lora_section_add": "LoRA アダプターを追加",
     "lora_section_loaded": "読み込み済みアダプター",
-    "lora_clear_active_btn": "⭕ アクティブ解除"
+    "lora_clear_active_btn": "⭕ アクティブ解除",
+    "user_mode_label": "ユーザーモード",
+    "user_mode_info": "初心者モードでは DiT/LM/自動化の高度な設定を非表示にし、UI をシンプルに保ちます。サンプリング、velocity 調整、CFG インターバル、デバッグフラグを細かく制御する必要がある場合は、エキスパートに切り替えてください。",
+    "user_mode_beginner": "初心者",
+    "user_mode_expert": "エキスパート"
   },
   "results": {
     "title": "🎵 結果",

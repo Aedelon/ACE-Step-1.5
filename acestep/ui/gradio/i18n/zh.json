@@ -277,7 +277,11 @@
     "lora_browse_btn": "📂 浏览…",
     "lora_section_add": "添加 LoRA 适配器",
     "lora_section_loaded": "已加载的适配器",
-    "lora_clear_active_btn": "⭕ 取消激活"
+    "lora_clear_active_btn": "⭕ 取消激活",
+    "user_mode_label": "用户模式",
+    "user_mode_info": "初学者模式隐藏 DiT/LM/自动化的高级设置以保持界面简洁。当你需要对采样、速度调整、CFG 间隔和调试标志进行精细控制时,切换到专家模式。",
+    "user_mode_beginner": "初学者",
+    "user_mode_expert": "专家"
   },
   "results": {
     "title": "🎵 结果",

@@ -292,7 +292,11 @@
     "lora_browse_btn": "📂 Parcourir…",
     "lora_section_add": "Ajouter un adaptateur LoRA",
     "lora_section_loaded": "Adaptateurs chargés",
-    "lora_clear_active_btn": "⭕ Rendre inactif"
+    "lora_clear_active_btn": "⭕ Rendre inactif",
+    "user_mode_label": "Mode utilisateur",
+    "user_mode_info": "Beginner masque les réglages avancés DiT/LM/Automation pour garder une UI simple. Passe à Expert quand tu as besoin du contrôle fin sur le sampling, les velocity tweaks, les intervalles CFG et les flags de debug.",
+    "user_mode_beginner": "Débutant",
+    "user_mode_expert": "Expert"
   },
   "results": {
     "title": "🎵 Results",

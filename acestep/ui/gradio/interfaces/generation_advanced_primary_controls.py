@@ -143,7 +143,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
 
     with gr.Accordion(
         t("generation.advanced_lm_section"), open=False, elem_classes=["acestep-tt"]
-    ):
+    ) as lm_accordion:
         with gr.Row():
             lm_temperature = gr.Slider(
                 label=t("generation.lm_temperature_label"),
@@ -235,6 +235,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
             )
 
     return {
+        "lm_accordion": lm_accordion,
         "lm_temperature": lm_temperature,
         "lm_cfg_scale": lm_cfg_scale,
         "lm_top_k": lm_top_k,

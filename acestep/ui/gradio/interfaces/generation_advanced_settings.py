@@ -22,6 +22,7 @@ from .generation_advanced_primary_controls import (
 )
 from .generation_defaults import compute_init_defaults
 from .generation_service_config import create_service_config_content
+from .user_mode import build_user_mode_selector
 
 
 def create_advanced_settings_section(
@@ -62,6 +63,11 @@ def create_advanced_settings_section(
         t("generation.advanced_settings"),
         open=not service_pre_initialized,
     ) as advanced_settings_accordion:
+        # User mode toggle (Beginner / Expert) shown FIRST inside the
+        # advanced accordion so newcomers see it before hitting any
+        # complex control. Expert-only accordions/sliders are hidden by
+        # default (Beginner mode) via the wire_user_mode handler.
+        user_mode_components = build_user_mode_selector()
         service_components = create_service_config_content(
             dit_handler=dit_handler,
             llm_handler=llm_handler,
@@ -78,7 +84,10 @@ def create_advanced_settings_section(
         )
         automation_components = build_automation_controls(service_mode=service_mode)
 
-    result: dict[str, Any] = {"advanced_settings_accordion": advanced_settings_accordion}
+    result: dict[str, Any] = {
+        "advanced_settings_accordion": advanced_settings_accordion
+    }
+    result.update(user_mode_components)
     result.update(dit_components)
     result.update(lm_components)
     result.update(output_components)

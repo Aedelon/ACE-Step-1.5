@@ -288,7 +288,11 @@
     "lora_browse_btn": "📂 עיון…",
     "lora_section_add": "הוסף מתאם LoRA",
     "lora_section_loaded": "מתאמים טעונים",
-    "lora_clear_active_btn": "⭕ בטל פעילות"
+    "lora_clear_active_btn": "⭕ בטל פעילות",
+    "user_mode_label": "מצב משתמש",
+    "user_mode_info": "מצב מתחיל מסתיר את ההגדרות המתקדמות של DiT/LM/אוטומציה כדי לשמור על ממשק נקי. עבור למצב מומחה כאשר אתה זקוק לשליטה עדינה על דגימה, velocity, מרווחי CFG ודגלי debug.",
+    "user_mode_beginner": "מתחיל",
+    "user_mode_expert": "מומחה"
   },
   "results": {
     "title": "🎵 תוצאות",

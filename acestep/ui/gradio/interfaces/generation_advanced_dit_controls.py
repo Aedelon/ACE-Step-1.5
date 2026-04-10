@@ -23,7 +23,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
         t("generation.advanced_dit_section"),
         open=True,
         elem_classes=["acestep-tt"],
-    ):
+    ) as dit_accordion:
         create_help_button("generation_advanced")
         dit_preset = gr.Dropdown(
             choices=[
@@ -168,6 +168,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 elem_classes=["acestep-tt"],
             )
     return {
+        "dit_accordion": dit_accordion,
         "dit_preset": dit_preset,
         "inference_steps": inference_steps,
         "guidance_scale": guidance_scale,

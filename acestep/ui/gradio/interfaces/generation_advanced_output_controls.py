@@ -218,7 +218,7 @@ def build_automation_controls(service_mode: bool) -> dict[str, Any]:
         t("generation.advanced_automation_section"),
         open=False,
         elem_classes=["acestep-tt"],
-    ):
+    ) as automation_accordion:
         with gr.Row():
             lm_batch_chunk_size = gr.Number(
                 label=t("generation.lm_batch_chunk_label"),
@@ -232,4 +232,7 @@ def build_automation_controls(service_mode: bool) -> dict[str, Any]:
                 elem_id="acestep-lm-batch-chunk-size",
                 elem_classes=["acestep-tt"],
             )
-    return {"lm_batch_chunk_size": lm_batch_chunk_size}
+    return {
+        "automation_accordion": automation_accordion,
+        "lm_batch_chunk_size": lm_batch_chunk_size,
+    }

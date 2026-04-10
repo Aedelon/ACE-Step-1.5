@@ -36,6 +36,10 @@ from acestep.ui.gradio.interfaces.user_preferences import (
     get_user_preferences_head,
     wire_preference_restore,
 )
+from acestep.ui.gradio.interfaces.user_mode import (
+    get_user_mode_save_head,
+    wire_user_mode,
+)
 from acestep.ui.gradio.interfaces.result import create_results_section
 from acestep.ui.gradio.interfaces.training import create_training_section
 from acestep.ui.gradio.events import setup_event_handlers, setup_training_event_handlers
@@ -66,7 +70,9 @@ def get_acestep_head_html(service_mode: bool = False) -> str:
         HTML string ready for ``launch(head=...)``.
     """
     return get_audio_player_preferences_head() + (
-        "" if service_mode else get_user_preferences_head()
+        ""
+        if service_mode
+        else (get_user_preferences_head() + get_user_mode_save_head())
     )
 
 
@@ -294,5 +300,10 @@ def create_gradio_interface(
         # In service mode, skip restore so localStorage cannot override
         # server-configured init_params or locked controls.
         wire_preference_restore(demo, generation_section, service_mode=service_mode)
+
+        # Beginner / Expert mode toggle — hides advanced accordions and
+        # sliders when Beginner is selected, reveals them for Expert.
+        # Persists via its own localStorage key.
+        wire_user_mode(demo, generation_section, service_mode=service_mode)
 
     return demo
