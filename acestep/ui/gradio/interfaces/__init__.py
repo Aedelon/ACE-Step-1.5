@@ -50,6 +50,7 @@ from acestep.ui.gradio.interfaces.tooltip_head import (
     get_tooltip_head,
     get_tooltip_js,
 )
+from acestep.ui.gradio.interfaces.polish import get_polish_css
 
 
 def get_acestep_head_html(service_mode: bool = False) -> str:
@@ -79,10 +80,12 @@ def get_acestep_head_html(service_mode: bool = False) -> str:
 def get_acestep_css() -> str:
     """Return CSS to pass to ``launch(css=...)`` in Gradio 6.
 
-    Includes the tooltip system CSS. Combined with the existing inline CSS
-    on gr.Blocks() (legacy path).
+    Concatenates the tooltip system CSS (bubble + modal + per-LoRA
+    rows) with the Phase D polish stylesheet (typography hierarchy,
+    accordion gradients, button states, slider thumbs, focus rings,
+    custom scrollbars, responsive spacing).
     """
-    return get_tooltip_css()
+    return get_tooltip_css() + "\n" + get_polish_css()
 
 
 def get_acestep_js(language: str = "en") -> str:
