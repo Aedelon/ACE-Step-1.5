@@ -456,8 +456,33 @@ _TOOLTIP_JS = """
         return null;
     }
 
+    /** Skip hosts that are clearly Accordions/Groups/Containers, not leaf
+     *  components with info= text. We detect them by looking for elements
+     *  that suggest a container: <details>/<summary>, gradio-accordion class,
+     *  or hosts that contain other .acestep-tt descendants. */
+    function isContainerHost(host) {
+        if (host.tagName === 'DETAILS') return true;
+        if (host.querySelector('summary')) return true;
+        // Gradio Accordion uses .gradio-accordion class on the wrapper
+        if (host.classList && host.classList.contains('gradio-accordion')) return true;
+        // If host contains nested .acestep-tt elements, it's a container
+        const nested = host.querySelectorAll(HOST_SELECTOR);
+        if (nested.length > 0) return true;
+        return false;
+    }
+
     function upgradeHost(host) {
         if (host.dataset.acestepTtUpgraded === '1') return;
+
+        if (isContainerHost(host)) {
+            host.dataset.acestepTtUpgraded = '1';
+            // Un-hide any elements we may have wrongly hidden in a previous
+            // pass before the container check existed
+            host.querySelectorAll('.acestep-tt-hidden').forEach(el => {
+                el.classList.remove('acestep-tt-hidden');
+            });
+            return;
+        }
 
         const found = findInfoInHost(host);
         if (!found) {
