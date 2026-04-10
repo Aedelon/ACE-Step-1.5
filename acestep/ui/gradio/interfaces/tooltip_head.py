@@ -202,6 +202,69 @@ _TOOLTIP_CSS = """
     display: none !important;
 }
 
+/* ===== Multi-LoRA dynamic rows =====
+   Styling for the per-adapter @gr.render rows. Each row carries a
+   header column (marker + name + badge on one line), an intensity
+   slider, and a pair of action buttons. */
+.acestep-lora-rows .gradio-row {
+    align-items: center !important;
+    padding: 16px 20px !important;
+    gap: 20px !important;
+}
+.acestep-lora-rows .gradio-row + .gradio-row {
+    margin-top: 14px !important;
+}
+.acestep-lora-row-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.acestep-lora-row-header > * {
+    margin: 0 !important;
+    color: #f9fafb !important;
+    width: 100% !important;
+    text-align: center !important;
+}
+.acestep-lora-row-header h3 {
+    margin: 0 !important;
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+    color: #f9fafb !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    text-align: center !important;
+}
+.acestep-lora-row-header strong {
+    color: #f9fafb !important;
+    font-weight: 700 !important;
+}
+/* Adapter type badge (LoRA / LoKr) rendered as a highlighted chip
+   via Markdown ``code`` syntax. */
+.acestep-lora-row-header code {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.6px !important;
+    text-transform: uppercase !important;
+    padding: 3px 10px !important;
+    border-radius: 12px !important;
+    display: inline-block !important;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace !important;
+}
+.acestep-lora-row-header.acestep-lora-badge-lora code {
+    background: rgba(59, 130, 246, 0.2) !important;
+    color: #93c5fd !important;
+    border: 1px solid rgba(59, 130, 246, 0.45) !important;
+}
+.acestep-lora-row-header.acestep-lora-badge-lokr code {
+    background: rgba(251, 191, 36, 0.2) !important;
+    color: #fde68a !important;
+    border: 1px solid rgba(251, 191, 36, 0.45) !important;
+}
+
+
 /* Bubble popup (lives in <body>, position: fixed) shown on (?) click */
 #acestep-info-bubble {
     position: fixed;

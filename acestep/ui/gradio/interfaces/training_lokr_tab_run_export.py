@@ -76,6 +76,10 @@ def build_lokr_run_and_export_controls() -> dict[str, object]:
             placeholder="./lokr_output",
             info=t("training.lokr_output_dir_info"),
             elem_classes=["acestep-tt"],
+            scale=4,
+        )
+        lokr_output_dir_browse_btn = gr.Button(
+            t("common.browse_btn"), variant="secondary", scale=0, min_width=120
         )
 
     gr.HTML("<hr>")
@@ -120,8 +124,14 @@ def build_lokr_run_and_export_controls() -> dict[str, object]:
             label=t("training.export_path"),
             value="./lokr_output/final_lokr",
             placeholder="./lokr_output/my_lokr",
+            scale=3,
         )
-        export_lokr_btn = gr.Button(t("training.export_lokr_btn"), variant="secondary")
+        lokr_export_path_browse_btn = gr.Button(
+            t("common.browse_btn"), variant="secondary", scale=0, min_width=120
+        )
+        export_lokr_btn = gr.Button(
+            t("training.export_lokr_btn"), variant="secondary", scale=1
+        )
 
     with gr.Row():
         lokr_export_epoch = gr.Dropdown(
@@ -149,12 +159,14 @@ def build_lokr_run_and_export_controls() -> dict[str, object]:
         "lokr_training_shift": lokr_training_shift,
         "lokr_training_seed": lokr_training_seed,
         "lokr_output_dir": lokr_output_dir,
+        "lokr_output_dir_browse_btn": lokr_output_dir_browse_btn,
         "start_lokr_training_btn": start_lokr_training_btn,
         "stop_lokr_training_btn": stop_lokr_training_btn,
         "lokr_training_progress": lokr_training_progress,
         "lokr_training_log": lokr_training_log,
         "lokr_training_loss_plot": lokr_training_loss_plot,
         "lokr_export_path": lokr_export_path,
+        "lokr_export_path_browse_btn": lokr_export_path_browse_btn,
         "lokr_export_epoch": lokr_export_epoch,
         "refresh_lokr_export_epochs_btn": refresh_lokr_export_epochs_btn,
         "export_lokr_btn": export_lokr_btn,

@@ -15,15 +15,22 @@ def build_lora_dataset_and_adapter_controls() -> dict[str, object]:
             gr.HTML(f"<h3>📊 {t('training.train_section_tensors')}</h3>")
             gr.Markdown(t("training.train_tensor_selection_desc"))
 
-            training_tensor_dir = gr.Textbox(
-                label=t("training.preprocessed_tensors_dir"),
-                placeholder="./datasets/preprocessed_tensors",
-                value="./datasets/preprocessed_tensors",
-                info=t("training.preprocessed_tensors_info"),
-                elem_classes=["acestep-tt"],
-            )
+            with gr.Row():
+                training_tensor_dir = gr.Textbox(
+                    label=t("training.preprocessed_tensors_dir"),
+                    placeholder="./datasets/preprocessed_tensors",
+                    value="./datasets/preprocessed_tensors",
+                    info=t("training.preprocessed_tensors_info"),
+                    elem_classes=["acestep-tt"],
+                    scale=4,
+                )
+                training_tensor_dir_browse_btn = gr.Button(
+                    t("common.browse_btn"), variant="secondary", scale=0, min_width=120
+                )
 
-            load_dataset_btn = gr.Button(t("training.load_dataset_btn"), variant="secondary")
+            load_dataset_btn = gr.Button(
+                t("training.load_dataset_btn"), variant="secondary"
+            )
 
             training_dataset_info = gr.Textbox(
                 label=t("training.dataset_info"),
@@ -64,6 +71,7 @@ def build_lora_dataset_and_adapter_controls() -> dict[str, object]:
 
     return {
         "training_tensor_dir": training_tensor_dir,
+        "training_tensor_dir_browse_btn": training_tensor_dir_browse_btn,
         "load_dataset_btn": load_dataset_btn,
         "training_dataset_info": training_dataset_info,
         "lora_rank": lora_rank,

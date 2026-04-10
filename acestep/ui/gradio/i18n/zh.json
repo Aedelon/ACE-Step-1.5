@@ -7,7 +7,8 @@
     "language_metadata": {
       "name": "Chinese",
       "native_name": "中文"
-    }
+    },
+    "browse_btn": "📂 浏览…"
   },
   "dataset": {
     "title": "📊 数据集浏览器",
@@ -272,7 +273,11 @@
     "lora_df_name_header": "名称",
     "lora_df_scale_header": "强度",
     "lora_set_active_btn": "⭐ 设为激活",
-    "lora_remove_btn": "❌ 移除所选"
+    "lora_remove_btn": "❌ 移除所选",
+    "lora_browse_btn": "📂 浏览…",
+    "lora_section_add": "添加 LoRA 适配器",
+    "lora_section_loaded": "已加载的适配器",
+    "lora_clear_active_btn": "⭕ 取消激活"
   },
   "results": {
     "title": "🎵 结果",

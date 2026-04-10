@@ -7,7 +7,8 @@
     "language_metadata": {
       "name": "Japanese",
       "native_name": "日本語"
-    }
+    },
+    "browse_btn": "📂 参照…"
   },
   "dataset": {
     "title": "📊 データセットエクスプローラー",
@@ -272,7 +273,11 @@
     "lora_df_name_header": "名前",
     "lora_df_scale_header": "強度",
     "lora_set_active_btn": "⭐ アクティブに設定",
-    "lora_remove_btn": "❌ 選択を削除"
+    "lora_remove_btn": "❌ 選択を削除",
+    "lora_browse_btn": "📂 参照…",
+    "lora_section_add": "LoRA アダプターを追加",
+    "lora_section_loaded": "読み込み済みアダプター",
+    "lora_clear_active_btn": "⭕ アクティブ解除"
   },
   "results": {
     "title": "🎵 結果",

@@ -7,7 +7,8 @@
     "language_metadata": {
       "name": "English",
       "native_name": "English"
-    }
+    },
+    "browse_btn": "📂 Browse…"
   },
   "dataset": {
     "title": "📊 Dataset Explorer",
@@ -287,7 +288,11 @@
     "lora_df_name_header": "Name",
     "lora_df_scale_header": "Scale",
     "lora_set_active_btn": "⭐ Set Active",
-    "lora_remove_btn": "❌ Remove Selected"
+    "lora_remove_btn": "❌ Remove Selected",
+    "lora_browse_btn": "📂 Browse…",
+    "lora_section_add": "Add a LoRA adapter",
+    "lora_section_loaded": "Loaded adapters",
+    "lora_clear_active_btn": "⭕ Clear Active"
   },
   "results": {
     "title": "🎵 Results",

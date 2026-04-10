@@ -10,31 +10,17 @@ from acestep.ui.gradio.i18n import t
 def build_lora_controls() -> dict[str, Any]:
     """Create the multi-LoRA adapter management UI.
 
-    Layout:
-        ┌────────────────────────────────────────────────────────────────┐
-        │ ⚠️ LoKr warning banner                                          │
-        │ ┌──────────────────────────────────────────────────────────┐   │
-        │ │ Path Textbox │ Adapter Name │ ➕ Add LoRA │ 🗑️ Unload All │   │
-        │ └──────────────────────────────────────────────────────────┘   │
-        │ ┌──────────────────────────────────────────────────────────┐   │
-        │ │ ★ │ Name        │ Scale (editable)                       │   │
-        │ │ ★ │ voice_v1    │ 0.85                                   │   │
-        │ │   │ style_neon  │ 1.00                                   │   │
-        │ └──────────────────────────────────────────────────────────┘   │
-        │ ┌──────────────────────────────────────────────────────────┐   │
-        │ │ ⭐ Set Active │ ❌ Remove │   Use LoRA ☑                  │   │
-        │ └──────────────────────────────────────────────────────────┘   │
-        │ Status textbox                                                  │
-        └────────────────────────────────────────────────────────────────┘
+    The "loaded adapters" area is a dynamic ``@gr.render`` block driven
+    by a hidden ``gr.State`` holding ``list[[marker, name, scale]]``
+    rows. Each row gets its own Slider + Activate/Deactivate + Remove
+    controls — no dataframe, because ``gr.Dataframe`` cannot embed
+    interactive sliders per cell.
 
-    Returns:
-        A component map keyed by component name. The keys
-        ``lora_path``, ``load_lora_btn``, ``unload_lora_btn``,
-        ``use_lora_checkbox`` and ``lora_status`` are preserved for
-        backward compatibility with existing wiring; new keys
-        (``lora_adapter_name``, ``lora_adapters_df``, ``lora_set_active_btn``,
-        ``lora_remove_btn``, ``lora_selected_idx``) drive the multi-adapter
-        workflow.
+    The bulk actions area (``lora_set_active_btn`` / ``lora_remove_btn``
+    etc.) is kept around for API compatibility with existing wiring
+    contracts, but the buttons are hidden — per-row controls replace
+    them. ``lora_selected_idx`` is similarly kept as a no-op state for
+    the same reason.
     """
 
     with gr.Accordion(
@@ -42,6 +28,12 @@ def build_lora_controls() -> dict[str, Any]:
     ):
         gr.Markdown(
             t("generation.lora_lokr_warning"),
+            elem_classes=["no-tooltip"],
+        )
+
+        # --- Section 1: Add adapter form -------------------------------
+        gr.Markdown(
+            "### " + t("generation.lora_section_add"),
             elem_classes=["no-tooltip"],
         )
         with gr.Row():
@@ -52,46 +44,49 @@ def build_lora_controls() -> dict[str, Any]:
                 scale=3,
                 elem_classes=["acestep-tt"],
             )
+            lora_browse_btn = gr.Button(
+                t("generation.lora_browse_btn"),
+                variant="secondary",
+                scale=0,
+                min_width=140,
+            )
+        with gr.Row():
             lora_adapter_name = gr.Textbox(
                 label=t("generation.lora_adapter_name_label"),
                 placeholder=t("generation.lora_adapter_name_placeholder"),
                 info=t("generation.lora_adapter_name_info"),
-                scale=2,
+                scale=3,
                 elem_classes=["acestep-tt"],
             )
-        with gr.Row():
             load_lora_btn = gr.Button(
-                t("generation.add_lora_btn"), variant="primary", scale=1
-            )
-            unload_lora_btn = gr.Button(
-                t("generation.lora_unload_all_btn"), variant="secondary", scale=1
+                t("generation.add_lora_btn"),
+                variant="primary",
+                scale=0,
+                min_width=140,
             )
 
-        lora_adapters_df = gr.Dataframe(
-            headers=[
-                t("generation.lora_df_active_header"),
-                t("generation.lora_df_name_header"),
-                t("generation.lora_df_scale_header"),
-            ],
-            datatype=["str", "str", "number"],
-            value=[],
-            row_count=(0, "dynamic"),
-            column_count=(3, "fixed"),
-            interactive=True,
-            label=t("generation.lora_adapters_label"),
-            elem_classes=["acestep-tt"],
-            wrap=True,
+        # --- Section 2: Dynamic per-adapter rows -----------------------
+        gr.Markdown(
+            "### " + t("generation.lora_section_loaded"),
+            elem_classes=["no-tooltip"],
         )
 
+        # Shared state: list of [marker, name, scale] rows. Every
+        # add/remove/set-active/scale handler reads + writes this state,
+        # and @gr.render below listens to it to redraw the per-row UI.
+        lora_state = gr.State(value=[])
+
+        # The @gr.render block is wired by the service wiring layer (it
+        # needs access to dit_handler which lives there). We expose the
+        # state here and the wiring layer attaches the render decorator.
+        # For now we create a placeholder container; the wiring layer
+        # will populate it via a deferred @gr.render call.
+        lora_rows_container = gr.Column(elem_classes=["acestep-lora-rows"])
+
         with gr.Row():
-            lora_set_active_btn = gr.Button(
-                t("generation.lora_set_active_btn"),
+            unload_lora_btn = gr.Button(
+                t("generation.lora_unload_all_btn"),
                 variant="secondary",
-                scale=1,
-            )
-            lora_remove_btn = gr.Button(
-                t("generation.lora_remove_btn"),
-                variant="stop",
                 scale=1,
             )
             use_lora_checkbox = gr.Checkbox(
@@ -109,17 +104,26 @@ def build_lora_controls() -> dict[str, Any]:
             lines=1,
             elem_classes=["no-tooltip"],
         )
-        # Hidden state: zero-based row index of the currently selected
-        # adapter in lora_adapters_df. -1 means no row selected.
+
+        # --- Legacy bulk-action buttons (hidden, kept for contract) ----
+        # The wiring layer still references these keys in older code
+        # paths; we render them invisibly so the contract tests stay
+        # green without asking every caller to stop using them.
+        lora_set_active_btn = gr.Button("set_active", visible=False)
+        lora_clear_active_btn = gr.Button("clear_active", visible=False)
+        lora_remove_btn = gr.Button("remove", visible=False)
         lora_selected_idx = gr.State(value=-1)
 
     return {
         "lora_path": lora_path,
         "lora_adapter_name": lora_adapter_name,
+        "lora_browse_btn": lora_browse_btn,
         "load_lora_btn": load_lora_btn,
         "unload_lora_btn": unload_lora_btn,
-        "lora_adapters_df": lora_adapters_df,
+        "lora_state": lora_state,
+        "lora_rows_container": lora_rows_container,
         "lora_set_active_btn": lora_set_active_btn,
+        "lora_clear_active_btn": lora_clear_active_btn,
         "lora_remove_btn": lora_remove_btn,
         "lora_selected_idx": lora_selected_idx,
         "use_lora_checkbox": use_lora_checkbox,

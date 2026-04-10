@@ -13,7 +13,9 @@ from .context import (
 )
 from .generation_metadata_wiring import register_generation_metadata_handlers
 from .generation_metadata_file_wiring import register_generation_metadata_file_handlers
-from .generation_batch_navigation_wiring import register_generation_batch_navigation_handlers
+from .generation_batch_navigation_wiring import (
+    register_generation_batch_navigation_handlers,
+)
 from .generation_mode_wiring import register_generation_mode_handlers
 from .generation_run_wiring import register_generation_run_handlers
 from .results_aux_wiring import register_results_aux_handlers
@@ -28,6 +30,7 @@ from .training_dataset_preprocess_wiring import (
     register_training_preprocess_handler,
 )
 from .training_run_wiring import register_training_run_handlers
+from .training_path_pickers_wiring import register_training_path_pickers
 
 __all__ = [
     "GenerationWiringContext",
@@ -46,6 +49,7 @@ __all__ = [
     "register_generation_service_handlers",
     "register_training_dataset_builder_handlers",
     "register_training_dataset_load_handler",
+    "register_training_path_pickers",
     "register_training_preprocess_handler",
     "register_training_run_handlers",
 ]

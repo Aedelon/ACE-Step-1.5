@@ -15,15 +15,22 @@ def build_lokr_dataset_and_adapter_controls() -> dict[str, object]:
             gr.HTML(f"<h3>📊 {t('training.lokr_section_tensors')}</h3>")
             gr.Markdown(t("training.lokr_tensor_selection_desc"))
 
-            lokr_training_tensor_dir = gr.Textbox(
-                label=t("training.preprocessed_tensors_dir"),
-                placeholder="./datasets/preprocessed_tensors",
-                value="./datasets/preprocessed_tensors",
-                info=t("training.preprocessed_tensors_info"),
-                elem_classes=["acestep-tt"],
-            )
+            with gr.Row():
+                lokr_training_tensor_dir = gr.Textbox(
+                    label=t("training.preprocessed_tensors_dir"),
+                    placeholder="./datasets/preprocessed_tensors",
+                    value="./datasets/preprocessed_tensors",
+                    info=t("training.preprocessed_tensors_info"),
+                    elem_classes=["acestep-tt"],
+                    scale=4,
+                )
+                lokr_training_tensor_dir_browse_btn = gr.Button(
+                    t("common.browse_btn"), variant="secondary", scale=0, min_width=120
+                )
 
-            lokr_load_dataset_btn = gr.Button(t("training.load_dataset_btn"), variant="secondary")
+            lokr_load_dataset_btn = gr.Button(
+                t("training.load_dataset_btn"), variant="secondary"
+            )
 
             lokr_training_dataset_info = gr.Textbox(
                 label=t("training.dataset_info"),
@@ -86,6 +93,7 @@ def build_lokr_dataset_and_adapter_controls() -> dict[str, object]:
 
     return {
         "lokr_training_tensor_dir": lokr_training_tensor_dir,
+        "lokr_training_tensor_dir_browse_btn": lokr_training_tensor_dir_browse_btn,
         "lokr_load_dataset_btn": lokr_load_dataset_btn,
         "lokr_training_dataset_info": lokr_training_dataset_info,
         "lokr_linear_dim": lokr_linear_dim,

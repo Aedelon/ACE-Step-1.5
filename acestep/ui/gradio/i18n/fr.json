@@ -7,7 +7,8 @@
     "language_metadata": {
       "name": "French",
       "native_name": "Français"
-    }
+    },
+    "browse_btn": "📂 Parcourir…"
   },
   "dataset": {
     "title": "📊 Dataset Explorer",
@@ -287,7 +288,11 @@
     "lora_df_name_header": "Nom",
     "lora_df_scale_header": "Intensité",
     "lora_set_active_btn": "⭐ Définir actif",
-    "lora_remove_btn": "❌ Retirer la sélection"
+    "lora_remove_btn": "❌ Retirer la sélection",
+    "lora_browse_btn": "📂 Parcourir…",
+    "lora_section_add": "Ajouter un adaptateur LoRA",
+    "lora_section_loaded": "Adaptateurs chargés",
+    "lora_clear_active_btn": "⭕ Rendre inactif"
   },
   "results": {
     "title": "🎵 Results",

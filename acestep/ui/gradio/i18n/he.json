@@ -7,7 +7,8 @@
     "language_metadata": {
       "name": "Hebrew",
       "native_name": "עברית"
-    }
+    },
+    "browse_btn": "📂 עיון…"
   },
   "dataset": {
     "title": "📊 סייר מערכי נתונים (Dataset)",
@@ -283,7 +284,11 @@
     "lora_df_name_header": "שם",
     "lora_df_scale_header": "עוצמה",
     "lora_set_active_btn": "⭐ הגדר כפעיל",
-    "lora_remove_btn": "❌ הסר נבחר"
+    "lora_remove_btn": "❌ הסר נבחר",
+    "lora_browse_btn": "📂 עיון…",
+    "lora_section_add": "הוסף מתאם LoRA",
+    "lora_section_loaded": "מתאמים טעונים",
+    "lora_clear_active_btn": "⭕ בטל פעילות"
   },
   "results": {
     "title": "🎵 תוצאות",

@@ -30,7 +30,12 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
                     elem_classes=["acestep-tt"],
                     scale=3,
                 )
-                load_json_btn = gr.Button(t("training.load_btn"), variant="primary", scale=1)
+                load_json_path_browse_btn = gr.Button(
+                    t("common.browse_btn"), variant="secondary", scale=0, min_width=120
+                )
+                load_json_btn = gr.Button(
+                    t("training.load_btn"), variant="primary", scale=1
+                )
             load_json_status = gr.Textbox(
                 label=t("training.load_status"),
                 interactive=False,
@@ -46,7 +51,12 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
                     elem_classes=["acestep-tt"],
                     scale=3,
                 )
-                scan_btn = gr.Button(t("training.scan_btn"), variant="secondary", scale=1)
+                audio_directory_browse_btn = gr.Button(
+                    t("common.browse_btn"), variant="secondary", scale=0, min_width=120
+                )
+                scan_btn = gr.Button(
+                    t("training.scan_btn"), variant="secondary", scale=1
+                )
             scan_status = gr.Textbox(
                 label=t("training.scan_status"),
                 interactive=False,
@@ -57,7 +67,16 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
     with gr.Row():
         with gr.Column(scale=2):
             audio_files_table = gr.Dataframe(
-                headers=["#", "Filename", "Duration", "Lyrics", "Labeled", "BPM", "Key", "Caption"],
+                headers=[
+                    "#",
+                    "Filename",
+                    "Duration",
+                    "Lyrics",
+                    "Labeled",
+                    "BPM",
+                    "Key",
+                    "Caption",
+                ],
                 datatype=["number", "str", "str", "str", "str", "str", "str", "str"],
                 label=t("training.found_audio_files"),
                 interactive=False,
@@ -127,9 +146,11 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
 
     return {
         "load_json_path": load_json_path,
+        "load_json_path_browse_btn": load_json_path_browse_btn,
         "load_json_btn": load_json_btn,
         "load_json_status": load_json_status,
         "audio_directory": audio_directory,
+        "audio_directory_browse_btn": audio_directory_browse_btn,
         "scan_btn": scan_btn,
         "scan_status": scan_status,
         "audio_files_table": audio_files_table,

@@ -2,6 +2,7 @@
 Gradio UI Event Handlers Module
 Main entry point for setting up all event handlers
 """
+
 # Import handler modules
 from .wiring import (
     GenerationWiringContext,
@@ -18,12 +19,21 @@ from .wiring import (
     register_generation_service_handlers,
     register_training_dataset_builder_handlers,
     register_training_dataset_load_handler,
+    register_training_path_pickers,
     register_training_preprocess_handler,
     register_training_run_handlers,
 )
 
 
-def setup_event_handlers(demo, dit_handler, llm_handler, dataset_handler, dataset_section, generation_section, results_section):
+def setup_event_handlers(
+    demo,
+    dit_handler,
+    llm_handler,
+    dataset_handler,
+    dataset_section,
+    generation_section,
+    results_section,
+):
     """Setup generation/results event wiring for the Gradio UI.
 
     Args:
@@ -62,7 +72,7 @@ def setup_event_handlers(demo, dit_handler, llm_handler, dataset_handler, datase
         generation_section=generation_section,
         results_section=results_section,
     )
-    
+
     auto_checkbox_inputs, auto_checkbox_outputs = register_generation_service_handlers(
         wiring_context
     )
@@ -103,7 +113,7 @@ def setup_training_event_handlers(demo, dit_handler, llm_handler, training_secti
         llm_handler=llm_handler,
         training_section=training_section,
     )
-    
+
     # ========== Load Existing Dataset (Top Section) ==========
 
     # Load existing dataset JSON at the top of Dataset Builder
@@ -117,7 +127,7 @@ def setup_training_event_handlers(demo, dit_handler, llm_handler, training_secti
     register_training_dataset_builder_handlers(training_context)
 
     # ========== Preprocess Handlers ==========
-    
+
     # Load existing dataset JSON for preprocessing
     # This also updates the preview section so users can view/edit samples
     register_training_dataset_load_handler(
@@ -126,7 +136,10 @@ def setup_training_event_handlers(demo, dit_handler, llm_handler, training_secti
         path_key="load_existing_dataset_path",
         status_key="load_existing_status",
     )
-    
+
     # Preprocess dataset to tensor files
     register_training_preprocess_handler(training_context)
     register_training_run_handlers(training_context)
+
+    # Native OS folder / file pickers for every path Textbox in the tab.
+    register_training_path_pickers(training_section)

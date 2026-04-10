@@ -152,40 +152,38 @@ def register_generation_service_handlers(
 
     # ========== Multi-LoRA Handlers ==========
     from ..generation.lora_actions import (
+        ACTIVE_MARKER,
         handle_add_lora,
-        handle_dataframe_edit,
-        handle_remove_lora,
-        handle_row_select,
-        handle_set_active,
+        handle_remove_by_name,
+        handle_set_active_by_name,
+        handle_set_scale_by_name,
         handle_unload_all,
+        status_to_rows,
     )
 
     lora_status_out = generation_section["lora_status"]
-    lora_df_out = generation_section["lora_adapters_df"]
+    lora_state_out = generation_section["lora_state"]
 
-    # Add a new adapter from path + optional name, then refresh the table.
+    # Add a new adapter from path + optional name, then refresh state.
     generation_section["load_lora_btn"].click(
         fn=lambda path, name: handle_add_lora(path, name, dit_handler),
         inputs=[
             generation_section["lora_path"],
             generation_section["lora_adapter_name"],
         ],
-        outputs=[lora_status_out, lora_df_out],
+        outputs=[lora_status_out, lora_state_out],
     ).then(
         fn=lambda: gr.update(value=True),
         outputs=[generation_section["use_lora_checkbox"]],
     )
 
-    # Unload every adapter and clear the table.
+    # Unload every adapter and clear the list.
     generation_section["unload_lora_btn"].click(
         fn=lambda: handle_unload_all(dit_handler),
-        outputs=[lora_status_out, lora_df_out],
+        outputs=[lora_status_out, lora_state_out],
     ).then(
         fn=lambda: gr.update(value=False),
         outputs=[generation_section["use_lora_checkbox"]],
-    ).then(
-        fn=lambda: -1,
-        outputs=[generation_section["lora_selected_idx"]],
     )
 
     # Master toggle (enable/disable the active adapter).
@@ -195,33 +193,141 @@ def register_generation_service_handlers(
         outputs=[lora_status_out],
     )
 
-    # Track the selected row in a hidden gr.State so set-active and
-    # remove buttons know which adapter to act on.
-    generation_section["lora_adapters_df"].select(
-        fn=handle_row_select,
-        outputs=[generation_section["lora_selected_idx"]],
+    # ---- Dynamic per-row UI via @gr.render ------------------------------
+    # The render block is attached to the container created by
+    # build_lora_controls. It redraws itself every time lora_state
+    # changes — when we add/remove/activate/scale an adapter the state
+    # updates and @gr.render re-runs, emitting one full row per adapter
+    # with its own Slider + Activate/Deactivate + Remove button.
+    container = generation_section["lora_rows_container"]
+
+    # @gr.render must be declared INSIDE the target container's ``with``
+    # context so the dynamically-created children attach to the right
+    # parent. Without this, Gradio inserts them at the Blocks root.
+    with container:
+
+        @gr.render(inputs=[lora_state_out])
+        def _render_lora_rows(rows):  # noqa: D401 - Gradio render hook
+            if not rows:
+                gr.Markdown(
+                    "_No LoRA adapter loaded. Add one above to get started._",
+                    elem_classes=["no-tooltip"],
+                )
+                return
+
+            for row in rows:
+                if not isinstance(row, (list, tuple)) or len(row) < 3:
+                    continue
+                marker = row[0]
+                name = str(row[1])
+                try:
+                    current_scale = float(row[2])
+                except (TypeError, ValueError):
+                    current_scale = 1.0
+                badge = str(row[3]) if len(row) >= 4 else "LoRA"
+                is_active = marker == ACTIVE_MARKER
+                badge_class = (
+                    "acestep-lora-badge-lokr"
+                    if badge.lower() == "lokr"
+                    else "acestep-lora-badge-lora"
+                )
+
+                with gr.Row(equal_height=True, variant="panel"):
+                    # Header column: marker + name + badge on a single line.
+                    with gr.Column(scale=3, min_width=200):
+                        gr.Markdown(
+                            f"### {marker} &nbsp; **{name}** &nbsp; `{badge}`",
+                            elem_classes=[
+                                "no-tooltip",
+                                "acestep-lora-row-header",
+                                badge_class,
+                            ],
+                        )
+
+                    # Intensity slider.
+                    with gr.Column(scale=4, min_width=240):
+                        row_slider = gr.Slider(
+                            minimum=0.0,
+                            maximum=1.0,
+                            step=0.05,
+                            value=current_scale,
+                            label="Intensity",
+                            interactive=True,
+                            elem_classes=["no-tooltip"],
+                        )
+
+                    # Action buttons, side by side with visible text.
+                    with gr.Column(scale=3, min_width=300):
+                        with gr.Row():
+                            if is_active:
+                                toggle_btn = gr.Button(
+                                    "⭕ Deactivate",
+                                    variant="secondary",
+                                    size="sm",
+                                )
+                                toggle_btn.click(
+                                    fn=lambda: (
+                                        dit_handler.clear_active_lora_adapter(),
+                                        status_to_rows(dit_handler),
+                                    ),
+                                    outputs=[lora_status_out, lora_state_out],
+                                )
+                            else:
+                                toggle_btn = gr.Button(
+                                    "⭐ Activate",
+                                    variant="primary",
+                                    size="sm",
+                                )
+                                toggle_btn.click(
+                                    fn=lambda n=name: handle_set_active_by_name(
+                                        n, dit_handler
+                                    ),
+                                    outputs=[lora_status_out, lora_state_out],
+                                )
+                            remove_btn = gr.Button(
+                                "🗑️ Remove",
+                                variant="stop",
+                                size="sm",
+                            )
+
+                    row_slider.release(
+                        fn=lambda val, n=name: handle_set_scale_by_name(
+                            n, val, dit_handler
+                        ),
+                        inputs=[row_slider],
+                        outputs=[lora_status_out, lora_state_out],
+                    )
+                    remove_btn.click(
+                        fn=lambda n=name: handle_remove_by_name(n, dit_handler),
+                        outputs=[lora_status_out, lora_state_out],
+                    )
+
+    # Refresh the state on page load so reconnecting to an already
+    # initialized server shows the adapters that were loaded beforehand.
+    context.demo.load(
+        fn=lambda: status_to_rows(dit_handler),
+        outputs=[lora_state_out],
     )
 
-    # Edits in the dataframe (Scale column) are committed via .change().
-    generation_section["lora_adapters_df"].change(
-        fn=lambda df: handle_dataframe_edit(df, dit_handler),
-        inputs=[generation_section["lora_adapters_df"]],
-        outputs=[lora_status_out, lora_df_out],
-    )
+    # ---- LoRA folder picker (native OS dialog) -------------------------
+    # Shell out to the platform's native folder chooser (osascript on
+    # macOS, zenity/kdialog on Linux, PowerShell on Windows). Only works
+    # when Gradio is accessed on the same machine that serves it — the
+    # expected localhost dev usage for ACE-Step.
+    from ..generation.native_folder_picker import pick_folder as _native_pick_folder
 
-    generation_section["lora_set_active_btn"].click(
-        fn=lambda idx: handle_set_active(idx, dit_handler),
-        inputs=[generation_section["lora_selected_idx"]],
-        outputs=[lora_status_out, lora_df_out],
-    )
+    def _browse_lora_folder(current_path: str) -> Any:
+        picked = _native_pick_folder(title="Select a LoRA adapter folder")
+        if not picked:
+            # User cancelled or picker unavailable: leave the existing
+            # path untouched.
+            return gr.update()
+        return gr.update(value=picked)
 
-    generation_section["lora_remove_btn"].click(
-        fn=lambda idx: handle_remove_lora(idx, dit_handler),
-        inputs=[generation_section["lora_selected_idx"]],
-        outputs=[lora_status_out, lora_df_out],
-    ).then(
-        fn=lambda: -1,
-        outputs=[generation_section["lora_selected_idx"]],
+    generation_section["lora_browse_btn"].click(
+        fn=_browse_lora_folder,
+        inputs=[generation_section["lora_path"]],
+        outputs=[generation_section["lora_path"]],
     )
 
     # ========== MLX VAE Chunk Size ==========

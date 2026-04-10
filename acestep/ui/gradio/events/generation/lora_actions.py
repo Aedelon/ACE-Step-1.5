@@ -23,7 +23,16 @@ from typing import Any
 import gradio as gr
 
 
-ACTIVE_MARKER = "★"
+ACTIVE_MARKER = "⭐"
+INACTIVE_MARKER = "❌"
+
+# Human-readable badges for the adapter kind. Shared by the @gr.render
+# block so a single source of truth describes what each row is.
+BADGE_BY_TYPE = {
+    "lora": "LoRA",
+    "lokr": "LoKr",
+}
+BADGE_UNKNOWN = "LoRA"
 
 
 def status_to_rows(dit_handler: Any) -> list[list[Any]]:
@@ -44,14 +53,16 @@ def status_to_rows(dit_handler: Any) -> list[list[Any]]:
         return []
     scales = status.get("scales") or {}
     active = status.get("active_adapter") or ""
+    adapter_type = status.get("adapter_type") or ""
+    badge = BADGE_BY_TYPE.get(adapter_type, BADGE_UNKNOWN)
     rows: list[list[Any]] = []
     for name, scale in scales.items():
-        marker = ACTIVE_MARKER if name == active else ""
+        marker = ACTIVE_MARKER if name == active else INACTIVE_MARKER
         try:
             scale_value = float(scale)
         except (TypeError, ValueError):
             scale_value = 1.0
-        rows.append([marker, str(name), scale_value])
+        rows.append([marker, str(name), scale_value, badge])
     return rows
 
 
@@ -126,6 +137,63 @@ def handle_set_active(
         return "⚠️ Invalid selection.", rows
     name = rows[selected_idx][1]
     msg = dit_handler.set_active_lora_adapter(name)
+    return msg, status_to_rows(dit_handler)
+
+
+def handle_clear_active(dit_handler: Any) -> tuple[str, list[list[Any]]]:
+    """Clear the currently-active adapter pointer (keeps adapters loaded).
+
+    Removes the active marker from every row and disables adapter effect
+    until the user re-activates one. Adapters themselves remain in
+    memory — use ``handle_remove_lora`` or ``handle_unload_all`` to
+    actually unload weights.
+
+    Args:
+        dit_handler: Active DiT handler instance.
+
+    Returns:
+        ``(status_text, new_rows)``.
+    """
+    msg = dit_handler.clear_active_lora_adapter()
+    return msg, status_to_rows(dit_handler)
+
+
+# --- Per-adapter handlers (used by dynamic @gr.render rows) ----------
+
+
+def handle_set_active_by_name(
+    adapter_name: str,
+    dit_handler: Any,
+) -> tuple[str, list[list[Any]]]:
+    """Activate an adapter by name, bypassing the dataframe selection.
+
+    Used by the per-row Activate/Deactivate buttons in the dynamically
+    rendered LoRA list so the caller doesn't have to track row indices.
+    """
+    msg = dit_handler.set_active_lora_adapter(adapter_name)
+    return msg, status_to_rows(dit_handler)
+
+
+def handle_remove_by_name(
+    adapter_name: str,
+    dit_handler: Any,
+) -> tuple[str, list[list[Any]]]:
+    """Remove an adapter by name (per-row trash button)."""
+    msg = dit_handler.remove_lora(adapter_name)
+    return msg, status_to_rows(dit_handler)
+
+
+def handle_set_scale_by_name(
+    adapter_name: str,
+    scale: float,
+    dit_handler: Any,
+) -> tuple[str, list[list[Any]]]:
+    """Apply a new scale to an adapter (per-row slider release)."""
+    try:
+        scale_value = float(scale)
+    except (TypeError, ValueError):
+        return "⚠️ Invalid scale value.", status_to_rows(dit_handler)
+    msg = dit_handler.set_lora_scale(adapter_name, scale_value)
     return msg, status_to_rows(dit_handler)
 
 

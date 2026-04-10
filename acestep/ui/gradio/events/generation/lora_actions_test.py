@@ -8,11 +8,16 @@ from typing import Any
 from acestep.ui.gradio.events.generation import lora_actions
 from acestep.ui.gradio.events.generation.lora_actions import (
     ACTIVE_MARKER,
+    INACTIVE_MARKER,
     handle_add_lora,
+    handle_clear_active,
     handle_dataframe_edit,
+    handle_remove_by_name,
     handle_remove_lora,
     handle_row_select,
     handle_set_active,
+    handle_set_active_by_name,
+    handle_set_scale_by_name,
     handle_unload_all,
     status_to_rows,
 )
@@ -21,10 +26,11 @@ from acestep.ui.gradio.events.generation.lora_actions import (
 class _FakeDitHandler:
     """In-memory stub of the LoRA portion of ``AceStepHandler``."""
 
-    def __init__(self) -> None:
+    def __init__(self, adapter_type: str = "lora") -> None:
         self.calls: list[tuple[str, tuple, dict]] = []
         self._adapters: dict[str, float] = {}
         self._active: str | None = None
+        self._adapter_type: str = adapter_type
 
     # ---- recording helper ----------------------------------------------
     def _record(self, name: str, *args: Any, **kwargs: Any) -> None:
@@ -39,6 +45,7 @@ class _FakeDitHandler:
             "scales": dict(self._adapters),
             "active_adapter": self._active,
             "adapters": list(self._adapters.keys()),
+            "adapter_type": self._adapter_type,
         }
 
     def add_lora(self, path: str, adapter_name: str | None = None) -> str:
@@ -64,6 +71,14 @@ class _FakeDitHandler:
             return f"❌ Unknown adapter: {adapter_name}"
         self._active = adapter_name
         return f"✅ Active LoRA adapter: {adapter_name}"
+
+    def clear_active_lora_adapter(self) -> str:
+        self._record("clear_active_lora_adapter")
+        if self._active is None:
+            return "ℹ️ No adapter was active."
+        previous = self._active
+        self._active = None
+        return f"✅ LoRA adapter '{previous}' deactivated."
 
     def set_lora_scale(self, adapter_name: str, scale: float) -> str:
         self._record("set_lora_scale", adapter_name, scale)
@@ -92,7 +107,27 @@ class StatusToRowsTests(unittest.TestCase):
         self.assertEqual(len(rows), 2)
         markers = {row[1]: row[0] for row in rows}
         self.assertEqual(markers["style_a"], ACTIVE_MARKER)
-        self.assertEqual(markers["style_b"], "")
+        self.assertEqual(markers["style_b"], INACTIVE_MARKER)
+
+    def test_row_includes_lora_badge(self) -> None:
+        handler = _FakeDitHandler(adapter_type="lora")
+        handler.add_lora("/tmp/style_a")
+        rows = status_to_rows(handler)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(len(rows[0]), 4)
+        self.assertEqual(rows[0][3], "LoRA")
+
+    def test_row_includes_lokr_badge(self) -> None:
+        handler = _FakeDitHandler(adapter_type="lokr")
+        handler.add_lora("/tmp/voice")
+        rows = status_to_rows(handler)
+        self.assertEqual(rows[0][3], "LoKr")
+
+    def test_row_defaults_to_lora_badge_when_type_missing(self) -> None:
+        handler = _FakeDitHandler(adapter_type="")
+        handler.add_lora("/tmp/x")
+        rows = status_to_rows(handler)
+        self.assertEqual(rows[0][3], "LoRA")
 
     def test_handles_handler_exception_gracefully(self) -> None:
         class _Broken:
@@ -155,8 +190,58 @@ class HandleRemoveAndActiveTests(unittest.TestCase):
         self.assertEqual(self.handler.calls, [("set_active_lora_adapter", ("b",), {})])
         markers = {row[1]: row[0] for row in rows}
         self.assertEqual(markers["b"], ACTIVE_MARKER)
-        self.assertEqual(markers["a"], "")
+        self.assertEqual(markers["a"], INACTIVE_MARKER)
         self.assertTrue(msg.startswith("✅"))
+
+    def test_clear_active_removes_marker(self) -> None:
+        # "a" is active from setUp. Clearing should drop the ⭐ marker
+        # from every row while keeping the adapters loaded.
+        msg, rows = handle_clear_active(self.handler)
+        self.assertEqual(self.handler.calls, [("clear_active_lora_adapter", (), {})])
+        self.assertTrue(msg.startswith("✅"))
+        # Both rows still present, neither carries the active marker.
+        self.assertEqual(len(rows), 2)
+        for row in rows:
+            self.assertEqual(
+                row[0],
+                INACTIVE_MARKER,
+                f"row {row[1]} still marked active",
+            )
+
+    def test_clear_active_when_nothing_active(self) -> None:
+        self.handler._active = None
+        self.handler.calls.clear()
+        msg, rows = handle_clear_active(self.handler)
+        self.assertIn("No adapter was active", msg)
+        self.assertEqual(self.handler.calls, [("clear_active_lora_adapter", (), {})])
+        # Rows still present, still no active markers.
+        self.assertEqual(len(rows), 2)
+
+    def test_set_active_by_name_and_remove_by_name(self) -> None:
+        """Per-row handlers used by @gr.render should act on name, not idx."""
+        msg, rows = handle_set_active_by_name("b", self.handler)
+        self.assertEqual(self.handler.calls, [("set_active_lora_adapter", ("b",), {})])
+        markers = {row[1]: row[0] for row in rows}
+        self.assertEqual(markers["b"], ACTIVE_MARKER)
+        self.assertTrue(msg.startswith("✅"))
+
+        self.handler.calls.clear()
+        msg, rows = handle_remove_by_name("a", self.handler)
+        self.assertEqual(self.handler.calls, [("remove_lora", ("a",), {})])
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0][1], "b")
+
+    def test_set_scale_by_name_applies_float(self) -> None:
+        msg, rows = handle_set_scale_by_name("a", 0.65, self.handler)
+        self.assertEqual(self.handler.calls, [("set_lora_scale", ("a", 0.65), {})])
+        scales = {row[1]: row[2] for row in rows}
+        self.assertAlmostEqual(scales["a"], 0.65)
+        self.assertTrue(msg.startswith("✅"))
+
+    def test_set_scale_by_name_rejects_invalid(self) -> None:
+        msg, _ = handle_set_scale_by_name("a", "oops", self.handler)
+        self.assertEqual(self.handler.calls, [])
+        self.assertIn("Invalid", msg)
 
 
 class HandleUnloadAllTests(unittest.TestCase):
