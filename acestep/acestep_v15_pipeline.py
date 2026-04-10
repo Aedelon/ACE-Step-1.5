@@ -654,6 +654,8 @@ def main():
 
         # In Gradio 6, head=/css=/js= must be passed to launch(), not Blocks().
         # Build the head HTML once here so both branches use the same payload.
+        from acestep.ui.gradio.interfaces import get_acestep_head_html
+
         _service_mode = init_params is not None and init_params.get(
             "service_mode", False
         )
