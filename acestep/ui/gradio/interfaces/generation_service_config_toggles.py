@@ -162,5 +162,6 @@ def build_service_init_controls(
         max_lines=10,
         value=params.get("init_status", "") if service_pre_initialized else "",
         elem_id="acestep-init-status",
+        elem_classes=["acestep-tt"],
     )
     return {"init_btn": init_btn, "init_status": init_status}

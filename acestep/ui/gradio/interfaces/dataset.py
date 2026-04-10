@@ -2,6 +2,7 @@
 Gradio UI Dataset Section Module
 Contains dataset explorer section component definitions
 """
+
 import gradio as gr
 
 
@@ -13,30 +14,35 @@ def create_dataset_section(dataset_handler) -> dict:
                 choices=["train", "test"],
                 value="train",
                 label="Dataset",
-                info="Choose dataset to explore", elem_classes=["acestep-tt"],
-                scale=2
+                info="Choose dataset to explore",
+                elem_classes=["acestep-tt"],
+                scale=2,
             )
-            import_dataset_btn = gr.Button("📥 Import Dataset", variant="primary", scale=1)
+            import_dataset_btn = gr.Button(
+                "📥 Import Dataset", variant="primary", scale=1
+            )
 
             search_type = gr.Dropdown(
                 choices=["keys", "idx", "random"],
                 value="random",
                 label="Search Type",
-                info="How to find items", elem_classes=["acestep-tt"],
-                scale=1
+                info="How to find items",
+                elem_classes=["acestep-tt"],
+                scale=1,
             )
             search_value = gr.Textbox(
                 label="Search Value",
                 placeholder="Enter keys or index (leave empty for random)",
-                info="Keys: exact match, Index: 0 to dataset size-1", elem_classes=["acestep-tt"],
-                scale=2
+                info="Keys: exact match, Index: 0 to dataset size-1",
+                elem_classes=["acestep-tt"],
+                scale=2,
             )
 
         instruction_display = gr.Textbox(
             label="📝 Instruction",
             interactive=False,
             placeholder="No instruction available",
-            lines=1
+            lines=1,
         )
 
         repaint_viz_plot = gr.Plot()
@@ -46,40 +52,36 @@ def create_dataset_section(dataset_handler) -> dict:
                 label="Complete Item Information",
                 language="json",
                 interactive=False,
-                lines=15
+                lines=15,
             )
 
         with gr.Row(equal_height=True):
             item_src_audio = gr.Audio(
-                label="Source Audio",
-                type="filepath",
-                interactive=False,
-                scale=8
+                label="Source Audio", type="filepath", interactive=False, scale=8
             )
-            get_item_btn = gr.Button("🔍 Get Item", variant="secondary", interactive=False, scale=2)
+            get_item_btn = gr.Button(
+                "🔍 Get Item", variant="secondary", interactive=False, scale=2
+            )
 
         with gr.Row(equal_height=True):
             item_target_audio = gr.Audio(
-                label="Target Audio",
-                type="filepath",
-                interactive=False,
-                scale=8
+                label="Target Audio", type="filepath", interactive=False, scale=8
             )
             item_refer_audio = gr.Audio(
-                label="Reference Audio",
-                type="filepath",
-                interactive=False,
-                scale=2
+                label="Reference Audio", type="filepath", interactive=False, scale=2
             )
 
         with gr.Row():
             use_src_checkbox = gr.Checkbox(
                 label="Use Source Audio from Dataset",
                 value=True,
-                info="Check to use the source audio from dataset"
+                info="Check to use the source audio from dataset",
+                elem_classes=["acestep-tt"],
             )
 
-        data_status = gr.Textbox(label="📊 Data Status", interactive=False, value="❌ No dataset imported")
+        data_status = gr.Textbox(
+            label="📊 Data Status", interactive=False, value="❌ No dataset imported"
+        )
         auto_fill_btn = gr.Button("📋 Auto-fill Generation Form", variant="primary")
 
     return {
@@ -98,4 +100,3 @@ def create_dataset_section(dataset_handler) -> dict:
         "data_status": data_status,
         "auto_fill_btn": auto_fill_btn,
     }
-

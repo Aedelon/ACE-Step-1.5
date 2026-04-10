@@ -17,22 +17,30 @@ def build_lora_controls() -> dict[str, Any]:
         A component map containing LoRA path, action buttons, toggles, and status controls.
     """
 
-    with gr.Accordion(t("generation.lora_accordion_title"), open=False, elem_classes=["acestep-tt"]):
+    with gr.Accordion(
+        t("generation.lora_accordion_title"), open=False, elem_classes=["acestep-tt"]
+    ):
         with gr.Row():
             lora_path = gr.Textbox(
                 label=t("generation.lora_path_label"),
                 placeholder=t("generation.lora_path_placeholder"),
                 info=t("generation.lora_path_info"),
                 scale=3,
+                elem_classes=["acestep-tt"],
             )
-            load_lora_btn = gr.Button(t("generation.load_lora_btn"), variant="secondary", scale=1)
-            unload_lora_btn = gr.Button(t("generation.unload_lora_btn"), variant="secondary", scale=1)
+            load_lora_btn = gr.Button(
+                t("generation.load_lora_btn"), variant="secondary", scale=1
+            )
+            unload_lora_btn = gr.Button(
+                t("generation.unload_lora_btn"), variant="secondary", scale=1
+            )
         with gr.Row():
             use_lora_checkbox = gr.Checkbox(
                 label=t("generation.use_lora_label"),
                 value=False,
                 info=t("generation.use_lora_info"),
                 scale=1,
+                elem_classes=["acestep-tt"],
             )
             lora_scale_slider = gr.Slider(
                 minimum=0.0,
@@ -42,6 +50,7 @@ def build_lora_controls() -> dict[str, Any]:
                 label=t("generation.lora_scale_label"),
                 info=t("generation.lora_scale_info"),
                 scale=2,
+                elem_classes=["acestep-tt"],
             )
         lora_status = gr.Textbox(
             label=t("generation.lora_status_label"),
@@ -70,7 +79,9 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
         A component map containing LM sampling, CoT, negative prompt, and batch controls.
     """
 
-    with gr.Accordion(t("generation.advanced_lm_section"), open=False, elem_classes=["acestep-tt"]):
+    with gr.Accordion(
+        t("generation.advanced_lm_section"), open=False, elem_classes=["acestep-tt"]
+    ):
         with gr.Row():
             lm_temperature = gr.Slider(
                 label=t("generation.lm_temperature_label"),
@@ -143,6 +154,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 info=t("generation.constrained_debug_info"),
                 scale=1,
                 interactive=not service_mode,
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
             allow_lm_batch = gr.Checkbox(
