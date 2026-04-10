@@ -5,46 +5,55 @@ CSS class. The tooltip layer lives as a direct child of <body> in
 position:fixed to escape all stacking contexts created by Gradio's nested
 divs (transform, opacity, contain).
 
-Why opt-in:
-    The previous tooltip system used `has-info-container` which was
-    applied to many elements including Accordions and Groups. CSS
-    selectors targeting descendants of `.has-info-container` ended up
-    matching live components and hiding them. This system uses a strict
-    opt-in marker `acestep-tt` placed ONLY on leaf components (Slider,
-    Dropdown, Checkbox, Number, Textbox).
+Why this exists:
+    Gradio 6 has no native tooltip component. Components only support
+    `info=` which renders as static text below the label. We want hover
+    tooltips on a (?) icon next to the label.
 
-How it works:
-    1. CSS injects styles for `.acestep-info-icon` (the visible ?) and
-       `#acestep-tooltip-layer` (the popup container in <body>).
-    2. JS scans `document.querySelectorAll('.acestep-tt')` and finds
-       each `span[data-testid="block-info"]` inside.
-    3. Hides the native info span and creates a sibling `<button>`
-       with the info text stored in `data-tooltip`.
-    4. On mouseenter, positions the tooltip layer using
-       getBoundingClientRect() relative to the trigger button.
-    5. Auto-flips to above the trigger when there's not enough room
-       below.
-    6. 200ms grace period on mouseleave so the user can move into the
-       tooltip and scroll long content.
-    7. MutationObserver covers components added dynamically (e.g. when
-       a mode change reveals new components).
+Why opt-in via class:
+    The previous tooltip system used `has-info-container` which was
+    applied to many elements including Accordions. CSS selectors targeting
+    descendants of `.has-info-container` ended up matching live components
+    and hiding them. This system uses a strict opt-in marker `acestep-tt`
+    placed on Slider/Dropdown/Checkbox/Number/Textbox components, and
+    the JS uses `closest()` to ensure each info span belongs to the right
+    host (preventing accordion-level upgrades).
+
+Why CSS and JS are exposed separately:
+    In Gradio 6, head=/css=/js= must be passed to demo.launch(), not to
+    gr.Blocks(). Crucially, <script> tags inside head= are inserted via
+    innerHTML and therefore NEVER execute (HTML5 spec). The js= parameter
+    is the ONLY way to run custom JavaScript on page load. We expose
+    get_tooltip_css() for the css= parameter and get_tooltip_js() for the
+    js= parameter so they can be passed correctly at launch time.
 """
 
 
-def get_tooltip_head() -> str:
-    """Return the HTML string to inject into the Gradio Blocks head=.
+def get_tooltip_css() -> str:
+    """Return the CSS for the tooltip system, suitable for css= parameter."""
+    return _TOOLTIP_CSS
 
-    The string contains a <style> block and a <script> block that
-    together implement the opt-in hover tooltip system.
 
-    Returns:
-        HTML string ready for concatenation with other head= content.
+def get_tooltip_js() -> str:
+    """Return a JavaScript function string suitable for the js= parameter.
+
+    The js= parameter expects a JavaScript function expression. This function
+    is called once on page load. We use it to install the tooltip system,
+    then start a MutationObserver for dynamically added components.
     """
-    return _TOOLTIP_HEAD
+    return _TOOLTIP_JS
 
 
-_TOOLTIP_HEAD = """
-<style>
+def get_tooltip_head() -> str:
+    """[DEPRECATED] Return tooltip CSS+JS as a single <style>+<script> string.
+
+    Kept for backward compatibility. Prefer get_tooltip_css() and
+    get_tooltip_js() for Gradio 6 launch(css=..., js=...).
+    """
+    return f"<style>{_TOOLTIP_CSS}</style>\n<script>{_TOOLTIP_JS_INLINE}</script>"
+
+
+_TOOLTIP_CSS = """
 /* ===== ACE-Step Tooltip System ===== */
 
 /* The (?) icon button placed next to each label */
@@ -74,6 +83,11 @@ _TOOLTIP_HEAD = """
     border-color: #3b82f6;
     background: #3b82f6;
     transform: scale(1.1);
+}
+
+/* Hide native Gradio info span when our tooltip system has upgraded it */
+.acestep-tt span[data-testid="block-info"].acestep-tt-hidden {
+    display: none !important;
 }
 
 /* The tooltip popup layer (lives in <body>, position: fixed) */
@@ -106,23 +120,25 @@ _TOOLTIP_HEAD = """
     background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
 }
-</style>
-<script>
-(function() {
+"""
+
+
+# JavaScript wrapped as a function expression for the js= parameter.
+# Gradio passes this string to the browser and calls it as `(function...)()`.
+_TOOLTIP_JS = """
+() => {
     'use strict';
     const LAYER_ID = 'acestep-tooltip-layer';
     const HOST_SELECTOR = '.acestep-tt';
     const HIDE_DELAY_MS = 200;
     let hideTimer = null;
 
-    /** Create or return the singleton tooltip layer attached to <body>. */
     function ensureLayer() {
         let layer = document.getElementById(LAYER_ID);
         if (!layer) {
             layer = document.createElement('div');
             layer.id = LAYER_ID;
             document.body.appendChild(layer);
-            // Keep layer visible while user hovers it (to scroll long content)
             layer.addEventListener('mouseenter', () => {
                 if (hideTimer) {
                     clearTimeout(hideTimer);
@@ -154,17 +170,14 @@ _TOOLTIP_HEAD = """
         layer.textContent = text;
         layer.classList.add('visible');
 
-        // Position relative to trigger using viewport coordinates
         const rect = triggerEl.getBoundingClientRect();
         const vh = window.innerHeight;
         const vw = window.innerWidth;
         const TOOLTIP_MAX_W = 380;
 
-        // Horizontal: clamp inside viewport with 8px margin
         const left = Math.max(8, Math.min(rect.left, vw - TOOLTIP_MAX_W - 8));
         layer.style.left = left + 'px';
 
-        // Vertical: prefer below, flip above if not enough room
         const belowRoom = vh - rect.bottom;
         if (belowRoom > 220 || belowRoom > vh * 0.4) {
             layer.style.top = (rect.bottom + 6) + 'px';
@@ -175,13 +188,9 @@ _TOOLTIP_HEAD = """
         }
     }
 
-    /** Upgrade a single .acestep-tt host element to display a hover icon. */
     function upgradeHost(host) {
         if (host.dataset.acestepTtUpgraded === '1') return;
 
-        // Find the native info span Gradio created from the info= prop.
-        // Critical: the span must "belong" to THIS host, not to a nested
-        // acestep-tt descendant (e.g. an accordion containing sliders).
         const candidates = host.querySelectorAll('span[data-testid="block-info"]');
         let infoSpan = null;
         for (const candidate of candidates) {
@@ -191,27 +200,23 @@ _TOOLTIP_HEAD = """
             }
         }
         if (!infoSpan) {
-            // Mark as scanned so we don't retry on every observer tick.
             host.dataset.acestepTtUpgraded = '1';
             return;
         }
 
         const text = (infoSpan.textContent || '').trim();
-        if (!text) return;
+        if (!text) {
+            host.dataset.acestepTtUpgraded = '1';
+            return;
+        }
 
         host.dataset.acestepTtUpgraded = '1';
+        infoSpan.classList.add('acestep-tt-hidden');
 
-        // Hide the native info span (don't remove — Gradio may re-render)
-        infoSpan.style.display = 'none';
-
-        // Find the label to attach the icon to
         const label = host.querySelector('label, .label-wrap, .block-title');
         if (!label) return;
-
-        // Avoid duplicates
         if (label.querySelector('.acestep-info-icon')) return;
 
-        // Create the (?) button
         const icon = document.createElement('button');
         icon.type = 'button';
         icon.className = 'acestep-info-icon';
@@ -220,13 +225,10 @@ _TOOLTIP_HEAD = """
         icon.setAttribute('data-tooltip', text);
         icon.tabIndex = 0;
 
-        // Hover events
         icon.addEventListener('mouseenter', () => showTooltip(icon));
         icon.addEventListener('mouseleave', scheduleHide);
-        // Keyboard accessibility
         icon.addEventListener('focus', () => showTooltip(icon));
         icon.addEventListener('blur', scheduleHide);
-        // Click toggles (for touch devices)
         icon.addEventListener('click', (e) => {
             e.preventDefault();
             const layer = document.getElementById(LAYER_ID);
@@ -241,20 +243,17 @@ _TOOLTIP_HEAD = """
         label.appendChild(icon);
     }
 
-    /** Scan a root element and upgrade all .acestep-tt descendants. */
     function scanAndUpgrade(root) {
         if (!root || !root.querySelectorAll) return;
         const hosts = root.querySelectorAll(HOST_SELECTOR);
         hosts.forEach(upgradeHost);
     }
 
-    /** MutationObserver to handle dynamically added components. */
     function startObserver() {
         const observer = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === 1) {
-                        // Element node
                         if (node.matches && node.matches(HOST_SELECTOR)) {
                             upgradeHost(node);
                         }
@@ -269,16 +268,17 @@ _TOOLTIP_HEAD = """
         });
     }
 
-    function init() {
-        scanAndUpgrade(document);
-        startObserver();
-    }
+    // Run scan now and start observer
+    scanAndUpgrade(document);
+    startObserver();
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-})();
-</script>
+    // Run a delayed second scan to catch components that mount after this js= callback
+    setTimeout(() => scanAndUpgrade(document), 500);
+    setTimeout(() => scanAndUpgrade(document), 1500);
+}
 """
+
+# Inline version (without the function wrapping) for the legacy head= path
+_TOOLTIP_JS_INLINE = (
+    _TOOLTIP_JS.replace("() => {", "(function() {").rstrip().rstrip("}") + "})();"
+)

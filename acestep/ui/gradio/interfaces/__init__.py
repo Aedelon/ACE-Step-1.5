@@ -41,28 +41,53 @@ from acestep.ui.gradio.interfaces.training import create_training_section
 from acestep.ui.gradio.events import setup_event_handlers, setup_training_event_handlers
 from acestep.ui.gradio.help_content import create_help_button, HELP_MODAL_CSS
 from acestep.ui.gradio.theme import ACEStepDark
-from acestep.ui.gradio.interfaces.tooltip_head import get_tooltip_head
+from acestep.ui.gradio.interfaces.tooltip_head import (
+    get_tooltip_css,
+    get_tooltip_head,
+    get_tooltip_js,
+)
 
 
 def get_acestep_head_html(service_mode: bool = False) -> str:
     """Return the full head= HTML to inject when launching Gradio.
 
-    In Gradio 6, ``head=`` must be passed to ``demo.launch()`` instead of
-    ``gr.Blocks(head=...)`` (the latter silently ignores it via **kwargs).
-    Call this from the launch site to get the complete HTML payload
-    (audio player prefs + user prefs + tooltip system).
+    Note: <script> tags inside head= are NOT executed in Gradio 6 because
+    they are inserted via innerHTML (HTML5 spec). Use get_acestep_js() for
+    JavaScript that must run on page load and get_acestep_css() for styles.
+
+    This helper is kept for the audio_player_preferences and user_preferences
+    scripts which use a different injection mechanism (DOM script tag at
+    page load via Gradio's loader).
 
     Args:
         service_mode: When True, the user preferences script is omitted.
 
     Returns:
-        Complete <style>/<script> HTML string ready for ``launch(head=...)``.
+        HTML string ready for ``launch(head=...)``.
     """
-    return (
-        get_audio_player_preferences_head()
-        + ("" if service_mode else get_user_preferences_head())
-        + get_tooltip_head()
+    return get_audio_player_preferences_head() + (
+        "" if service_mode else get_user_preferences_head()
     )
+
+
+def get_acestep_css() -> str:
+    """Return CSS to pass to ``launch(css=...)`` in Gradio 6.
+
+    Includes the tooltip system CSS. Combined with the existing inline CSS
+    on gr.Blocks() (legacy path).
+    """
+    return get_tooltip_css()
+
+
+def get_acestep_js() -> str:
+    """Return JavaScript function string for ``launch(js=...)`` in Gradio 6.
+
+    The js= parameter expects a JS function expression (e.g. ``() => {...}``)
+    that runs once on page load. We use it to install the tooltip system,
+    which cannot be done via head= because <script> tags inserted via
+    innerHTML do not execute (HTML5 spec).
+    """
+    return get_tooltip_js()
 
 
 def create_gradio_interface(
