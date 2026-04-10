@@ -40,13 +40,118 @@ def get_tooltip_css() -> str:
     return _TOOLTIP_CSS
 
 
-def get_tooltip_js() -> str:
+def get_tooltip_js(language: str = "en") -> str:
     """Return JavaScript function string for the js= parameter.
 
     The js= parameter expects a JavaScript function expression. The
-    function is called once on page load.
+    function is called once on page load. We prepend a small prelude
+    that exposes the original markdown sources of every ``_info`` key
+    in the active language as ``window.ACESTEP_TOOLTIP_SOURCES`` keyed
+    by whitespace-normalized rendered text. This lets the JS recover
+    the original markdown after Gradio renders ``info=`` to plain HTML
+    (which strips ``**``, ``###``, code fences, etc.).
+
+    Args:
+        language: Active UI language code. Falls back to ``en`` if the
+            language file isn't loaded.
+
+    Returns:
+        Concatenated JS string ready for ``launch(js=...)``.
     """
-    return _TOOLTIP_JS
+    return _build_tooltip_sources_js(language) + "\n" + _TOOLTIP_JS
+
+
+def _build_tooltip_sources_js(language: str) -> str:
+    """Build the ``window.ACESTEP_TOOLTIP_SOURCES`` prelude.
+
+    Walks the active language's i18n dict and produces TWO lookup tables:
+
+    - ``byLabel``: maps each ``_label`` text → its sibling ``_info`` markdown
+      source. Most reliable: labels are short and unique within a section.
+    - ``byText``: maps the rendered (markdown-stripped + whitespace
+      collapsed) ``_info`` text → its original markdown source. Used as a
+      fallback when no matching label is found.
+
+    The JS-side ``upgradeHost`` checks ``byLabel`` first, then ``byText``,
+    then falls back to the raw DOM text. This avoids brittle whitespace
+    matching for long tooltips like ``mode_info``.
+    """
+    import json
+    import re
+
+    from acestep.ui.gradio.i18n import get_i18n
+
+    i18n = get_i18n()
+    translations = i18n.translations.get(language) or i18n.translations.get("en") or {}
+
+    def strip_markdown(text: str) -> str:
+        """Approximate Gradio's rendered output: strip headers/bold/italic/code."""
+        text = re.sub(r"^#{1,6}\s*", "", text, flags=re.M)  # ###, ##, #
+        text = re.sub(r"\*\*([^*\n]+)\*\*", r"\1", text)  # **bold**
+        text = re.sub(r"(?<!\*)\*([^*\n]+)\*(?!\*)", r"\1", text)  # *italic*
+        text = re.sub(r"`([^`\n]+)`", r"\1", text)  # `code`
+        text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)  # [text](url)
+        text = re.sub(r"^[•\-]\s+", "", text, flags=re.M)  # bullet markers
+        return text
+
+    def normalize(text: str) -> str:
+        return re.sub(r"\s+", " ", strip_markdown(text)).strip()
+
+    by_label: dict[str, str] = {}
+    by_text: dict[str, str] = {}
+
+    def walk(node: dict) -> None:
+        if not isinstance(node, dict):
+            return
+        # Pair *_label and *_info entries within the same section.
+        for key, value in node.items():
+            if isinstance(value, dict):
+                walk(value)
+                continue
+            if not isinstance(value, str):
+                continue
+            if key.endswith("_info") and value:
+                normalized = normalize(value)
+                if normalized:
+                    by_text[normalized] = value
+                # Look for a sibling label by trying several conventions:
+                #   foo_info  -> foo_label, foo, foolabel
+                #   foo_label_info -> foo_label
+                stem = key[: -len("_info")]
+                label_key_candidates = [
+                    f"{stem}_label",  # foo_info -> foo_label
+                    stem,  # foo_info -> foo (e.g. enable_normalization)
+                    f"{stem}label",  # rare
+                ]
+                # If the stem already ends with _label, try the stem itself
+                # (think_label_info -> think_label)
+                if stem.endswith("_label"):
+                    label_key_candidates.insert(0, stem)
+                for lkey in label_key_candidates:
+                    label_value = node.get(lkey)
+                    if isinstance(label_value, str) and label_value:
+                        by_label[normalize(label_value)] = value
+                        break
+
+    if isinstance(translations, dict):
+        walk(translations)
+
+        # Recurse into nested sections (walk only handled top-level above
+        # via the inner loop). Do a deep walk to be safe.
+        def deep_walk(d: dict) -> None:
+            for v in d.values():
+                if isinstance(v, dict):
+                    walk(v)
+                    deep_walk(v)
+
+        deep_walk(translations)
+
+    payload = json.dumps({"byLabel": by_label, "byText": by_text}, ensure_ascii=False)
+    return (
+        "(() => { try { window.ACESTEP_TOOLTIP_SOURCES = "
+        + payload
+        + "; } catch (e) { console.warn('[acestep] tooltip source map failed', e); } })();"
+    )
 
 
 def get_tooltip_head() -> str:
@@ -134,27 +239,35 @@ _TOOLTIP_CSS = """
 
 /* Bubble body content */
 .acestep-bubble-body {
-    padding: 14px 20px 18px 20px;
+    padding: 16px 22px 20px 22px;
+    line-height: 1.55;
 }
 .acestep-bubble-body p {
-    margin: 0 0 10px 0;
+    margin: 0 0 12px 0;
+    line-height: 1.55;
 }
 .acestep-bubble-body p:last-child {
     margin-bottom: 0;
 }
 .acestep-bubble-body ul {
-    margin: 8px 0 12px 0;
-    padding-left: 20px;
+    margin: 10px 0 16px 0;
+    padding-left: 22px;
     list-style: none;
 }
 .acestep-bubble-body ul li {
-    margin: 6px 0;
+    margin: 10px 0;
     position: relative;
+    line-height: 1.55;
+    padding-left: 2px;
+}
+.acestep-bubble-body ul li + li {
+    margin-top: 12px;
 }
 .acestep-bubble-body ul li::before {
     content: "•";
     position: absolute;
     left: -16px;
+    top: 0;
     color: #60a5fa;
     font-weight: 700;
 }
@@ -222,9 +335,9 @@ _TOOLTIP_CSS = """
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    max-width: 560px;
-    width: 90%;
-    max-height: 80vh;
+    max-width: 720px;
+    width: 92%;
+    max-height: 85vh;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -246,11 +359,16 @@ _TOOLTIP_CSS = """
 }
 
 #acestep-info-modal-body {
-    padding: 16px 24px 24px 24px;
+    padding: 8px 24px 24px 24px;
     overflow-y: auto;
     line-height: 1.6;
     font-size: 13px;
     color: #e4e4e7;
+}
+/* When the markdown wrapper sits inside the modal, drop its own padding
+   so we don't double-pad. Inherit colours/typography from the bubble body. */
+#acestep-info-modal-body .acestep-bubble-body {
+    padding: 0;
 }
 
 #acestep-info-modal-close {
@@ -583,9 +701,10 @@ _TOOLTIP_JS = """
                 if (el.querySelector('span[data-testid="block-info"]')) continue;
                 const txt = (el.textContent || '').trim();
                 if (!txt || txt === labelText) continue;
-                // Skip if too long (likely a container, not info)
-                // Info text is typically <500 chars
-                if (txt.length > 1000) continue;
+                // Sanity cap: only reject truly absurd lengths (container
+                // with unrelated content). Markdown tooltips can be up to
+                // ~3000 chars so we keep a generous ceiling.
+                if (txt.length > 50000) continue;
                 // Avoid picking large container divs: must have only inline children or none
                 const childElements = Array.from(el.children);
                 const hasOnlyInlineChildren = childElements.every(c =>
@@ -643,7 +762,18 @@ _TOOLTIP_JS = """
         const labelEl = found.labelEl;
         const labelText = (found.labelText || '').replace(/\\s+/g, ' ');
         const infoEl = found.infoEl;
-        const infoText = found.infoText;
+        // Recover the original markdown source. Try two lookups built at
+        // server startup from the active language i18n dict:
+        //   1. byLabel — keyed by normalized label text (most reliable)
+        //   2. byText  — keyed by normalized rendered info text (fallback)
+        // If both miss, fall back to the raw DOM text.
+        const renderedText = found.infoText;
+        const labelKey = (labelText || '').replace(/\\s+/g, ' ').trim();
+        const textKey = (renderedText || '').replace(/\\s+/g, ' ').trim();
+        const sources = (typeof window !== 'undefined' && window.ACESTEP_TOOLTIP_SOURCES) || {};
+        const byLabel = (sources && sources.byLabel) || {};
+        const byText = (sources && sources.byText) || {};
+        const infoText = byLabel[labelKey] || byText[textKey] || renderedText;
 
         // Hide the info element so only the (?) bubble shows it
         if (infoEl) {
@@ -665,6 +795,15 @@ _TOOLTIP_JS = """
         icon.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
+            // Long tooltips (>600 chars) go into a centered modal with
+            // more vertical room; shorter ones use the anchored bubble.
+            const useModal = (infoText || '').length > 600;
+            if (useModal) {
+                const html = '<div class="acestep-bubble-body">'
+                    + renderMarkdown(infoText || '') + '</div>';
+                showModal(labelText, html, true);
+                return;
+            }
             const bubble = document.getElementById(BUBBLE_ID);
             if (bubble && bubble.classList.contains('visible') && activeBubbleTrigger === icon) {
                 hideBubble();

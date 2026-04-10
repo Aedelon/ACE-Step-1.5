@@ -392,6 +392,18 @@ def main():
 
     args = parser.parse_args()
 
+    # If the user did not explicitly pass --language, fall back to the
+    # language persisted by a previous in-UI language switch. This is what
+    # lets the language dropdown survive the process restart triggered by
+    # _apply_runtime_language().
+    _lang_passed_on_cli = any(
+        arg == "--language" or arg.startswith("--language=") for arg in sys.argv[1:]
+    )
+    if not _lang_passed_on_cli:
+        from acestep.ui.gradio.i18n import load_language
+
+        args.language = load_language(default=args.language)
+
     # Enable API requires init_service
     if args.enable_api:
         args.init_service = True
@@ -667,7 +679,7 @@ def main():
         )
         head_html = get_acestep_head_html(service_mode=_service_mode)
         custom_css = get_acestep_css()
-        custom_js = get_acestep_js()
+        custom_js = get_acestep_js(args.language)
 
         # Enable API endpoints if requested
         if args.enable_api:

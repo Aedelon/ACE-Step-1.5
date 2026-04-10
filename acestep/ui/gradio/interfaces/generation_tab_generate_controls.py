@@ -26,21 +26,27 @@ def _build_left_generate_toggles(
     with gr.Column(scale=1, variant="compact"):
         think_checkbox = gr.Checkbox(
             label=t("generation.think_label"),
+            info=t("generation.think_label_info"),
             value=lm_initialized,
             visible=True,
             scale=1,
             interactive=lm_initialized,
+            elem_classes=["acestep-tt"],
         )
         auto_score = gr.Checkbox(
             label=t("generation.auto_score_label"),
+            info=t("generation.auto_score_info"),
             value=False,
             scale=1,
             interactive=not service_mode and not save_memory,
+            elem_classes=["acestep-tt"],
         )
     return think_checkbox, auto_score
 
 
-def _build_right_generate_toggles(service_mode: bool) -> tuple[gr.Checkbox, gr.Checkbox]:
+def _build_right_generate_toggles(
+    service_mode: bool,
+) -> tuple[gr.Checkbox, gr.Checkbox]:
     """Create the right-side runtime toggles shown next to the generate button.
 
     Args:
@@ -54,15 +60,19 @@ def _build_right_generate_toggles(service_mode: bool) -> tuple[gr.Checkbox, gr.C
     with gr.Column(scale=1, variant="compact"):
         autogen_checkbox = gr.Checkbox(
             label=t("generation.autogen_label"),
+            info=t("generation.autogen_label_info"),
             value=False,
             scale=1,
             interactive=not service_mode,
+            elem_classes=["acestep-tt"],
         )
         auto_lrc = gr.Checkbox(
             label=t("generation.auto_lrc_label"),
+            info=t("generation.auto_lrc_info"),
             value=False,
             scale=1,
             interactive=not service_mode and not save_memory,
+            elem_classes=["acestep-tt"],
         )
     return autogen_checkbox, auto_lrc
 
@@ -86,7 +96,9 @@ def build_generate_row_controls(
     """
 
     params = init_params or {}
-    generate_btn_interactive = params.get("enable_generate", False) if service_pre_initialized else False
+    generate_btn_interactive = (
+        params.get("enable_generate", False) if service_pre_initialized else False
+    )
     with gr.Row(equal_height=True, visible=True) as generate_btn_row:
         think_checkbox, auto_score = _build_left_generate_toggles(
             lm_initialized=lm_initialized,
@@ -100,7 +112,9 @@ def build_generate_row_controls(
                 interactive=generate_btn_interactive,
                 elem_id="acestep-generate-btn",
             )
-        autogen_checkbox, auto_lrc = _build_right_generate_toggles(service_mode=service_mode)
+        autogen_checkbox, auto_lrc = _build_right_generate_toggles(
+            service_mode=service_mode
+        )
     return {
         "think_checkbox": think_checkbox,
         "auto_score": auto_score,

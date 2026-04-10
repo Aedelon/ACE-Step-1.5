@@ -79,15 +79,16 @@ def get_acestep_css() -> str:
     return get_tooltip_css()
 
 
-def get_acestep_js() -> str:
+def get_acestep_js(language: str = "en") -> str:
     """Return JavaScript function string for ``launch(js=...)`` in Gradio 6.
 
     The js= parameter expects a JS function expression (e.g. ``() => {...}``)
     that runs once on page load. We use it to install the tooltip system,
     which cannot be done via head= because <script> tags inserted via
-    innerHTML do not execute (HTML5 spec).
+    innerHTML do not execute (HTML5 spec). The active language is forwarded
+    so the tooltip system can recover original markdown sources.
     """
-    return get_tooltip_js()
+    return get_tooltip_js(language)
 
 
 def create_gradio_interface(
