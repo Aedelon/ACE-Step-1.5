@@ -101,24 +101,89 @@ _TOOLTIP_CSS = """
 #acestep-info-bubble {
     position: fixed;
     z-index: 999998;
-    max-width: 460px;
-    max-height: 70vh;
+    width: 480px;
+    max-width: calc(100vw - 32px);
+    max-height: 75vh;
     overflow-y: auto;
-    padding: 18px 20px;
-    border-radius: 10px;
-    background: rgba(20, 20, 30, 0.98);
-    color: #f0f0f0;
+    padding: 0;
+    border-radius: 12px;
+    background: rgba(18, 18, 28, 0.98);
+    color: #e8e8ec;
     border: 1px solid #3b82f6;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.65;
     font-weight: 400;
     pointer-events: auto;
     display: none;
     backdrop-filter: blur(10px);
     animation: acestep-bubble-fade-in 0.12s ease-out;
-    white-space: pre-wrap;
     word-wrap: break-word;
+}
+
+/* Bubble title bar (parameter label) */
+.acestep-bubble-title {
+    padding: 14px 20px 10px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #60a5fa;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    background: rgba(59, 130, 246, 0.06);
+    border-radius: 12px 12px 0 0;
+}
+
+/* Bubble body content */
+.acestep-bubble-body {
+    padding: 14px 20px 18px 20px;
+}
+.acestep-bubble-body p {
+    margin: 0 0 10px 0;
+}
+.acestep-bubble-body p:last-child {
+    margin-bottom: 0;
+}
+.acestep-bubble-body ul {
+    margin: 8px 0 12px 0;
+    padding-left: 20px;
+    list-style: none;
+}
+.acestep-bubble-body ul li {
+    margin: 6px 0;
+    position: relative;
+}
+.acestep-bubble-body ul li::before {
+    content: "•";
+    position: absolute;
+    left: -16px;
+    color: #60a5fa;
+    font-weight: 700;
+}
+.acestep-bubble-body strong {
+    color: #fbbf24;
+    font-weight: 600;
+}
+.acestep-bubble-body em {
+    color: #c4b5fd;
+    font-style: italic;
+}
+.acestep-bubble-body code {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f9a8d4;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 12.5px;
+}
+.acestep-bubble-body h4 {
+    margin: 14px 0 6px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #93c5fd;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.acestep-bubble-body h4:first-child {
+    margin-top: 0;
 }
 #acestep-info-bubble.visible {
     display: block;
@@ -257,9 +322,92 @@ _TOOLTIP_JS = """
         }
     }
 
-    function showBubble(triggerEl, text) {
+    /** Convert simple markdown-like text to HTML for the bubble.
+     *  Supported syntax:
+     *    **bold** *italic* `code`
+     *    \\n\\n → paragraph break
+     *    Lines starting with - or • → bullet list item
+     *    Lines starting with ### → h4 section header
+     *    [text](url) → link
+     */
+    function escapeHtml(s) {
+        return s.replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;',
+            '"': '&quot;', "'": '&#39;'
+        })[c]);
+    }
+
+    function renderInline(s) {
+        // Apply order matters: code first to avoid double-processing
+        s = s.replace(/`([^`]+)`/g, (m, c) => '<code>' + escapeHtml(c) + '</code>');
+        s = s.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
+        s = s.replace(/\\*([^*]+)\\*/g, '<em>$1</em>');
+        s = s.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g,
+            '<a href="$2" target="_blank" rel="noopener" style="color:#60a5fa;text-decoration:underline;">$1</a>');
+        return s;
+    }
+
+    function renderMarkdown(text) {
+        if (!text) return '';
+        const escaped = escapeHtml(text);
+        const lines = escaped.split('\\n');
+        const out = [];
+        let inList = false;
+        let para = [];
+
+        const flushPara = () => {
+            if (para.length > 0) {
+                out.push('<p>' + renderInline(para.join(' ')) + '</p>');
+                para = [];
+            }
+        };
+        const closeList = () => {
+            if (inList) {
+                out.push('</ul>');
+                inList = false;
+            }
+        };
+
+        for (const rawLine of lines) {
+            const line = rawLine.trim();
+            if (!line) {
+                flushPara();
+                closeList();
+                continue;
+            }
+            // h4 header
+            if (line.startsWith('### ')) {
+                flushPara();
+                closeList();
+                out.push('<h4>' + renderInline(line.slice(4)) + '</h4>');
+                continue;
+            }
+            // Bullet item
+            const bulletMatch = line.match(/^[•\\-]\\s+(.+)/);
+            if (bulletMatch) {
+                flushPara();
+                if (!inList) {
+                    out.push('<ul>');
+                    inList = true;
+                }
+                out.push('<li>' + renderInline(bulletMatch[1]) + '</li>');
+                continue;
+            }
+            // Regular line — accumulate into paragraph
+            para.push(line);
+        }
+        flushPara();
+        closeList();
+        return out.join('\\n');
+    }
+
+    function showBubble(triggerEl, text, title) {
         const bubble = ensureBubble();
-        bubble.textContent = text || '';
+        const titleHtml = title
+            ? '<div class="acestep-bubble-title">' + escapeHtml(title) + '</div>'
+            : '';
+        const bodyHtml = '<div class="acestep-bubble-body">' + renderMarkdown(text || '') + '</div>';
+        bubble.innerHTML = titleHtml + bodyHtml;
         bubble.classList.add('visible');
 
         if (activeBubbleTrigger && activeBubbleTrigger !== triggerEl) {
@@ -521,7 +669,7 @@ _TOOLTIP_JS = """
             if (bubble && bubble.classList.contains('visible') && activeBubbleTrigger === icon) {
                 hideBubble();
             } else {
-                showBubble(icon, infoText);
+                showBubble(icon, infoText, labelText);
             }
         });
 
