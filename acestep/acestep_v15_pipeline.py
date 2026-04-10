@@ -70,6 +70,7 @@ except ImportError:
     from acestep.llm_inference import LLMHandler
     from acestep.dataset_handler import DatasetHandler
     from acestep.ui.gradio import create_gradio_interface
+    from acestep.ui.gradio.interfaces import get_acestep_head_html
     from acestep.ui.gradio.i18n import get_i18n, available_languages_info
     from acestep.gpu_config import (
         get_gpu_config,
@@ -328,6 +329,7 @@ def main():
         _default_quantization = "int8_weight_only"
         try:
             import torch
+
             if torch.cuda.is_available():
                 major, _ = torch.cuda.get_device_capability(0)
                 if major < 7:
@@ -650,6 +652,13 @@ def main():
             if p and p not in allowed_paths:
                 allowed_paths.append(p)
 
+        # In Gradio 6, head=/css=/js= must be passed to launch(), not Blocks().
+        # Build the head HTML once here so both branches use the same payload.
+        _service_mode = init_params is not None and init_params.get(
+            "service_mode", False
+        )
+        head_html = get_acestep_head_html(service_mode=_service_mode)
+
         # Enable API endpoints if requested
         if args.enable_api:
             print("Enabling API endpoints...")
@@ -666,6 +675,7 @@ def main():
                 inbrowser=False,
                 auth=auth,
                 allowed_paths=allowed_paths,  # include output_dir + user-provided
+                head=head_html,
             )
 
             # Now add API routes to Gradio's FastAPI app (app is available after launch)
@@ -696,6 +706,7 @@ def main():
                 inbrowser=False,
                 auth=auth,
                 allowed_paths=allowed_paths,  # include output_dir + user-provided
+                head=head_html,
             )
     except Exception as e:
         print(f"Error launching Gradio: {e}", file=sys.stderr)

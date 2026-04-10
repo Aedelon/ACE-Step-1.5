@@ -44,6 +44,27 @@ from acestep.ui.gradio.theme import ACEStepDark
 from acestep.ui.gradio.interfaces.tooltip_head import get_tooltip_head
 
 
+def get_acestep_head_html(service_mode: bool = False) -> str:
+    """Return the full head= HTML to inject when launching Gradio.
+
+    In Gradio 6, ``head=`` must be passed to ``demo.launch()`` instead of
+    ``gr.Blocks(head=...)`` (the latter silently ignores it via **kwargs).
+    Call this from the launch site to get the complete HTML payload
+    (audio player prefs + user prefs + tooltip system).
+
+    Args:
+        service_mode: When True, the user preferences script is omitted.
+
+    Returns:
+        Complete <style>/<script> HTML string ready for ``launch(head=...)``.
+    """
+    return (
+        get_audio_player_preferences_head()
+        + ("" if service_mode else get_user_preferences_head())
+        + get_tooltip_head()
+    )
+
+
 def create_gradio_interface(
     dit_handler, llm_handler, dataset_handler, init_params=None, language="en"
 ) -> gr.Blocks:
