@@ -101,10 +101,10 @@ _TOOLTIP_CSS = """
 #acestep-info-bubble {
     position: fixed;
     z-index: 999998;
-    max-width: 400px;
-    max-height: 60vh;
+    max-width: 460px;
+    max-height: 70vh;
     overflow-y: auto;
-    padding: 16px 18px;
+    padding: 18px 20px;
     border-radius: 10px;
     background: rgba(20, 20, 30, 0.98);
     color: #f0f0f0;
@@ -117,6 +117,8 @@ _TOOLTIP_CSS = """
     display: none;
     backdrop-filter: blur(10px);
     animation: acestep-bubble-fade-in 0.12s ease-out;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 #acestep-info-bubble.visible {
     display: block;
@@ -270,7 +272,7 @@ _TOOLTIP_JS = """
         const rect = triggerEl.getBoundingClientRect();
         const vh = window.innerHeight;
         const vw = window.innerWidth;
-        const BUBBLE_MAX_W = 420;
+        const BUBBLE_MAX_W = 480;
 
         // Reset positioning so we can measure
         bubble.style.top = '';
