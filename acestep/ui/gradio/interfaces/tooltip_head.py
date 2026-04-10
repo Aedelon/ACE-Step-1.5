@@ -61,20 +61,20 @@ def get_tooltip_head() -> str:
 _TOOLTIP_CSS = """
 /* ===== ACE-Step Help System ===== */
 
-/* Small (?) icon button placed next to each label */
+/* (?) icon button placed next to each label */
 .acestep-info-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 13px;
-    height: 13px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-    margin-left: 5px;
+    margin-left: 8px;
     padding: 0;
-    border: 1px solid var(--border-color-primary, #555);
+    border: 1.5px solid var(--border-color-primary, #555);
     background: transparent;
     color: var(--body-text-color-subdued, #aaa);
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
@@ -101,17 +101,17 @@ _TOOLTIP_CSS = """
 #acestep-info-bubble {
     position: fixed;
     z-index: 999998;
-    max-width: 320px;
-    max-height: 50vh;
+    max-width: 400px;
+    max-height: 60vh;
     overflow-y: auto;
-    padding: 12px 14px;
-    border-radius: 8px;
+    padding: 16px 18px;
+    border-radius: 10px;
     background: rgba(20, 20, 30, 0.98);
     color: #f0f0f0;
     border: 1px solid #3b82f6;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-    font-size: 12px;
-    line-height: 1.5;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+    line-height: 1.6;
     font-weight: 400;
     pointer-events: auto;
     display: none;
@@ -270,7 +270,7 @@ _TOOLTIP_JS = """
         const rect = triggerEl.getBoundingClientRect();
         const vh = window.innerHeight;
         const vw = window.innerWidth;
-        const BUBBLE_MAX_W = 340;
+        const BUBBLE_MAX_W = 420;
 
         // Reset positioning so we can measure
         bubble.style.top = '';
