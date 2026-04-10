@@ -260,7 +260,19 @@
     "key_auto_label_info": "### 调性自动\n\n让 **LM 从 caption 决定音乐调性**。\n\n- **勾选** — 手动调性选择器被**覆盖**,模型选择匹配氛围/风格的调性\n- **未勾选** — 执行手动调性值\n\n有助于匹配传统的风格调性(例如悲伤情歌 → 小调)。",
     "timesig_auto_label_info": "### 拍号自动\n\n让 **LM 从 caption 决定拍号**。\n\n- **勾选** — 手动拍号选择器被**覆盖**(例如 `waltz` → `3/4`,`metal` → `4/4`,`prog` → `7/8`)\n- **未勾选** — 执行手动拍号",
     "duration_auto_label_info": "### 时长自动\n\n让 **LM 从 caption 决定曲目时长**。\n\n- **勾选** — 手动时长滑块被**覆盖**,长度从结构提示推断(`intro + 2 verses + chorus` → 更长,`jingle` → 短)\n- **未勾选** — 执行手动时长值",
-    "vocal_lang_auto_label_info": "### 语言自动\n\n让 **LM 从 caption 和歌词决定人声语言**。\n\n- **勾选** — 手动人声语言选择器被**覆盖**,从歌词脚本和 caption 提示推断\n- **未勾选** — 执行手动语言\n\n对多语言或模糊输入回退到 `unknown`。"
+    "vocal_lang_auto_label_info": "### 语言自动\n\n让 **LM 从 caption 和歌词决定人声语言**。\n\n- **勾选** — 手动人声语言选择器被**覆盖**,从歌词脚本和 caption 提示推断\n- **未勾选** — 执行手动语言\n\n对多语言或模糊输入回退到 `unknown`。",
+    "lora_lokr_warning": "> ⚠️ **LoKr 适配器无法堆叠。** 加载 LoKr 适配器会替换所有已激活的 PEFT LoRA。标准 LoRA 适配器可以同时堆叠多个。",
+    "lora_adapter_name_label": "适配器名称(可选)",
+    "lora_adapter_name_placeholder": "voice_v1、neon_synth…",
+    "lora_adapter_name_info": "用于在表格中标识适配器的唯一名称。留空时将从路径的基础名派生默认名称。",
+    "add_lora_btn": "➕ 添加 LoRA",
+    "lora_unload_all_btn": "🗑️ 全部卸载",
+    "lora_adapters_label": "已加载的 LoRA 适配器",
+    "lora_df_active_header": "★",
+    "lora_df_name_header": "名称",
+    "lora_df_scale_header": "强度",
+    "lora_set_active_btn": "⭐ 设为激活",
+    "lora_remove_btn": "❌ 移除所选"
   },
   "results": {
     "title": "🎵 结果",

@@ -271,7 +271,19 @@
     "key_auto_label_info": "### Key אוטומטי\n\nנותן ל-**LM להחליט על המפתח המוזיקלי** מהכיתוב.\n\n- **מסומן** — בחירת המפתח הידנית **נדרסת**, המודל בוחר מפתח שתואם למצב רוח/ז'אנר\n- **לא מסומן** — ערך המפתח הידני נאכף\n\nמועיל להתאמה למפתחות ז'אנר מקובלים (למשל בלדה עצובה → מינור).",
     "timesig_auto_label_info": "### TimeSig אוטומטי\n\nנותן ל-**LM להחליט על חתימת הזמן** מהכיתוב.\n\n- **מסומן** — בחירת TimeSig הידנית **נדרסת** (לדוגמה `waltz` → `3/4`, `metal` → `4/4`, `prog` → `7/8`)\n- **לא מסומן** — חתימת הזמן הידנית נאכפת",
     "vocal_lang_auto_label_info": "### Language אוטומטי\n\nנותן ל-**LM להחליט על שפת הווקאל** מהכיתוב והמילים.\n\n- **מסומן** — בחירת Vocal Language הידנית **נדרסת**, מוסקת מכתב המילים ומרמזי הכיתוב\n- **לא מסומן** — השפה הידנית נאכפת\n\nנופל חזרה ל-`unknown` עבור קלטים רב-לשוניים או עמומים.",
-    "duration_auto_label_info": "### Duration אוטומטי\n\nנותן ל-**LM להחליט על משך הרצועה** מהכיתוב.\n\n- **מסומן** — סליידר Duration הידני **נדרס**, האורך מוסק מרמזי מבנה (`intro + 2 verses + chorus` → ארוך יותר, `jingle` → קצר)\n- **לא מסומן** — ערך Duration הידני נאכף"
+    "duration_auto_label_info": "### Duration אוטומטי\n\nנותן ל-**LM להחליט על משך הרצועה** מהכיתוב.\n\n- **מסומן** — סליידר Duration הידני **נדרס**, האורך מוסק מרמזי מבנה (`intro + 2 verses + chorus` → ארוך יותר, `jingle` → קצר)\n- **לא מסומן** — ערך Duration הידני נאכף",
+    "lora_lokr_warning": "> ⚠️ **לא ניתן לערום מתאמי LoKr.** טעינת מתאם LoKr מחליפה כל LoRA מסוג PEFT פעיל. מתאמי LoRA רגילים ניתנים לערימה של מספר מתאמים בו-זמנית.",
+    "lora_adapter_name_label": "שם המתאם (אופציונלי)",
+    "lora_adapter_name_placeholder": "voice_v1, neon_synth…",
+    "lora_adapter_name_info": "שם ייחודי לזיהוי המתאם בטבלה. השאר ריק כדי להשתמש בשם בסיסי שנגזר מהנתיב.",
+    "add_lora_btn": "➕ הוסף LoRA",
+    "lora_unload_all_btn": "🗑️ פרוק את כולם",
+    "lora_adapters_label": "מתאמי LoRA טעונים",
+    "lora_df_active_header": "★",
+    "lora_df_name_header": "שם",
+    "lora_df_scale_header": "עוצמה",
+    "lora_set_active_btn": "⭐ הגדר כפעיל",
+    "lora_remove_btn": "❌ הסר נבחר"
   },
   "results": {
     "title": "🎵 תוצאות",

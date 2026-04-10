@@ -275,7 +275,19 @@
     "key_auto_label_info": "### Key Auto\n\nLaisse le **LM décider de la tonalité musicale** à partir de la caption.\n\n- **Coché** — le sélecteur Key manuel est **ignoré**, le modèle choisit une tonalité correspondant à l'ambiance/au genre\n- **Décoché** — la valeur Key manuelle est appliquée\n\nPratique pour respecter les tonalités conventionnelles d'un genre (par exemple ballade triste → mineur).",
     "timesig_auto_label_info": "### TimeSig Auto\n\nLaisse le **LM décider de la signature rythmique** à partir de la caption.\n\n- **Coché** — le sélecteur TimeSig manuel est **ignoré** (par exemple `waltz` → `3/4`, `metal` → `4/4`, `prog` → `7/8`)\n- **Décoché** — la signature rythmique manuelle est appliquée",
     "vocal_lang_auto_label_info": "### Language Auto\n\nLaisse le **LM décider de la langue vocale** à partir de la caption et des paroles.\n\n- **Coché** — le sélecteur Vocal Language manuel est **ignoré**, la langue est déduite du script des paroles et des indices de la caption\n- **Décoché** — la langue manuelle est appliquée\n\nRetombe sur `unknown` pour les entrées multilingues ou ambiguës.",
-    "duration_auto_label_info": "### Duration Auto\n\nLaisse le **LM décider de la durée du morceau** à partir de la caption.\n\n- **Coché** — le curseur Duration manuel est **ignoré**, la longueur est déduite des indices de structure (`intro + 2 verses + chorus` → plus long, `jingle` → court)\n- **Décoché** — la valeur Duration manuelle est appliquée"
+    "duration_auto_label_info": "### Duration Auto\n\nLaisse le **LM décider de la durée du morceau** à partir de la caption.\n\n- **Coché** — le curseur Duration manuel est **ignoré**, la longueur est déduite des indices de structure (`intro + 2 verses + chorus` → plus long, `jingle` → court)\n- **Décoché** — la valeur Duration manuelle est appliquée",
+    "lora_lokr_warning": "> ⚠️ **Les adaptateurs LoKr ne peuvent pas être empilés.** Charger un adaptateur LoKr remplace tout LoRA PEFT actif. Les adaptateurs LoRA standards peuvent être empilés à plusieurs.",
+    "lora_adapter_name_label": "Nom de l'adaptateur (optionnel)",
+    "lora_adapter_name_placeholder": "voice_v1, neon_synth…",
+    "lora_adapter_name_info": "Nom unique utilisé pour identifier l'adaptateur dans le tableau. Laisse vide pour utiliser le nom du dossier source.",
+    "add_lora_btn": "➕ Ajouter LoRA",
+    "lora_unload_all_btn": "🗑️ Tout décharger",
+    "lora_adapters_label": "Adaptateurs LoRA chargés",
+    "lora_df_active_header": "★",
+    "lora_df_name_header": "Nom",
+    "lora_df_scale_header": "Intensité",
+    "lora_set_active_btn": "⭐ Définir actif",
+    "lora_remove_btn": "❌ Retirer la sélection"
   },
   "results": {
     "title": "🎵 Results",

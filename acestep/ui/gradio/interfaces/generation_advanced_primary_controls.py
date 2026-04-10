@@ -8,18 +8,42 @@ from acestep.ui.gradio.i18n import t
 
 
 def build_lora_controls() -> dict[str, Any]:
-    """Create LoRA adapter controls for loading and scaling inference adapters.
+    """Create the multi-LoRA adapter management UI.
 
-    Args:
-        None.
+    Layout:
+        ┌────────────────────────────────────────────────────────────────┐
+        │ ⚠️ LoKr warning banner                                          │
+        │ ┌──────────────────────────────────────────────────────────┐   │
+        │ │ Path Textbox │ Adapter Name │ ➕ Add LoRA │ 🗑️ Unload All │   │
+        │ └──────────────────────────────────────────────────────────┘   │
+        │ ┌──────────────────────────────────────────────────────────┐   │
+        │ │ ★ │ Name        │ Scale (editable)                       │   │
+        │ │ ★ │ voice_v1    │ 0.85                                   │   │
+        │ │   │ style_neon  │ 1.00                                   │   │
+        │ └──────────────────────────────────────────────────────────┘   │
+        │ ┌──────────────────────────────────────────────────────────┐   │
+        │ │ ⭐ Set Active │ ❌ Remove │   Use LoRA ☑                  │   │
+        │ └──────────────────────────────────────────────────────────┘   │
+        │ Status textbox                                                  │
+        └────────────────────────────────────────────────────────────────┘
 
     Returns:
-        A component map containing LoRA path, action buttons, toggles, and status controls.
+        A component map keyed by component name. The keys
+        ``lora_path``, ``load_lora_btn``, ``unload_lora_btn``,
+        ``use_lora_checkbox`` and ``lora_status`` are preserved for
+        backward compatibility with existing wiring; new keys
+        (``lora_adapter_name``, ``lora_adapters_df``, ``lora_set_active_btn``,
+        ``lora_remove_btn``, ``lora_selected_idx``) drive the multi-adapter
+        workflow.
     """
 
     with gr.Accordion(
         t("generation.lora_accordion_title"), open=False, elem_classes=["acestep-tt"]
     ):
+        gr.Markdown(
+            t("generation.lora_lokr_warning"),
+            elem_classes=["no-tooltip"],
+        )
         with gr.Row():
             lora_path = gr.Textbox(
                 label=t("generation.lora_path_label"),
@@ -28,30 +52,56 @@ def build_lora_controls() -> dict[str, Any]:
                 scale=3,
                 elem_classes=["acestep-tt"],
             )
-            load_lora_btn = gr.Button(
-                t("generation.load_lora_btn"), variant="secondary", scale=1
-            )
-            unload_lora_btn = gr.Button(
-                t("generation.unload_lora_btn"), variant="secondary", scale=1
+            lora_adapter_name = gr.Textbox(
+                label=t("generation.lora_adapter_name_label"),
+                placeholder=t("generation.lora_adapter_name_placeholder"),
+                info=t("generation.lora_adapter_name_info"),
+                scale=2,
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
+            load_lora_btn = gr.Button(
+                t("generation.add_lora_btn"), variant="primary", scale=1
+            )
+            unload_lora_btn = gr.Button(
+                t("generation.lora_unload_all_btn"), variant="secondary", scale=1
+            )
+
+        lora_adapters_df = gr.Dataframe(
+            headers=[
+                t("generation.lora_df_active_header"),
+                t("generation.lora_df_name_header"),
+                t("generation.lora_df_scale_header"),
+            ],
+            datatype=["str", "str", "number"],
+            value=[],
+            row_count=(0, "dynamic"),
+            column_count=(3, "fixed"),
+            interactive=True,
+            label=t("generation.lora_adapters_label"),
+            elem_classes=["acestep-tt"],
+            wrap=True,
+        )
+
+        with gr.Row():
+            lora_set_active_btn = gr.Button(
+                t("generation.lora_set_active_btn"),
+                variant="secondary",
+                scale=1,
+            )
+            lora_remove_btn = gr.Button(
+                t("generation.lora_remove_btn"),
+                variant="stop",
+                scale=1,
+            )
             use_lora_checkbox = gr.Checkbox(
                 label=t("generation.use_lora_label"),
                 value=False,
                 info=t("generation.use_lora_info"),
-                scale=1,
-                elem_classes=["acestep-tt"],
-            )
-            lora_scale_slider = gr.Slider(
-                minimum=0.0,
-                maximum=1.0,
-                value=1.0,
-                step=0.05,
-                label=t("generation.lora_scale_label"),
-                info=t("generation.lora_scale_info"),
                 scale=2,
                 elem_classes=["acestep-tt"],
             )
+
         lora_status = gr.Textbox(
             label=t("generation.lora_status_label"),
             value=t("generation.lora_status_default"),
@@ -59,12 +109,20 @@ def build_lora_controls() -> dict[str, Any]:
             lines=1,
             elem_classes=["no-tooltip"],
         )
+        # Hidden state: zero-based row index of the currently selected
+        # adapter in lora_adapters_df. -1 means no row selected.
+        lora_selected_idx = gr.State(value=-1)
+
     return {
         "lora_path": lora_path,
+        "lora_adapter_name": lora_adapter_name,
         "load_lora_btn": load_lora_btn,
         "unload_lora_btn": unload_lora_btn,
+        "lora_adapters_df": lora_adapters_df,
+        "lora_set_active_btn": lora_set_active_btn,
+        "lora_remove_btn": lora_remove_btn,
+        "lora_selected_idx": lora_selected_idx,
         "use_lora_checkbox": use_lora_checkbox,
-        "lora_scale_slider": lora_scale_slider,
         "lora_status": lora_status,
     }
 

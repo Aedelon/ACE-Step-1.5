@@ -275,7 +275,19 @@
     "key_auto_label_info": "### Key Auto\n\nLets the **LM decide the musical key** from the caption.\n\n- **Checked** — manual Key selector is **overridden**, the model picks a key matching mood/genre\n- **Unchecked** — the manual Key value is enforced\n\nHelpful for matching conventional genre keys (e.g. sad ballad → minor).",
     "timesig_auto_label_info": "### TimeSig Auto\n\nLets the **LM decide the time signature** from the caption.\n\n- **Checked** — manual TimeSig selector is **overridden** (e.g. `waltz` → `3/4`, `metal` → `4/4`, `prog` → `7/8`)\n- **Unchecked** — the manual Time Signature is enforced",
     "vocal_lang_auto_label_info": "### Language Auto\n\nLets the **LM decide the vocal language** from the caption and lyrics.\n\n- **Checked** — manual Vocal Language selector is **overridden**, inferred from lyrics script and caption cues\n- **Unchecked** — the manual language is enforced\n\nFalls back to `unknown` for multilingual or ambiguous inputs.",
-    "duration_auto_label_info": "### Duration Auto\n\nLets the **LM decide the track duration** from the caption.\n\n- **Checked** — manual Duration slider is **overridden**, length is inferred from structure hints (`intro + 2 verses + chorus` → longer, `jingle` → short)\n- **Unchecked** — the manual Duration value is enforced"
+    "duration_auto_label_info": "### Duration Auto\n\nLets the **LM decide the track duration** from the caption.\n\n- **Checked** — manual Duration slider is **overridden**, length is inferred from structure hints (`intro + 2 verses + chorus` → longer, `jingle` → short)\n- **Unchecked** — the manual Duration value is enforced",
+    "lora_lokr_warning": "> ⚠️ **LoKr adapters cannot be stacked.** Loading a LoKr adapter replaces any active PEFT LoRA. Standard LoRA adapters can be stacked with up to several adapters at once.",
+    "lora_adapter_name_label": "Adapter Name (optional)",
+    "lora_adapter_name_placeholder": "voice_v1, neon_synth…",
+    "lora_adapter_name_info": "Unique name used to identify the adapter in the table. Leave empty to derive a default from the path basename.",
+    "add_lora_btn": "➕ Add LoRA",
+    "lora_unload_all_btn": "🗑️ Unload All",
+    "lora_adapters_label": "Loaded LoRA Adapters",
+    "lora_df_active_header": "★",
+    "lora_df_name_header": "Name",
+    "lora_df_scale_header": "Scale",
+    "lora_set_active_btn": "⭐ Set Active",
+    "lora_remove_btn": "❌ Remove Selected"
   },
   "results": {
     "title": "🎵 Results",

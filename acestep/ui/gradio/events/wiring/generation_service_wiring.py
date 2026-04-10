@@ -150,34 +150,78 @@ def register_generation_service_handlers(
         ],
     )
 
-    # ========== LoRA Handlers ==========
+    # ========== Multi-LoRA Handlers ==========
+    from ..generation.lora_actions import (
+        handle_add_lora,
+        handle_dataframe_edit,
+        handle_remove_lora,
+        handle_row_select,
+        handle_set_active,
+        handle_unload_all,
+    )
+
+    lora_status_out = generation_section["lora_status"]
+    lora_df_out = generation_section["lora_adapters_df"]
+
+    # Add a new adapter from path + optional name, then refresh the table.
     generation_section["load_lora_btn"].click(
-        fn=dit_handler.load_lora,
-        inputs=[generation_section["lora_path"]],
-        outputs=[generation_section["lora_status"]],
+        fn=lambda path, name: handle_add_lora(path, name, dit_handler),
+        inputs=[
+            generation_section["lora_path"],
+            generation_section["lora_adapter_name"],
+        ],
+        outputs=[lora_status_out, lora_df_out],
     ).then(
         fn=lambda: gr.update(value=True),
         outputs=[generation_section["use_lora_checkbox"]],
     )
 
+    # Unload every adapter and clear the table.
     generation_section["unload_lora_btn"].click(
-        fn=dit_handler.unload_lora,
-        outputs=[generation_section["lora_status"]],
+        fn=lambda: handle_unload_all(dit_handler),
+        outputs=[lora_status_out, lora_df_out],
     ).then(
         fn=lambda: gr.update(value=False),
         outputs=[generation_section["use_lora_checkbox"]],
+    ).then(
+        fn=lambda: -1,
+        outputs=[generation_section["lora_selected_idx"]],
     )
 
+    # Master toggle (enable/disable the active adapter).
     generation_section["use_lora_checkbox"].change(
         fn=dit_handler.set_use_lora,
         inputs=[generation_section["use_lora_checkbox"]],
-        outputs=[generation_section["lora_status"]],
+        outputs=[lora_status_out],
     )
 
-    generation_section["lora_scale_slider"].change(
-        fn=dit_handler.set_lora_scale,
-        inputs=[generation_section["lora_scale_slider"]],
-        outputs=[generation_section["lora_status"]],
+    # Track the selected row in a hidden gr.State so set-active and
+    # remove buttons know which adapter to act on.
+    generation_section["lora_adapters_df"].select(
+        fn=handle_row_select,
+        outputs=[generation_section["lora_selected_idx"]],
+    )
+
+    # Edits in the dataframe (Scale column) are committed via .change().
+    generation_section["lora_adapters_df"].change(
+        fn=lambda df: handle_dataframe_edit(df, dit_handler),
+        inputs=[generation_section["lora_adapters_df"]],
+        outputs=[lora_status_out, lora_df_out],
+    )
+
+    generation_section["lora_set_active_btn"].click(
+        fn=lambda idx: handle_set_active(idx, dit_handler),
+        inputs=[generation_section["lora_selected_idx"]],
+        outputs=[lora_status_out, lora_df_out],
+    )
+
+    generation_section["lora_remove_btn"].click(
+        fn=lambda idx: handle_remove_lora(idx, dit_handler),
+        inputs=[generation_section["lora_selected_idx"]],
+        outputs=[lora_status_out, lora_df_out],
+    ).then(
+        fn=lambda: -1,
+        outputs=[generation_section["lora_selected_idx"]],
     )
 
     # ========== MLX VAE Chunk Size ==========

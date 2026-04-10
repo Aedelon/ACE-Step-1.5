@@ -260,7 +260,19 @@
     "key_auto_label_info": "### Key Auto\n\nキャプションから **LM に音楽キーを決定** させます。\n\n- **チェック** — 手動キーセレクタは **上書き** され、モデルはムード/ジャンルに合うキーを選択\n- **未チェック** — 手動キー値が強制される\n\n従来的なジャンルのキーに合わせるのに役立ちます(例: 悲しいバラード → マイナー)。",
     "timesig_auto_label_info": "### TimeSig Auto\n\nキャプションから **LM に拍子記号を決定** させます。\n\n- **チェック** — 手動 TimeSig セレクタは **上書き** される(例: `waltz` → `3/4`、`metal` → `4/4`、`prog` → `7/8`)\n- **未チェック** — 手動拍子記号が強制される",
     "vocal_lang_auto_label_info": "### Language Auto\n\nキャプションと歌詞から **LM にボーカル言語を決定** させます。\n\n- **チェック** — 手動ボーカル言語セレクタは **上書き** され、歌詞のスクリプトとキャプションの手がかりから推論される\n- **未チェック** — 手動言語が強制される\n\n多言語または曖昧な入力に対しては `unknown` にフォールバックします。",
-    "duration_auto_label_info": "### Duration Auto\n\nキャプションから **LM にトラックの長さを決定** させます。\n\n- **チェック** — 手動 Duration スライダーは **上書き** され、長さは構造ヒントから推論される(`intro + 2 verses + chorus` → 長い、`jingle` → 短い)\n- **未チェック** — 手動 Duration 値が強制される"
+    "duration_auto_label_info": "### Duration Auto\n\nキャプションから **LM にトラックの長さを決定** させます。\n\n- **チェック** — 手動 Duration スライダーは **上書き** され、長さは構造ヒントから推論される(`intro + 2 verses + chorus` → 長い、`jingle` → 短い)\n- **未チェック** — 手動 Duration 値が強制される",
+    "lora_lokr_warning": "> ⚠️ **LoKr アダプターはスタックできません。** LoKr アダプターを読み込むと、アクティブな PEFT LoRA が置き換えられます。標準の LoRA アダプターは複数同時にスタック可能です。",
+    "lora_adapter_name_label": "アダプター名(任意)",
+    "lora_adapter_name_placeholder": "voice_v1、neon_synth…",
+    "lora_adapter_name_info": "テーブル内でアダプターを識別するための一意の名前。空欄の場合はパスの末尾名から自動生成されます。",
+    "add_lora_btn": "➕ LoRA を追加",
+    "lora_unload_all_btn": "🗑️ すべて解放",
+    "lora_adapters_label": "読み込まれた LoRA アダプター",
+    "lora_df_active_header": "★",
+    "lora_df_name_header": "名前",
+    "lora_df_scale_header": "強度",
+    "lora_set_active_btn": "⭐ アクティブに設定",
+    "lora_remove_btn": "❌ 選択を削除"
   },
   "results": {
     "title": "🎵 結果",
