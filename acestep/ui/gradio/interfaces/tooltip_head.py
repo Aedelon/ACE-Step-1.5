@@ -90,8 +90,10 @@ _TOOLTIP_CSS = """
     background: #3b82f6;
 }
 
-/* Hide native Gradio info span when our system has upgraded it */
-.acestep-tt span[data-testid="block-info"].acestep-tt-hidden {
+/* Hide the native Gradio info element after our system has upgraded it.
+   The info element is the sibling of the block-info span (which holds
+   the label). We mark it with .acestep-tt-hidden in JS. */
+.acestep-tt-hidden {
     display: none !important;
 }
 
