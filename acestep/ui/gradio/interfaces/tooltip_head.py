@@ -181,7 +181,7 @@ _TOOLTIP_CSS = """
 
 
 _TOOLTIP_JS = """
-() => {
+(() => {
     'use strict';
     const OVERLAY_ID = 'acestep-info-modal-overlay';
     const HOST_SELECTOR = '.acestep-tt';
@@ -317,5 +317,5 @@ _TOOLTIP_JS = """
     setTimeout(() => scanAndUpgrade(document), 500);
     setTimeout(() => scanAndUpgrade(document), 1500);
     setTimeout(() => scanAndUpgrade(document), 3000);
-}
+})();
 """
