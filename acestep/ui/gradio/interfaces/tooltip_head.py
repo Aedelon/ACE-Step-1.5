@@ -218,13 +218,58 @@ _TOOLTIP_JS = """
         return overlay;
     }
 
-    function showModal(title, text) {
+    function showModal(title, content, isHtml) {
         const overlay = ensureModal();
         const titleEl = overlay.querySelector('#acestep-info-modal-title');
         const bodyEl = overlay.querySelector('#acestep-info-modal-body');
         titleEl.textContent = title || 'Parameter info';
-        bodyEl.textContent = text || '';
+        if (isHtml) {
+            bodyEl.innerHTML = content || '';
+        } else {
+            bodyEl.textContent = content || '';
+        }
         overlay.classList.add('visible');
+    }
+
+    /** Hijack existing .help-inline-btn elements to use our unified modal.
+     *  These buttons were created by help_content.py with inline onclick that
+     *  may not work reliably in Gradio 6 (CSP, sanitization, scoping). */
+    function upgradeHelpButton(btn) {
+        if (btn.dataset.acestepHelpUpgraded === '1') return;
+        btn.dataset.acestepHelpUpgraded = '1';
+
+        // The original onclick is `document.getElementById('help-modal-N').style.display='flex'`
+        // Extract the modal ID from the onclick attribute string
+        const onclickStr = btn.getAttribute('onclick') || '';
+        const m = onclickStr.match(/getElementById\\('([^']+)'\\)/);
+        if (!m) return;
+        const modalId = m[1];
+
+        // Remove the inline onclick to prevent double-handling
+        btn.removeAttribute('onclick');
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const sourceModal = document.getElementById(modalId);
+            if (!sourceModal) {
+                console.warn('[acestep] Help modal not found:', modalId);
+                return;
+            }
+            // Find the title (from button parent) and the content (from .help-modal-body)
+            const bodyEl = sourceModal.querySelector('.help-modal-body');
+            const html = bodyEl ? bodyEl.innerHTML : '';
+            // Use button's nearest section header as title
+            const section = btn.closest('.gradio-accordion, .accordion, .block, .gradio-row');
+            const titleEl = section ? section.querySelector('.label-wrap, label, h1, h2, h3, h4, summary') : null;
+            const title = titleEl ? titleEl.textContent.trim().replace(/\\?+$/, '').trim() : 'Help';
+            showModal(title, html, true);
+        });
+    }
+
+    function scanHelpButtons(root) {
+        if (!root || !root.querySelectorAll) return;
+        root.querySelectorAll('.help-inline-btn').forEach(upgradeHelpButton);
     }
 
     function hideModal() {
@@ -288,6 +333,7 @@ _TOOLTIP_JS = """
         if (!root || !root.querySelectorAll) return;
         const hosts = root.querySelectorAll(HOST_SELECTOR);
         hosts.forEach(upgradeHost);
+        scanHelpButtons(root);
     }
 
     function startObserver() {
@@ -297,6 +343,9 @@ _TOOLTIP_JS = """
                     if (node.nodeType === 1) {
                         if (node.matches && node.matches(HOST_SELECTOR)) {
                             upgradeHost(node);
+                        }
+                        if (node.matches && node.matches('.help-inline-btn')) {
+                            upgradeHelpButton(node);
                         }
                         scanAndUpgrade(node);
                     }
