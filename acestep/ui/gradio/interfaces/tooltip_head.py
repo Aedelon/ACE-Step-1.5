@@ -59,7 +59,7 @@ def get_tooltip_head() -> str:
 
 
 _TOOLTIP_CSS = """
-/* ===== ACE-Step Help Modal System ===== */
+/* ===== ACE-Step Help System ===== */
 
 /* Small (?) icon button placed next to each label */
 .acestep-info-icon {
@@ -83,7 +83,8 @@ _TOOLTIP_CSS = """
     transition: all 0.15s ease;
     flex-shrink: 0;
 }
-.acestep-info-icon:hover {
+.acestep-info-icon:hover,
+.acestep-info-icon.acestep-active {
     color: #fff;
     border-color: #3b82f6;
     background: #3b82f6;
@@ -92,6 +93,42 @@ _TOOLTIP_CSS = """
 /* Hide native Gradio info span when our system has upgraded it */
 .acestep-tt span[data-testid="block-info"].acestep-tt-hidden {
     display: none !important;
+}
+
+/* Bubble popup (lives in <body>, position: fixed) shown on (?) click */
+#acestep-info-bubble {
+    position: fixed;
+    z-index: 999998;
+    max-width: 320px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(20, 20, 30, 0.98);
+    color: #f0f0f0;
+    border: 1px solid #3b82f6;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 400;
+    pointer-events: auto;
+    display: none;
+    backdrop-filter: blur(10px);
+    animation: acestep-bubble-fade-in 0.12s ease-out;
+}
+#acestep-info-bubble.visible {
+    display: block;
+}
+@keyframes acestep-bubble-fade-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+#acestep-info-bubble::-webkit-scrollbar {
+    width: 6px;
+}
+#acestep-info-bubble::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
 }
 
 /* Modal overlay (full viewport, dimmed) */
@@ -184,7 +221,83 @@ _TOOLTIP_JS = """
 (() => {
     'use strict';
     const OVERLAY_ID = 'acestep-info-modal-overlay';
+    const BUBBLE_ID = 'acestep-info-bubble';
     const HOST_SELECTOR = '.acestep-tt';
+    let activeBubbleTrigger = null;
+
+    /** Create or return the bubble element used for parameter (?) tooltips. */
+    function ensureBubble() {
+        let bubble = document.getElementById(BUBBLE_ID);
+        if (bubble) return bubble;
+
+        bubble = document.createElement('div');
+        bubble.id = BUBBLE_ID;
+        document.body.appendChild(bubble);
+
+        // Click outside closes bubble (handled by document listener below)
+        // Escape closes
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && bubble.classList.contains('visible')) {
+                hideBubble();
+            }
+        });
+        return bubble;
+    }
+
+    function hideBubble() {
+        const bubble = document.getElementById(BUBBLE_ID);
+        if (bubble) bubble.classList.remove('visible');
+        if (activeBubbleTrigger) {
+            activeBubbleTrigger.classList.remove('acestep-active');
+            activeBubbleTrigger = null;
+        }
+    }
+
+    function showBubble(triggerEl, text) {
+        const bubble = ensureBubble();
+        bubble.textContent = text || '';
+        bubble.classList.add('visible');
+
+        if (activeBubbleTrigger && activeBubbleTrigger !== triggerEl) {
+            activeBubbleTrigger.classList.remove('acestep-active');
+        }
+        activeBubbleTrigger = triggerEl;
+        triggerEl.classList.add('acestep-active');
+
+        // Position relative to trigger using viewport coordinates
+        const rect = triggerEl.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const vw = window.innerWidth;
+        const BUBBLE_MAX_W = 340;
+
+        // Reset positioning so we can measure
+        bubble.style.top = '';
+        bubble.style.bottom = '';
+        bubble.style.left = '';
+        bubble.style.right = '';
+
+        // Horizontal: prefer aligning to trigger left, clamp inside viewport
+        const left = Math.max(8, Math.min(rect.left, vw - BUBBLE_MAX_W - 8));
+        bubble.style.left = left + 'px';
+
+        // Vertical: prefer below, flip above if not enough room
+        const belowRoom = vh - rect.bottom;
+        const bubbleHeight = bubble.offsetHeight || 200;
+        if (belowRoom > bubbleHeight + 16 || belowRoom > vh * 0.4) {
+            bubble.style.top = (rect.bottom + 6) + 'px';
+        } else {
+            bubble.style.top = Math.max(8, rect.top - bubbleHeight - 6) + 'px';
+        }
+    }
+
+    // Click anywhere outside bubble closes it
+    document.addEventListener('click', (e) => {
+        const bubble = document.getElementById(BUBBLE_ID);
+        if (!bubble || !bubble.classList.contains('visible')) return;
+        if (bubble.contains(e.target)) return;
+        if (e.target.classList && e.target.classList.contains('acestep-info-icon')) return;
+        hideBubble();
+    });
 
     function ensureModal() {
         let overlay = document.getElementById(OVERLAY_ID);
@@ -323,7 +436,13 @@ _TOOLTIP_JS = """
         icon.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            showModal(labelText, text);
+            // Toggle: if same icon clicked twice, close
+            const bubble = document.getElementById(BUBBLE_ID);
+            if (bubble && bubble.classList.contains('visible') && activeBubbleTrigger === icon) {
+                hideBubble();
+            } else {
+                showBubble(icon, text);
+            }
         });
 
         label.appendChild(icon);
