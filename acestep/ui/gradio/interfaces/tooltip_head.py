@@ -392,57 +392,91 @@ _TOOLTIP_JS = """
         if (overlay) overlay.classList.remove('visible');
     }
 
+    /** Find {labelEl, labelText, infoEl, infoText} in a .acestep-tt host.
+     *  Tries multiple strategies because Gradio renders info= differently
+     *  for Slider/Dropdown vs Checkbox. Returns null if no info found. */
+    function findInfoInHost(host) {
+        // Strategy 1: Slider/Dropdown — span[data-testid="block-info"]
+        // contains the label, info is the nextElementSibling.
+        const blockInfoSpans = host.querySelectorAll('span[data-testid="block-info"]');
+        for (const span of blockInfoSpans) {
+            if (span.closest(HOST_SELECTOR) !== host) continue;
+            const next = span.nextElementSibling;
+            if (next) {
+                const txt = (next.textContent || '').trim();
+                if (txt) {
+                    return {
+                        labelEl: span,
+                        labelText: (span.textContent || '').trim(),
+                        infoEl: next,
+                        infoText: txt,
+                    };
+                }
+            }
+        }
+
+        // Strategy 2: Checkbox — span.label-text inside <label>, info is
+        // a sibling element. Walk descendants and find one that contains
+        // text but is not part of the input control.
+        const labelTextSpan = host.querySelector('span.label-text');
+        if (labelTextSpan) {
+            const labelText = (labelTextSpan.textContent || '').trim();
+            const labelParent = labelTextSpan.closest('label');
+            // Look for any element under host that's NOT inside the label
+            // and contains text content distinct from the label.
+            const allDescendants = host.querySelectorAll('div, span, p');
+            for (const el of allDescendants) {
+                if (labelParent && labelParent.contains(el)) continue;
+                if (el.querySelector('input, select, textarea')) continue;
+                if (el.querySelector('button')) continue;
+                if (el.querySelector('span.label-text')) continue;
+                if (el.querySelector('span[data-testid="block-info"]')) continue;
+                const txt = (el.textContent || '').trim();
+                if (!txt || txt === labelText) continue;
+                // Skip if too long (likely a container, not info)
+                // Info text is typically <500 chars
+                if (txt.length > 1000) continue;
+                // Avoid picking large container divs: must have only inline children or none
+                const childElements = Array.from(el.children);
+                const hasOnlyInlineChildren = childElements.every(c =>
+                    ['SPAN', 'STRONG', 'EM', 'B', 'I', 'A', 'CODE', 'BR'].includes(c.tagName)
+                );
+                if (childElements.length > 0 && !hasOnlyInlineChildren) continue;
+                return {
+                    labelEl: labelTextSpan,
+                    labelText: labelText,
+                    infoEl: el,
+                    infoText: txt,
+                };
+            }
+        }
+
+        return null;
+    }
+
     function upgradeHost(host) {
         if (host.dataset.acestepTtUpgraded === '1') return;
 
-        // In Gradio 6, <span data-testid="block-info"> contains the LABEL
-        // (slot default). The info text lives in the NEXT sibling element
-        // (info-message component). Source: IconButtonWrapper-*.js
-        const candidates = host.querySelectorAll('span[data-testid="block-info"]');
-        let labelSpan = null;
-        for (const candidate of candidates) {
-            if (candidate.closest(HOST_SELECTOR) === host) {
-                labelSpan = candidate;
-                break;
-            }
-        }
-        if (!labelSpan) {
-            host.dataset.acestepTtUpgraded = '1';
-            return;
-        }
-
-        // The info text is in the next sibling of labelSpan
-        // (could be a span, div, or another element)
-        let infoEl = labelSpan.nextElementSibling;
-        // Walk forward through text nodes / empty elements until we find content
-        let infoText = '';
-        if (infoEl) {
-            infoText = (infoEl.textContent || '').trim();
-        }
-
-        // If next sibling is empty, look deeper: maybe inside a wrapper
-        if (!infoText && infoEl) {
-            const nested = infoEl.querySelector('*');
-            if (nested) infoText = (nested.textContent || '').trim();
-        }
-
-        if (!infoText) {
+        const found = findInfoInHost(host);
+        if (!found) {
             host.dataset.acestepTtUpgraded = '1';
             return;
         }
 
         host.dataset.acestepTtUpgraded = '1';
 
-        // Hide the info element (not the label!)
+        const labelEl = found.labelEl;
+        const labelText = (found.labelText || '').replace(/\\s+/g, ' ');
+        const infoEl = found.infoEl;
+        const infoText = found.infoText;
+
+        // Hide the info element so only the (?) bubble shows it
         if (infoEl) {
             infoEl.classList.add('acestep-tt-hidden');
         }
 
-        // The label span IS the label — attach our icon next to it
-        if (labelSpan.querySelector('.acestep-info-icon')) return;
-
-        // Get the actual label text from the labelSpan
-        const labelText = (labelSpan.textContent || '').trim().replace(/\\s+/g, ' ');
+        // Don't add icon twice
+        if (labelEl.querySelector('.acestep-info-icon')) return;
 
         const icon = document.createElement('button');
         icon.type = 'button';
@@ -456,7 +490,6 @@ _TOOLTIP_JS = """
         icon.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            // Toggle: if same icon clicked twice, close
             const bubble = document.getElementById(BUBBLE_ID);
             if (bubble && bubble.classList.contains('visible') && activeBubbleTrigger === icon) {
                 hideBubble();
@@ -465,8 +498,7 @@ _TOOLTIP_JS = """
             }
         });
 
-        // Append the icon to the label span (next to the label text)
-        labelSpan.appendChild(icon);
+        labelEl.appendChild(icon);
     }
 
     function scanAndUpgrade(root) {
