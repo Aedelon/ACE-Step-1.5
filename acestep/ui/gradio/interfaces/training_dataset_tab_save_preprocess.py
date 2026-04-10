@@ -19,7 +19,7 @@ def build_dataset_save_and_preprocess_controls() -> dict[str, object]:
                 value="./datasets/my_lora_dataset.json",
                 placeholder="./datasets/dataset_name.json",
                 info=t("training.save_path_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Column(scale=1):
             save_dataset_btn = gr.Button(
@@ -44,7 +44,7 @@ def build_dataset_save_and_preprocess_controls() -> dict[str, object]:
                 label=t("training.load_existing_label"),
                 placeholder="./datasets/my_lora_dataset.json",
                 info=t("training.load_existing_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Column(scale=1):
             load_existing_dataset_btn = gr.Button(
@@ -66,7 +66,7 @@ def build_dataset_save_and_preprocess_controls() -> dict[str, object]:
             choices=["LoRA", "LoKr"],
             value="LoRA",
             info="LoRA keeps compatibility mode; LoKr uses per-sample source-style context.",
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
     with gr.Row():
@@ -76,7 +76,7 @@ def build_dataset_save_and_preprocess_controls() -> dict[str, object]:
                 value="./datasets/preprocessed_tensors",
                 placeholder="./datasets/preprocessed_tensors",
                 info=t("training.tensor_output_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Column(scale=1):
             preprocess_btn = gr.Button(

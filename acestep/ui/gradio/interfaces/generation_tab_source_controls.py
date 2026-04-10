@@ -53,7 +53,7 @@ def build_track_selection_controls() -> dict[str, Any]:
         value=None,
         label=t("generation.track_name_label"),
         info=t("generation.track_name_info"),
-        elem_classes=["has-info-container"],
+        elem_classes=["acestep-tt"],
         visible=False,
     )
     with gr.Group(visible=False) as complete_help_group:
@@ -62,7 +62,7 @@ def build_track_selection_controls() -> dict[str, Any]:
         choices=TRACK_NAMES,
         label=t("generation.track_classes_label"),
         info=t("generation.track_classes_info"),
-        elem_classes=["has-info-container"],
+        elem_classes=["acestep-tt"],
         visible=False,
     )
     return {
@@ -86,7 +86,7 @@ def build_lm_code_hint_controls() -> dict[str, Any]:
         t("generation.lm_codes_hints"),
         open=False,
         visible=True,
-        elem_classes=["has-info-container"],
+        elem_classes=["acestep-tt"],
     ) as text2music_audio_codes_group:
         with gr.Row(equal_height=True):
             lm_codes_audio_upload = gr.Audio(label=t("generation.source_audio"), type="filepath", scale=3)
@@ -95,7 +95,7 @@ def build_lm_code_hint_controls() -> dict[str, Any]:
                 placeholder=t("generation.lm_codes_placeholder"),
                 lines=6,
                 info=t("generation.lm_codes_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 scale=6,
             )
         with gr.Row():

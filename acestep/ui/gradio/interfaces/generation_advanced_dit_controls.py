@@ -22,7 +22,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
     with gr.Accordion(
         t("generation.advanced_dit_section"),
         open=True,
-        elem_classes=["has-info-container"],
+        elem_classes=["acestep-tt"],
     ):
         create_help_button("generation_advanced")
         dit_preset = gr.Dropdown(
@@ -35,7 +35,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
             value="Custom",
             label=t("generation.dit_preset_label"),
             info=t("generation.dit_preset_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
         with gr.Row():
             inference_steps = gr.Slider(
@@ -45,7 +45,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 step=1,
                 label=t("generation.inference_steps_label"),
                 info=t("generation.inference_steps_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             guidance_scale = gr.Slider(
                 minimum=1.0,
@@ -54,22 +54,23 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 step=0.1,
                 label=t("generation.guidance_scale_label"),
                 info=t("generation.guidance_scale_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 visible=ui_config["guidance_scale_visible"],
+                interactive=ui_config.get("guidance_scale_interactive", True),
             )
             infer_method = gr.Dropdown(
                 choices=["ode", "sde"],
                 value="ode",
                 label=t("generation.infer_method_label"),
                 info=t("generation.infer_method_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             sampler_mode = gr.Dropdown(
                 choices=["euler", "heun"],
                 value="euler",
                 label=t("generation.sampler_mode_label"),
                 info=t("generation.sampler_mode_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
             velocity_norm_threshold = gr.Slider(
@@ -79,7 +80,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 step=0.1,
                 label=t("generation.velocity_norm_threshold_label"),
                 info=t("generation.velocity_norm_threshold_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             velocity_ema_factor = gr.Slider(
                 minimum=0.0,
@@ -88,15 +89,16 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 step=0.01,
                 label=t("generation.velocity_ema_factor_label"),
                 info=t("generation.velocity_ema_factor_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
             use_adg = gr.Checkbox(
                 label=t("generation.use_adg_label"),
                 value=False,
                 info=t("generation.use_adg_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 visible=ui_config["use_adg_visible"],
+                interactive=ui_config.get("use_adg_interactive", True),
             )
             shift = gr.Slider(
                 minimum=1.0,
@@ -105,7 +107,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 step=0.1,
                 label=t("generation.shift_label"),
                 info=t("generation.shift_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 visible=ui_config["shift_visible"],
             )
         with gr.Row():
@@ -114,7 +116,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 placeholder="0.97,0.76,0.615,0.5,0.395,0.28,0.18,0.085,0",
                 value="",
                 info=t("generation.custom_timesteps_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
             cfg_interval_start = gr.Slider(
@@ -125,7 +127,8 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 label=t("generation.cfg_interval_start"),
                 info=t("generation.cfg_interval_start_info"),
                 visible=ui_config["cfg_interval_start_visible"],
-                elem_classes=["has-info-container"],
+                interactive=ui_config.get("cfg_interval_start_interactive", True),
+                elem_classes=["acestep-tt"],
             )
             cfg_interval_end = gr.Slider(
                 minimum=0.0,
@@ -135,7 +138,8 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 label=t("generation.cfg_interval_end"),
                 info=t("generation.cfg_interval_end_info"),
                 visible=ui_config["cfg_interval_end_visible"],
-                elem_classes=["has-info-container"],
+                interactive=ui_config.get("cfg_interval_end_interactive", True),
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
             with gr.Column():
@@ -143,13 +147,13 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                     label=t("generation.seed_label"),
                     value="-1",
                     info=t("generation.seed_info"),
-                    elem_classes=["has-info-container"],
+                    elem_classes=["acestep-tt"],
                 )
                 random_seed_checkbox = gr.Checkbox(
                     label=t("generation.random_seed_label"),
                     value=True,
                     info=t("generation.random_seed_info"),
-                    elem_classes=["has-info-container"],
+                    elem_classes=["acestep-tt"],
                 )
         _gpu_config = get_global_gpu_config()
         _show_mlx_chunk = is_mps_platform()
@@ -161,7 +165,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
                 step=64,
                 label="MLX VAE Chunk Size",
                 info="Larger = faster decode but more memory. Auto-detected based on your system.",
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
     return {
         "dit_preset": dit_preset,

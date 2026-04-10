@@ -41,6 +41,7 @@ from acestep.ui.gradio.interfaces.training import create_training_section
 from acestep.ui.gradio.events import setup_event_handlers, setup_training_event_handlers
 from acestep.ui.gradio.help_content import create_help_button, HELP_MODAL_CSS
 from acestep.ui.gradio.theme import ACEStepDark
+from acestep.ui.gradio.interfaces.tooltip_head import get_tooltip_head
 
 
 def create_gradio_interface(
@@ -71,29 +72,7 @@ def create_gradio_interface(
         theme=ACEStepDark(),
         head=get_audio_player_preferences_head()
         + ("" if service_mode else get_user_preferences_head())
-        + """
-        <script>
-        /* Position fixed tooltips relative to their trigger element.
-           Since tooltips use position:fixed to escape stacking contexts,
-           we must set top/left from getBoundingClientRect on hover. */
-        document.addEventListener('mouseover', function(e) {
-            var info = e.target.closest('span[data-testid="block-info"]');
-            if (!info) return;
-            var tooltip = info.nextElementSibling;
-            if (!tooltip) return;
-            var rect = info.getBoundingClientRect();
-            var spaceBelow = window.innerHeight - rect.bottom;
-            if (spaceBelow < 200) {
-                tooltip.style.top = 'auto';
-                tooltip.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
-            } else {
-                tooltip.style.top = (rect.bottom + 6) + 'px';
-                tooltip.style.bottom = 'auto';
-            }
-            tooltip.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 340)) + 'px';
-        });
-        </script>
-        """,
+        + get_tooltip_head(),
         css="""
         .main-header {
             text-align: center;
@@ -167,140 +146,8 @@ def create_gradio_interface(
             line-height: 1.4;
         }
 
-        /* --- On-hover Tooltips --- */
-        /* Safely ensure parents don't clip the tooltips using the container class */
-        .has-info-container {
-            overflow: visible !important;
-            contain: none !important;
-        }
-
-        /* Ensure ALL ancestor containers allow tooltip overflow. */
-        .has-info-container,
-        .has-info-container > *,
-        .row:has(.has-info-container),
-        .column:has(.has-info-container),
-        .form:has(.has-info-container),
-        .accordion:has(.has-info-container),
-        .tabs:has(.has-info-container),
-        .gr-block:has(.has-info-container),
-        .gr-box:has(.has-info-container),
-        div:has(> .has-info-container),
-        div:has(> div > .has-info-container) {
-            overflow: visible !important;
-            contain: none !important;
-        }
-
-        /* Hide info text by default and format as tooltip.
-           Uses position:fixed to escape ALL stacking contexts created by
-           Gradio's nested divs (transform, contain, opacity all create
-           new stacking contexts that trap z-index). */
-        .has-info-container span[data-testid="block-info"] + div,
-        .has-info-container span[data-testid="block-info"] + span,
-        .checkbox-container + div {
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.1s ease, visibility 0.1s ease;
-            transition-delay: 0.08s;
-            position: fixed;
-            background: rgba(20, 20, 30, 0.98);
-            color: #ffffff;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            z-index: 999999;
-            max-width: 320px;
-            min-width: 180px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-            pointer-events: none;
-            line-height: 1.5;
-            border: 1px solid rgba(255,255,255,0.15);
-            backdrop-filter: blur(10px);
-            font-weight: 400;
-            text-transform: none;
-        }
-
-        /* Prevent tooltip CSS from hiding content inside .no-tooltip components */
-        .no-tooltip span[data-testid="block-info"] + div,
-        .no-tooltip span[data-testid="block-info"] + span {
-            display: block !important;
-            position: static !important;
-            background: none !important;
-            padding: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-            backdrop-filter: none !important;
-            max-width: none !important;
-            min-width: 0 !important;
-            z-index: auto !important;
-            pointer-events: auto !important;
-            margin-top: 0 !important;
-            color: inherit !important;
-            font-size: inherit !important;
-            line-height: inherit !important;
-            font-weight: inherit !important;
-            text-transform: inherit !important;
-            border-radius: 0 !important;
-        }
-        .no-tooltip span[data-testid="block-info"]::after {
-            display: none !important;
-        }
-
-        /* Show tooltips on hover of the label/icon, OR when hovering the tooltip itself.
-           The sibling :hover rule keeps the tooltip visible while the user scrolls it. */
-        .has-info-container span[data-testid="block-info"]:hover + div,
-        .has-info-container span[data-testid="block-info"]:hover + span,
-        .has-info-container span[data-testid="block-info"] + div:hover,
-        .has-info-container span[data-testid="block-info"] + span:hover,
-        .checkbox-container:hover + div,
-        .checkbox-container + div:hover {
-            visibility: visible !important;
-            opacity: 1 !important;
-            transition-delay: 0s;
-        }
-
-        /* High-res info icon using SVG, appended to the label text */
-        .has-info-container span[data-testid="block-info"]::after,
-        .checkbox-container:has(+ div) .label-text::after {
-            content: "";
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            margin-left: 8px;
-            vertical-align: middle;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='16' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-size: contain;
-            opacity: 0.6;
-            transition: opacity 0.2s, transform 0.2s;
-            cursor: help;
-        }
-
-        /* Hide original Gradio info icon if present */
-        .has-info-container span[data-testid="block-info"] svg,
-        .has-info-container span[data-testid="block-info"]::before {
-            display: none !important;
-        }
-
-        .has-info-container span[data-testid="block-info"]:hover::after,
-        .checkbox-container:hover .label-text::after {
-            opacity: 1;
-            transform: scale(1.15);
-        }
-
-        /* Cap tooltip height, allow scrolling, and enable pointer events so users
-           can hover over and scroll long tooltips without them collapsing */
-        .has-info-container span[data-testid="block-info"]:hover + div,
-        .has-info-container span[data-testid="block-info"]:hover + span,
-        .has-info-container span[data-testid="block-info"] + div:hover,
-        .has-info-container span[data-testid="block-info"] + span:hover,
-        .checkbox-container:hover + div,
-        .checkbox-container + div:hover {
-            max-height: 40vh;
-            overflow-y: auto;
-            pointer-events: auto;
-        }
-
-        /* Tooltip flip is handled by JS positioning (position: fixed) */
+        /* Custom tooltip system removed — was breaking Gradio 6 component
+           rendering inside accordions. Gradio's native info= display is used. */
 
         /* --- Auto-toggle checkbox row --- */
         /* Compact row of Auto checkboxes that mirrors the field row above */

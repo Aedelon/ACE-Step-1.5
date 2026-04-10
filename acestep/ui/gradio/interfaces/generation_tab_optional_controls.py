@@ -30,7 +30,7 @@ def build_optional_parameter_controls(
         t("generation.optional_params"),
         open=True,
         visible=True,
-        elem_classes=["has-info-container"],
+        elem_classes=["acestep-tt"],
     ) as optional_params_accordion:
         with gr.Row():
             bpm = gr.Number(
@@ -38,7 +38,7 @@ def build_optional_parameter_controls(
                 value=None,
                 step=1,
                 info=t("generation.bpm_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
             key_scale = gr.Textbox(
@@ -46,7 +46,7 @@ def build_optional_parameter_controls(
                 placeholder=t("generation.keyscale_placeholder"),
                 value="",
                 info=t("generation.keyscale_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
             time_signature = gr.Dropdown(
@@ -55,7 +55,7 @@ def build_optional_parameter_controls(
                 label=t("generation.timesig_label"),
                 allow_custom_value=True,
                 info=t("generation.timesig_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
             vocal_language = gr.Dropdown(
@@ -64,7 +64,7 @@ def build_optional_parameter_controls(
                 label=t("generation.vocal_language_label"),
                 info=t("generation.vocal_language_info"),
                 allow_custom_value=True,
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
         with gr.Row(elem_classes=["auto-toggles-row"]):
@@ -101,7 +101,7 @@ def build_optional_parameter_controls(
                 step=0.1,
                 info=t("generation.duration_info")
                 + f" (Max: {max_duration}s / {max_duration // 60} min)",
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
             batch_size_input = gr.Number(
@@ -111,7 +111,7 @@ def build_optional_parameter_controls(
                 maximum=max_batch_size,
                 step=1,
                 info=t("generation.batch_size_info") + f" (Max: {max_batch_size})",
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=not service_mode,
             )
         with gr.Row(elem_classes=["auto-toggles-row"]):

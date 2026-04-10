@@ -94,6 +94,9 @@ def generate_with_progress(
     latent_rescale,
     repaint_mode,
     repaint_strength,
+    chunk_mask_mode,
+    repaint_latent_crossfade_frames,
+    repaint_wav_crossfade_sec,
     progress=gr.Progress(track_tqdm=True),
 ):
     """Generate audio with progress tracking.
@@ -219,6 +222,13 @@ def generate_with_progress(
         repaint_strength=float(repaint_strength)
         if repaint_strength is not None
         else 0.5,
+        chunk_mask_mode=chunk_mask_mode if chunk_mask_mode else "auto",
+        repaint_latent_crossfade_frames=int(repaint_latent_crossfade_frames)
+        if repaint_latent_crossfade_frames is not None
+        else 10,
+        repaint_wav_crossfade_sec=float(repaint_wav_crossfade_sec)
+        if repaint_wav_crossfade_sec is not None
+        else 0.0,
     )
 
     if isinstance(seed, str) and seed.strip():

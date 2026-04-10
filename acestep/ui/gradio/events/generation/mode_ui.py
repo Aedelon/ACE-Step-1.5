@@ -218,8 +218,35 @@ def compute_mode_ui_updates(mode: str, llm_handler=None, previous_mode: str = "C
     )
 
 
-def handle_generation_mode_change(mode: str, previous_mode: str, llm_handler=None):
-    """Delegate generation-mode change handling to compute_mode_ui_updates."""
+def handle_generation_mode_change(
+    mode: str, previous_mode: str, llm_handler=None, dit_handler=None
+):
+    """Handle generation-mode change with turbo-incompatible mode guard.
+
+    Extract/Lego/Complete modes only work with base models. If the user
+    selects one while a turbo model is loaded, revert to the previous mode
+    and show a warning. The Radio still displays all 7 modes so users can
+    see what's available — they just can't use the disabled ones on turbo.
+    """
+    base_only_modes = {"Extract", "Lego", "Complete"}
+    is_turbo = False
+    if dit_handler is not None:
+        try:
+            is_turbo = bool(dit_handler.is_turbo_model())
+        except Exception:
+            is_turbo = False
+
+    if is_turbo and mode in base_only_modes:
+        gr.Warning(
+            f"Mode '{mode}' is only available with base models. "
+            "Switch to acestep-v15-base in Service Configuration to use it."
+        )
+        # Revert: rerun the handler with the previous mode
+        return compute_mode_ui_updates(
+            previous_mode or "Custom",
+            llm_handler,
+            previous_mode=previous_mode or "Custom",
+        )
     return compute_mode_ui_updates(mode, llm_handler, previous_mode=previous_mode)
 
 

@@ -22,7 +22,7 @@ def build_lora_run_and_export_controls(
             label=t("training.learning_rate"),
             value=3e-4,
             info=t("training.learning_rate_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         train_epochs = gr.Slider(
@@ -40,7 +40,7 @@ def build_lora_run_and_export_controls(
             value=1,
             label=t("training.batch_size"),
             info=t("training.batch_size_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         gradient_accumulation = gr.Slider(
@@ -50,7 +50,7 @@ def build_lora_run_and_export_controls(
             value=1,
             label=t("training.gradient_accumulation"),
             info=t("training.gradient_accumulation_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
     with gr.Row():
@@ -69,7 +69,7 @@ def build_lora_run_and_export_controls(
             value=3.0,
             label=t("training.shift"),
             info=t("training.shift_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         training_seed = gr.Number(
@@ -84,7 +84,7 @@ def build_lora_run_and_export_controls(
             value="./lora_output",
             placeholder="./lora_output",
             info=t("training.output_dir_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
     with gr.Row():
@@ -92,7 +92,7 @@ def build_lora_run_and_export_controls(
             label="Resume Checkpoint",
             placeholder="./lora_output/checkpoints/epoch_200",
             info="Directory of a saved LoRA checkpoint to resume from",
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
     gr.HTML("<hr>")

@@ -17,7 +17,7 @@ def build_lokr_run_and_export_controls() -> dict[str, object]:
             label=t("training.learning_rate"),
             value=1e-3,
             info=t("training.lokr_learning_rate_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         lokr_train_epochs = gr.Slider(
@@ -60,7 +60,7 @@ def build_lokr_run_and_export_controls() -> dict[str, object]:
             value=3.0,
             label=t("training.shift"),
             info=t("training.shift_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         lokr_training_seed = gr.Number(
@@ -75,7 +75,7 @@ def build_lokr_run_and_export_controls() -> dict[str, object]:
             value="./lokr_output",
             placeholder="./lokr_output",
             info=t("training.lokr_output_dir_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
     gr.HTML("<hr>")
@@ -129,7 +129,7 @@ def build_lokr_run_and_export_controls() -> dict[str, object]:
             value=t("training.latest_auto"),
             label=t("training.lokr_checkpoint_epoch"),
             info=t("training.lokr_checkpoint_epoch_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
         refresh_lokr_export_epochs_btn = gr.Button(
             t("training.refresh_epochs_btn"), variant="secondary"

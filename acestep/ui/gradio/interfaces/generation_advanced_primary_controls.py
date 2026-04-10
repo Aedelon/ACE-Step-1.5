@@ -17,7 +17,7 @@ def build_lora_controls() -> dict[str, Any]:
         A component map containing LoRA path, action buttons, toggles, and status controls.
     """
 
-    with gr.Accordion(t("generation.lora_accordion_title"), open=False, elem_classes=["has-info-container"]):
+    with gr.Accordion(t("generation.lora_accordion_title"), open=False, elem_classes=["acestep-tt"]):
         with gr.Row():
             lora_path = gr.Textbox(
                 label=t("generation.lora_path_label"),
@@ -70,7 +70,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
         A component map containing LM sampling, CoT, negative prompt, and batch controls.
     """
 
-    with gr.Accordion(t("generation.advanced_lm_section"), open=False, elem_classes=["has-info-container"]):
+    with gr.Accordion(t("generation.advanced_lm_section"), open=False, elem_classes=["acestep-tt"]):
         with gr.Row():
             lm_temperature = gr.Slider(
                 label=t("generation.lm_temperature_label"),
@@ -80,7 +80,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 step=0.1,
                 scale=1,
                 info=t("generation.lm_temperature_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             lm_cfg_scale = gr.Slider(
                 label=t("generation.lm_cfg_scale_label"),
@@ -90,7 +90,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 step=0.1,
                 scale=1,
                 info=t("generation.lm_cfg_scale_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
             lm_top_k = gr.Slider(
@@ -101,7 +101,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 step=1,
                 scale=1,
                 info=t("generation.lm_top_k_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             lm_top_p = gr.Slider(
                 label=t("generation.lm_top_p_label"),
@@ -111,7 +111,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 step=0.01,
                 scale=1,
                 info=t("generation.lm_top_p_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
             lm_negative_prompt = gr.Textbox(
@@ -119,7 +119,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 value="NO USER INPUT",
                 placeholder=t("generation.lm_negative_prompt_placeholder"),
                 info=t("generation.lm_negative_prompt_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 lines=2,
             )
         with gr.Row():
@@ -128,14 +128,14 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 value=True,
                 info=t("generation.cot_metas_info"),
                 scale=1,
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             use_cot_language = gr.Checkbox(
                 label=t("generation.cot_language_label"),
                 value=True,
                 info=t("generation.cot_language_info"),
                 scale=1,
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             constrained_decoding_debug = gr.Checkbox(
                 label=t("generation.constrained_debug_label"),
@@ -150,14 +150,14 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 value=True,
                 info=t("generation.parallel_thinking_info"),
                 scale=1,
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             use_cot_caption = gr.Checkbox(
                 label=t("generation.caption_rewrite_label"),
                 value=False,
                 info=t("generation.caption_rewrite_info"),
                 scale=1,
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
     return {

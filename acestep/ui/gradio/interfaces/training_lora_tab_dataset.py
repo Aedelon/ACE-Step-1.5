@@ -20,7 +20,7 @@ def build_lora_dataset_and_adapter_controls() -> dict[str, object]:
                 placeholder="./datasets/preprocessed_tensors",
                 value="./datasets/preprocessed_tensors",
                 info=t("training.preprocessed_tensors_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
             load_dataset_btn = gr.Button(t("training.load_dataset_btn"), variant="secondary")
@@ -41,7 +41,7 @@ def build_lora_dataset_and_adapter_controls() -> dict[str, object]:
                 value=64,
                 label=t("training.lora_rank"),
                 info=t("training.lora_rank_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
             lora_alpha = gr.Slider(
@@ -51,7 +51,7 @@ def build_lora_dataset_and_adapter_controls() -> dict[str, object]:
                 value=128,
                 label=t("training.lora_alpha"),
                 info=t("training.lora_alpha_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
             lora_dropout = gr.Slider(

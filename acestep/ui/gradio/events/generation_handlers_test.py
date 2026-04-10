@@ -146,7 +146,7 @@ class GenerationHandlersTests(unittest.TestCase):
         # Result is a tuple: (status, btn_update, accordion, *model_settings, duration_update, batch_update, think_update)
         # batch_update is at index -2 (second to last)
         batch_update = result[-2]
-        
+
         # Verify batch_update preserves the value 5 (clamped to max_batch of 8)
         self.assertEqual(batch_update["value"], 5)
         self.assertEqual(batch_update["maximum"], 8)
@@ -201,7 +201,7 @@ class GenerationHandlersTests(unittest.TestCase):
         )
 
         batch_update = result[-2]
-        
+
         # Verify batch_update defaults to min(2, max_batch)
         self.assertEqual(batch_update["value"], 2)
         self.assertEqual(batch_update["maximum"], 8)

@@ -20,7 +20,7 @@ def build_lokr_dataset_and_adapter_controls() -> dict[str, object]:
                 placeholder="./datasets/preprocessed_tensors",
                 value="./datasets/preprocessed_tensors",
                 info=t("training.preprocessed_tensors_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
             lokr_load_dataset_btn = gr.Button(t("training.load_dataset_btn"), variant="secondary")
@@ -41,7 +41,7 @@ def build_lokr_dataset_and_adapter_controls() -> dict[str, object]:
                 value=64,
                 label=t("training.lokr_linear_dim"),
                 info=t("training.lokr_linear_dim_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             lokr_linear_alpha = gr.Slider(
                 minimum=4,
@@ -50,38 +50,38 @@ def build_lokr_dataset_and_adapter_controls() -> dict[str, object]:
                 value=128,
                 label=t("training.lokr_linear_alpha"),
                 info=t("training.lokr_linear_alpha_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             lokr_factor = gr.Number(
                 label=t("training.lokr_factor"),
                 value=-1,
                 precision=0,
                 info=t("training.lokr_factor_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             lokr_decompose_both = gr.Checkbox(
                 label=t("training.lokr_decompose_both"),
                 value=False,
                 info=t("training.lokr_decompose_both_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             lokr_use_tucker = gr.Checkbox(
                 label=t("training.lokr_use_tucker"),
                 value=False,
                 info=t("training.lokr_use_tucker_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             lokr_use_scalar = gr.Checkbox(
                 label=t("training.lokr_use_scalar"),
                 value=False,
                 info=t("training.lokr_use_scalar_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             lokr_weight_decompose = gr.Checkbox(
                 label=t("training.lokr_weight_decompose"),
                 value=True,
                 info=t("training.lokr_weight_decompose_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
     return {

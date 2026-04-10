@@ -29,7 +29,7 @@ def build_language_selector(current_language: str) -> dict[str, Any]:
             label=t("service.language_label"),
             info=t("service.language_info"),
             interactive=True,
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
             scale=1,
         )
     return {"language_dropdown": language_dropdown}
@@ -57,7 +57,7 @@ def build_gpu_info_and_tier(gpu_config: Any) -> dict[str, Any]:
             value=gpu_config.tier,
             label=t("service.tier_label"),
             info=t("service.tier_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
             scale=1,
         )
     return {"gpu_info_display": gpu_info_display, "tier_dropdown": tier_dropdown}
@@ -82,7 +82,7 @@ def build_checkpoint_controls(dit_handler: Any, service_pre_initialized: bool, p
                 choices=dit_handler.get_available_checkpoints(),
                 value=params.get("checkpoint") if service_pre_initialized else None,
                 info=t("service.checkpoint_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Column(scale=1, min_width=90):
             refresh_btn = gr.Button(t("service.refresh_btn"), size="sm")
@@ -121,7 +121,7 @@ def build_model_device_controls(
             choices=available_models,
             value=params.get("config_path", default_model) if service_pre_initialized else default_model,
             info=t("service.model_path_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
         device_value = params.get("device", "auto") if service_pre_initialized else "auto"
         device = gr.Dropdown(
@@ -129,7 +129,7 @@ def build_model_device_controls(
             value=device_value,
             label=t("service.device_label"),
             info=t("service.device_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
     return {
         "config_path": config_path,
@@ -175,7 +175,7 @@ def build_lm_backend_controls(
                 if recommended_lm
                 else " (LM not available for this GPU tier)"
             ),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
         backend_dropdown = gr.Dropdown(
             choices=available_backends,
@@ -187,7 +187,7 @@ def build_lm_backend_controls(
                 if gpu_config.lm_backend_restriction == "pt_mlx_only"
                 else ""
             ),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
     return {
         "lm_model_path": lm_model_path,

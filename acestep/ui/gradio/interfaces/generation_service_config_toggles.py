@@ -56,7 +56,7 @@ def build_service_toggles(
             if service_pre_initialized
             else init_lm_default,
             info=lm_info_text,
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         flash_attn_available = dit_handler.is_flash_attention_available(device_value)
@@ -69,7 +69,7 @@ def build_service_toggles(
             info=t("service.flash_attention_info_enabled")
             if flash_attn_available
             else t("service.flash_attention_info_disabled"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
         offload_to_cpu_checkbox = gr.Checkbox(
             label=t("service.offload_cpu_label"),
@@ -82,7 +82,7 @@ def build_service_toggles(
                 if default_offload
                 else " (optional for this tier)"
             ),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
         offload_dit_to_cpu_checkbox = gr.Checkbox(
             label=t("service.offload_dit_cpu_label"),
@@ -95,7 +95,7 @@ def build_service_toggles(
                 if default_offload_dit
                 else " (optional for this tier)"
             ),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
         compile_model_checkbox = gr.Checkbox(
             label=t("service.compile_model_label"),
@@ -103,7 +103,7 @@ def build_service_toggles(
             if service_pre_initialized
             else default_compile,
             info=t("service.compile_model_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
         quantization_checkbox = gr.Checkbox(
             label=t("service.quantization_label"),
@@ -116,7 +116,7 @@ def build_service_toggles(
                 if default_quantization
                 else " (optional for this tier)"
             ),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         mlx_ok = _mlx_avail()
@@ -127,7 +127,7 @@ def build_service_toggles(
             info=t("service.mlx_dit_info_enabled")
             if mlx_ok
             else t("service.mlx_dit_info_disabled"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
     return {
         "init_llm_checkbox": init_llm_checkbox,

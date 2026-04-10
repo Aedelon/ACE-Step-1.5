@@ -19,13 +19,13 @@ def build_dataset_label_and_preview_controls() -> dict[str, object]:
                 label=t("training.skip_metas"),
                 value=False,
                 info=t("training.skip_metas_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             only_unlabeled = gr.Checkbox(
                 label=t("training.only_unlabeled"),
                 value=False,
                 info=t("training.only_unlabeled_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Column(scale=1):
             auto_label_btn = gr.Button(
@@ -51,7 +51,7 @@ def build_dataset_label_and_preview_controls() -> dict[str, object]:
                 value=0,
                 label=t("training.select_sample"),
                 info=t("training.select_sample_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
             preview_audio = gr.Audio(
@@ -84,7 +84,7 @@ def build_dataset_label_and_preview_controls() -> dict[str, object]:
                     value="Use Global Ratio",
                     label=t("training.prompt_override_label"),
                     info=t("training.prompt_override_info"),
-                    elem_classes=["has-info-container"],
+                    elem_classes=["acestep-tt"],
                 )
 
             with gr.Row():
