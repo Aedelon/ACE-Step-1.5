@@ -71,7 +71,9 @@
     "language_info": "Sélectionne la **langue d'interface** utilisée dans l'UI Gradio.\n\n### Notes\n\n- Affecte les libellés, infobulles et messages.\n- N'affecte pas les paroles générées ni le comportement du modèle.",
     "gpu_auto_tier": "Auto-detected Tier",
     "tier_label": "GPU Tier Override",
-    "tier_info": "Surcharge le **palier de capacité GPU détecté automatiquement**.\n\n### Ce que contrôle le palier\n\n- Les valeurs par défaut pour le **déchargement CPU**, la **quantization** et le choix du **backend**.\n- Ajusté pour correspondre à ton budget de **VRAM** disponible.\n\n### Quand le surcharger\n\n- La détection automatique choisit le mauvais palier pour ta configuration.\n- Tu veux **forcer des paramètres d'optimisation spécifiques** (par exemple désactiver le déchargement sur un gros GPU).\n- Laisse sur `Auto` sauf si tu as une raison claire de changer."
+    "tier_info": "Surcharge le **palier de capacité GPU détecté automatiquement**.\n\n### Ce que contrôle le palier\n\n- Les valeurs par défaut pour le **déchargement CPU**, la **quantization** et le choix du **backend**.\n- Ajusté pour correspondre à ton budget de **VRAM** disponible.\n\n### Quand le surcharger\n\n- La détection automatique choisit le mauvais palier pour ta configuration.\n- Tu veux **forcer des paramètres d'optimisation spécifiques** (par exemple désactiver le déchargement sur un gros GPU).\n- Laisse sur `Auto` sauf si tu as une raison claire de changer.",
+    "toggles_init_group": "Initialisation",
+    "toggles_memory_group": "Optimisation mémoire"
   },
   "generation": {
     "tab_title": "🎵 Generation",

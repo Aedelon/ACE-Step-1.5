@@ -51,6 +51,7 @@ from acestep.ui.gradio.interfaces.tooltip_head import (
     get_tooltip_js,
 )
 from acestep.ui.gradio.interfaces.polish import get_polish_css
+from acestep.ui.gradio.interfaces.polish_head import get_polish_head
 
 
 def get_acestep_head_html(service_mode: bool = False) -> str:
@@ -70,10 +71,14 @@ def get_acestep_head_html(service_mode: bool = False) -> str:
     Returns:
         HTML string ready for ``launch(head=...)``.
     """
-    return get_audio_player_preferences_head() + (
-        ""
-        if service_mode
-        else (get_user_preferences_head() + get_user_mode_save_head())
+    return (
+        get_polish_head()
+        + get_audio_player_preferences_head()
+        + (
+            ""
+            if service_mode
+            else (get_user_preferences_head() + get_user_mode_save_head())
+        )
     )
 
 

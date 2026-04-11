@@ -1,478 +1,422 @@
 """Phase D — Visual polish for the ACE-Step Gradio UI.
 
-A central CSS injection that overlays the ACEStepDark theme with the
-finishing touches Gradio's defaults skip:
+Sérieuse réécriture après audit anti-hallucination des sélecteurs Gradio
+6.2.0 contre la source officielle (Embed.svelte, Block.svelte, Tabs.svelte,
+Accordion.svelte, Button.svelte, etc.). Le précédent polish utilisait des
+classes inventées (`.gradio-accordion`, `.gradio-button`, `.gradio-row`)
+qui n'existent pas dans Gradio 6 — c'est pour ça qu'aucune règle ne
+s'appliquait correctement.
 
-- Hero header with gradient title and subtitle hierarchy
-- Accordion headers with icons, gradient backgrounds, hover states
-- Form inputs with consistent sizing, focus rings, and label
-  typography
-- Buttons with consistent padding, hover/active feedback, smooth
-  transitions, and clear primary vs secondary vs destructive variants
-- Slider track and thumb that match the theme's primary blue
-- Custom dark scrollbars throughout
-- Negative space everywhere — Gradio default packs controls too
-  tight to feel premium
+Les **vrais** sélecteurs Gradio 6.2 (vérifiés contre js/ source) :
 
-The CSS lives in this module rather than ``tooltip_head.py`` so each
-file stays focused: tooltips do the markdown bubble system, polish
-does pure visual styling.
+- ``.gradio-container.gradio-container-{version}`` : div racine, présente
+  dans ``Embed.svelte``. Mais ``css=`` est wrappé par ``prefix_css`` qui
+  scope tout sous ``.gradio-container .contain``, donc cibler ``body`` ou
+  ``:root`` depuis ``css=`` ne marche pas — il faut passer par ``head=``.
+- ``.block`` : wrapper de TOUT composant Gradio (Block.svelte)
+- ``.label-wrap`` : button qui sert d'entête d'``Accordion`` (Accordion.svelte)
+- ``.tabs > .tab-wrapper > .tab-container > button.selected`` : nav des tabs
+- ``.tabitem`` : panneau d'onglet (TabItem.svelte)
+- ``.row`` / ``.column`` / ``.form`` : Row/Column/Form natifs
+- ``button.primary`` / ``button.secondary`` / ``button.stop`` : variants
+- ``button.sm`` / ``button.md`` / ``button.lg`` : sizes
+- ``span[data-testid="block-info"]`` : label slot des composants
+- ``input[type="range"]`` / ``--range_progress`` : slider natif (la var
+  ``--ace-slider-percent`` du précédent polish n'existait pas)
+
+Tokens : on aligne sur les variables Gradio natives plutôt que de
+dupliquer (theme.py les expose déjà via ``set()``).
 """
 
 from __future__ import annotations
 
 
 def get_polish_css() -> str:
-    """Return the polish CSS appended to the active Gradio stylesheet."""
+    """Return the polish CSS appended after the tooltip CSS in
+    ``get_acestep_css()``."""
     return _POLISH_CSS
 
 
 _POLISH_CSS = """
 /* ============================================================
-   ACE-Step Phase D — UI Polish
+   ACE-Step Phase D — UI Polish (Gradio 6.2.0 verified selectors)
    ============================================================ */
 
-/* ---------- Design tokens ---------- */
-:root {
-    --ace-radius-sm: 8px;
-    --ace-radius: 10px;
-    --ace-radius-lg: 14px;
-    --ace-radius-xl: 18px;
-    --ace-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
-    --ace-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --ace-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.45);
-    --ace-transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
-    --ace-bg-elevated: rgba(30, 33, 45, 0.92);
-    --ace-bg-subtle: rgba(20, 22, 32, 0.55);
-    --ace-border-soft: rgba(255, 255, 255, 0.08);
-    --ace-border: rgba(255, 255, 255, 0.12);
-    --ace-border-strong: rgba(255, 255, 255, 0.2);
-    --ace-text: #f4f4f5;
-    --ace-text-muted: #a1a1aa;
-    --ace-text-faint: #71717a;
-    --ace-accent: #3b82f6;
+/* ---------- Design tokens (aligned on Gradio native vars) ----- */
+.gradio-container {
+    --ace-radius-xs: 4px;
+    --ace-radius-sm: 6px;
+    --ace-radius-md: 8px;
+    --ace-radius-lg: 12px;
+    --ace-radius-xl: 16px;
+
+    --ace-space-1: 4px;
+    --ace-space-2: 8px;
+    --ace-space-3: 12px;
+    --ace-space-4: 16px;
+    --ace-space-5: 20px;
+    --ace-space-6: 24px;
+    --ace-space-8: 32px;
+
+    --ace-shadow-raised:
+        0 1px 2px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    --ace-shadow-floating:
+        0 8px 16px rgba(0, 0, 0, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.3);
+    --ace-shadow-cta:
+        0 4px 14px rgba(59, 130, 246, 0.35),
+        0 1px 2px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+
+    --ace-duration-fast: 150ms;
+    --ace-duration-base: 200ms;
+    --ace-easing-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ace-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Re-export Gradio's own tokens under our namespace so future code
+       can reference them without having to know whether the value lives
+       in theme.py or polish.py. */
+    --ace-text-primary: var(--body-text-color);
+    --ace-text-secondary: var(--body-text-color-subdued);
+    --ace-text-muted: var(--input-placeholder-color);
+    --ace-bg-canvas: var(--body-background-fill);
+    --ace-bg-surface: var(--block-background-fill);
+    --ace-bg-elevated: var(--background-fill-secondary);
+    --ace-border-subtle: rgba(255, 255, 255, 0.06);
+    --ace-border-default: var(--border-color-primary);
+    --ace-border-strong: var(--input-border-color);
+    --ace-accent: var(--color-accent);
     --ace-accent-soft: rgba(59, 130, 246, 0.18);
-    --ace-accent-glow: rgba(59, 130, 246, 0.35);
+    --ace-accent-ring: rgba(59, 130, 246, 0.35);
     --ace-amber: #fbbf24;
     --ace-rose: #f43f5e;
     --ace-emerald: #34d399;
 }
 
-/* ---------- Body & containers ---------- */
-.gradio-container {
-    max-width: 1480px !important;
-    margin: 0 auto !important;
-    padding: 24px 28px 60px 28px !important;
-    font-feature-settings: "ss01", "cv11";
-}
-body {
-    background: radial-gradient(
-        ellipse at top,
-        #0f1117 0%,
-        #08090d 65%
-    ) !important;
-}
-
-/* ---------- Hero header (app title block) ---------- */
-.gradio-container > .main > div:first-child h1,
-.gradio-container > div > h1 {
-    font-size: 32px !important;
-    font-weight: 800 !important;
-    letter-spacing: -0.02em !important;
-    margin: 6px 0 4px 0 !important;
-    background: linear-gradient(
-        135deg,
-        #60a5fa 0%,
-        #93c5fd 35%,
-        #fbbf24 100%
-    ) !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    color: transparent !important;
-    -webkit-text-fill-color: transparent !important;
-}
-.gradio-container > .main > div:first-child p,
-.gradio-container > div > p {
-    color: var(--ace-text-muted) !important;
-    font-size: 14px !important;
-    margin: 0 0 18px 0 !important;
-    letter-spacing: 0.005em !important;
-}
-
-/* ---------- Tabs polish ---------- */
-.tabs > .tab-nav {
-    border-bottom: 1px solid var(--ace-border) !important;
-    padding: 0 4px !important;
-    gap: 4px !important;
-}
-.tabs > .tab-nav > button {
-    background: transparent !important;
-    border: none !important;
-    border-bottom: 2px solid transparent !important;
-    color: var(--ace-text-muted) !important;
-    padding: 12px 18px !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    transition: all var(--ace-transition) !important;
-    border-radius: 0 !important;
-}
-.tabs > .tab-nav > button:hover {
-    color: var(--ace-text) !important;
-    background: rgba(255, 255, 255, 0.03) !important;
-}
-.tabs > .tab-nav > button.selected {
-    color: var(--ace-accent) !important;
-    border-bottom-color: var(--ace-accent) !important;
-    background: transparent !important;
-}
-
-/* ---------- Accordions ---------- */
-.gradio-accordion {
-    border: 1px solid var(--ace-border) !important;
-    border-radius: var(--ace-radius-lg) !important;
-    background: var(--ace-bg-elevated) !important;
-    box-shadow: var(--ace-shadow-sm) !important;
-    margin: 14px 0 !important;
-    overflow: hidden !important;
-    transition: border-color var(--ace-transition),
-                box-shadow var(--ace-transition) !important;
-}
-.gradio-accordion:hover {
-    border-color: var(--ace-border-strong) !important;
-}
-.gradio-accordion > .label-wrap,
-.gradio-accordion > button {
-    padding: 14px 18px !important;
-    background: linear-gradient(
-        180deg,
-        rgba(40, 44, 60, 0.85) 0%,
-        rgba(30, 33, 45, 0.92) 100%
-    ) !important;
-    border-bottom: 1px solid var(--ace-border-soft) !important;
-    transition: background var(--ace-transition) !important;
-}
-.gradio-accordion > .label-wrap:hover,
-.gradio-accordion > button:hover {
-    background: linear-gradient(
-        180deg,
-        rgba(50, 55, 75, 0.9) 0%,
-        rgba(40, 44, 60, 0.95) 100%
-    ) !important;
-}
-.gradio-accordion > .label-wrap > span,
-.gradio-accordion > button > span {
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    color: var(--ace-text) !important;
-    letter-spacing: 0.01em !important;
-}
-/* Nested accordions get a slightly less prominent background */
-.gradio-accordion .gradio-accordion {
-    background: rgba(25, 28, 38, 0.7) !important;
-    border-color: rgba(255, 255, 255, 0.06) !important;
-}
-
-/* ---------- Form labels & info text ---------- */
+/* ---------- Typography polish on labels ---------- */
 span[data-testid="block-info"] {
-    color: var(--ace-text) !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.005em !important;
+    color: var(--ace-text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.005em;
 }
-/* The native info paragraph is hidden by the tooltip system, so we
-   only style the visible label-info span here. */
 
-/* ---------- Inputs (textbox, number, dropdown) ---------- */
+/* ---------- Tabs (Tabs.svelte structure) ---------- */
+.tabs > .tab-wrapper > .tab-container {
+    border-bottom: 1px solid var(--ace-border-default);
+    padding: 0 var(--ace-space-1);
+    gap: var(--ace-space-1);
+}
+.tabs > .tab-wrapper > .tab-container > button {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--ace-text-secondary);
+    padding: var(--ace-space-3) var(--ace-space-5);
+    font-weight: 600;
+    font-size: 14px;
+    transition: color var(--ace-duration-fast) var(--ace-easing-out),
+                border-color var(--ace-duration-fast) var(--ace-easing-out);
+    border-radius: 0;
+}
+.tabs > .tab-wrapper > .tab-container > button:hover {
+    color: var(--ace-text-primary);
+}
+.tabs > .tab-wrapper > .tab-container > button.selected {
+    color: var(--ace-accent);
+    border-bottom-color: var(--ace-accent);
+}
+
+/* ---------- Accordions (Accordion.svelte: button.label-wrap inside .block) ---------- */
+.block:has(> .label-wrap),
+.block:has(> button.label-wrap) {
+    border-radius: var(--ace-radius-lg);
+    box-shadow: var(--ace-shadow-raised);
+    transition: border-color var(--ace-duration-fast) var(--ace-easing-out);
+}
+.block:has(> .label-wrap):hover,
+.block:has(> button.label-wrap):hover {
+    border-color: var(--ace-border-strong);
+}
+.label-wrap {
+    padding: var(--ace-space-4) var(--ace-space-5);
+    background: transparent;
+    border: none;
+    transition: background var(--ace-duration-fast) var(--ace-easing-out);
+}
+.label-wrap:hover {
+    background: rgba(255, 255, 255, 0.025);
+}
+.label-wrap > span,
+.label-wrap > .label-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ace-text-primary);
+    letter-spacing: 0.005em;
+}
+
+/* ---------- Inputs (textarea, input[type="text"], input[type="number"]) ---------- */
 input[type="text"],
 input[type="number"],
 input[type="search"],
 textarea {
-    background: var(--ace-bg-subtle) !important;
-    border: 1px solid var(--ace-border) !important;
-    border-radius: var(--ace-radius-sm) !important;
-    color: var(--ace-text) !important;
-    padding: 9px 12px !important;
-    font-size: 13px !important;
-    transition: all var(--ace-transition) !important;
+    background: var(--ace-bg-surface);
+    border: 1px solid var(--ace-border-default);
+    border-radius: var(--ace-radius-sm);
+    color: var(--ace-text-primary);
+    padding: 9px 12px;
+    font-size: 13px;
+    transition: border-color var(--ace-duration-fast) var(--ace-easing-out),
+                box-shadow var(--ace-duration-fast) var(--ace-easing-out);
 }
 input[type="text"]::placeholder,
 input[type="number"]::placeholder,
 textarea::placeholder {
-    color: var(--ace-text-faint) !important;
+    color: var(--ace-text-muted);
 }
 input[type="text"]:hover,
 input[type="number"]:hover,
 textarea:hover {
-    border-color: var(--ace-border-strong) !important;
+    border-color: var(--ace-border-strong);
 }
 input[type="text"]:focus,
 input[type="number"]:focus,
-textarea:focus,
-input[type="text"]:focus-visible,
-textarea:focus-visible {
-    outline: none !important;
-    border-color: var(--ace-accent) !important;
-    box-shadow: 0 0 0 3px var(--ace-accent-soft) !important;
+textarea:focus {
+    outline: none;
+    border-color: var(--ace-accent);
+    box-shadow: 0 0 0 3px var(--ace-accent-ring);
+}
+input[readonly],
+textarea[readonly] {
+    background: rgba(15, 17, 24, 0.7);
+    color: var(--ace-text-secondary);
+    border-style: dashed;
+    cursor: default;
 }
 
-/* Dropdowns inherit the same look */
-.gradio-dropdown .wrap {
-    background: var(--ace-bg-subtle) !important;
-    border: 1px solid var(--ace-border) !important;
-    border-radius: var(--ace-radius-sm) !important;
-    transition: all var(--ace-transition) !important;
+/* ---------- Buttons (Button.svelte: .primary / .secondary / .stop + .sm / .md / .lg) ---------- */
+button.primary,
+button.secondary,
+button.stop {
+    border-radius: var(--ace-radius-sm);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: background var(--ace-duration-fast) var(--ace-easing-out),
+                border-color var(--ace-duration-fast) var(--ace-easing-out),
+                color var(--ace-duration-fast) var(--ace-easing-out);
+    box-shadow: var(--ace-shadow-raised);
 }
-.gradio-dropdown .wrap:hover {
-    border-color: var(--ace-border-strong) !important;
+button.lg {
+    padding: 12px 22px;
+    font-size: 14px;
 }
-.gradio-dropdown:focus-within .wrap {
-    border-color: var(--ace-accent) !important;
-    box-shadow: 0 0 0 3px var(--ace-accent-soft) !important;
-}
-
-/* ---------- Buttons ---------- */
-button.lg, button.gr-button-lg, button.large {
-    padding: 12px 22px !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-}
-button.sm, button.gr-button-sm, button.small {
-    padding: 6px 12px !important;
-    font-size: 12.5px !important;
-}
-button.gradio-button,
-button[class*="primary"],
-button[class*="secondary"],
-button[class*="stop"] {
-    border-radius: var(--ace-radius-sm) !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.01em !important;
-    transition: all var(--ace-transition) !important;
-    box-shadow: var(--ace-shadow-sm) !important;
-    border-width: 1px !important;
-}
-button.gradio-button:hover,
-button[class*="primary"]:hover,
-button[class*="secondary"]:hover,
-button[class*="stop"]:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: var(--ace-shadow) !important;
-}
-button.gradio-button:active,
-button[class*="primary"]:active,
-button[class*="secondary"]:active,
-button[class*="stop"]:active {
-    transform: translateY(0) !important;
-    box-shadow: var(--ace-shadow-sm) !important;
-}
-button:focus-visible {
-    outline: none !important;
-    box-shadow: 0 0 0 3px var(--ace-accent-soft), var(--ace-shadow) !important;
+button.sm {
+    padding: 6px 12px;
+    font-size: 12.5px;
 }
 
-/* The big "Generate Music" button gets extra love */
+/* ---------- Generate Music CTA (the only button with hover lift) ---------- */
 #acestep-generate-btn {
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    padding: 16px 28px !important;
-    background: linear-gradient(
-        135deg,
-        #2563eb 0%,
-        #3b82f6 50%,
-        #60a5fa 100%
-    ) !important;
-    border: none !important;
-    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35) !important;
-    letter-spacing: 0.015em !important;
-    text-transform: none !important;
+    min-width: 240px;
+    height: 52px;
+    padding: 16px 32px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #ffffff;
+    background: #3b82f6;
+    border: none;
+    border-radius: var(--ace-radius-md);
+    box-shadow: var(--ace-shadow-cta);
+    transition: background var(--ace-duration-fast) var(--ace-easing-out),
+                box-shadow var(--ace-duration-fast) var(--ace-easing-out),
+                transform var(--ace-duration-fast) var(--ace-easing-out);
+    cursor: pointer;
 }
-#acestep-generate-btn:hover {
-    background: linear-gradient(
-        135deg,
-        #1d4ed8 0%,
-        #3b82f6 50%,
-        #60a5fa 100%
-    ) !important;
-    box-shadow: 0 10px 24px rgba(59, 130, 246, 0.5) !important;
-    transform: translateY(-2px) !important;
+#acestep-generate-btn:hover:not(:disabled) {
+    background: #60a5fa;
+    box-shadow:
+        0 6px 20px rgba(59, 130, 246, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
 }
-#acestep-generate-btn:active {
-    transform: translateY(0) !important;
+#acestep-generate-btn:active:not(:disabled) {
+    background: #2563eb;
+    transform: translateY(0);
 }
 #acestep-generate-btn:disabled {
-    background: linear-gradient(
-        135deg,
-        rgba(59, 130, 246, 0.3) 0%,
-        rgba(37, 99, 235, 0.3) 100%
-    ) !important;
-    box-shadow: none !important;
-    cursor: not-allowed !important;
+    background: #3f3f46;
+    color: #71717a;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+#acestep-generate-btn.is-loading {
+    background: #1e40af;
+    cursor: progress;
+    pointer-events: none;
+}
+#acestep-generate-btn.is-loading::before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: ace-spin 0.8s linear infinite;
+    vertical-align: -2px;
+}
+@keyframes ace-spin {
+    to { transform: rotate(360deg); }
 }
 
-/* ---------- Sliders ---------- */
+/* ---------- Slider (input[type="range"], --range_progress is set by Gradio JS) ---------- */
 input[type="range"] {
-    height: 6px !important;
+    height: 6px;
 }
 input[type="range"]::-webkit-slider-runnable-track {
     background: linear-gradient(
         to right,
         var(--ace-accent) 0%,
-        var(--ace-accent) var(--ace-slider-percent, 50%),
-        rgba(255, 255, 255, 0.12) var(--ace-slider-percent, 50%),
+        var(--ace-accent) var(--range_progress, 50%),
+        rgba(255, 255, 255, 0.12) var(--range_progress, 50%),
         rgba(255, 255, 255, 0.12) 100%
-    ) !important;
-    height: 6px !important;
-    border-radius: 3px !important;
+    );
+    height: 6px;
+    border-radius: 3px;
 }
 input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none !important;
-    appearance: none !important;
-    width: 18px !important;
-    height: 18px !important;
-    border-radius: 50% !important;
-    background: white !important;
-    border: 2px solid var(--ace-accent) !important;
-    cursor: pointer !important;
-    margin-top: -6px !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
-    transition: transform var(--ace-transition),
-                box-shadow var(--ace-transition) !important;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--ace-accent);
+    cursor: pointer;
+    margin-top: -6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: transform var(--ace-duration-fast) var(--ace-easing-out);
 }
 input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.15) !important;
-    box-shadow: 0 0 0 6px var(--ace-accent-soft),
-                0 2px 8px rgba(0, 0, 0, 0.5) !important;
+    transform: scale(1.15);
+    box-shadow: 0 0 0 6px var(--ace-accent-ring),
+                0 2px 8px rgba(0, 0, 0, 0.5);
 }
 input[type="range"]::-moz-range-track {
-    background: rgba(255, 255, 255, 0.12) !important;
-    height: 6px !important;
-    border-radius: 3px !important;
+    background: rgba(255, 255, 255, 0.12);
+    height: 6px;
+    border-radius: 3px;
 }
 input[type="range"]::-moz-range-thumb {
-    width: 16px !important;
-    height: 16px !important;
-    border-radius: 50% !important;
-    background: white !important;
-    border: 2px solid var(--ace-accent) !important;
-    cursor: pointer !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--ace-accent);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 /* ---------- Checkboxes & radios ---------- */
 input[type="checkbox"],
 input[type="radio"] {
-    accent-color: var(--ace-accent) !important;
-    cursor: pointer !important;
-    width: 16px !important;
-    height: 16px !important;
-}
-label > input[type="checkbox"] + span,
-label > input[type="radio"] + span {
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    color: var(--ace-text) !important;
-    margin-left: 6px !important;
+    accent-color: var(--ace-accent);
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
 }
 
-/* ---------- Tab panels ---------- */
-.gradio-container .tabitem {
-    padding: 20px 0 !important;
+/* ---------- Spacing rhythm on Gradio-real selectors ---------- */
+.row {
+    gap: 14px;
+}
+.column {
+    gap: 12px;
+}
+.tabitem {
+    padding: 20px 0;
 }
 
-/* ---------- Block titles ---------- */
-.gradio-container span.svelte-1gfkn6j,
-.gradio-container .gradio-markdown h1,
-.gradio-container .gradio-markdown h2,
-.gradio-container .gradio-markdown h3 {
-    color: var(--ace-text) !important;
-    font-weight: 700 !important;
-    letter-spacing: -0.005em !important;
+/* ---------- User mode radio (Beginner/Expert) — sober card, NOT a gradient ---------- */
+#acestep-user-mode {
+    background: var(--ace-bg-surface);
+    border: 1px solid var(--ace-border-subtle);
+    border-radius: var(--ace-radius-lg);
+    padding: 12px 16px;
+    margin: 12px 0 20px 0;
+    box-shadow: var(--ace-shadow-raised);
+}
+#acestep-user-mode > label,
+#acestep-user-mode .label-wrap > span {
+    color: var(--ace-text-secondary);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 11px;
+}
+#acestep-user-mode input[type="radio"]:checked + span {
+    color: var(--ace-accent);
+    font-weight: 700;
 }
 
-/* ---------- Status / progress textboxes ---------- */
-input[readonly], textarea[readonly] {
-    background: rgba(15, 17, 24, 0.7) !important;
-    color: var(--ace-text-muted) !important;
-    border-style: dashed !important;
-    cursor: default !important;
+/* ---------- LoRA empty state (no Python required) ---------- */
+.acestep-lora-rows:empty::before {
+    content: "No adapters loaded — add a path above and click Add LoRA";
+    display: block;
+    text-align: center;
+    padding: 20px;
+    color: var(--ace-text-muted);
+    font-size: 12.5px;
+    font-style: italic;
+    border: 1px dashed var(--ace-border-default);
+    border-radius: var(--ace-radius-sm);
+    margin: 8px 0;
 }
 
-/* ---------- Custom scrollbars ---------- */
+/* ---------- Custom dark scrollbars (global) ---------- */
 *::-webkit-scrollbar {
-    width: 10px !important;
-    height: 10px !important;
+    width: 10px;
+    height: 10px;
 }
 *::-webkit-scrollbar-track {
-    background: rgba(15, 17, 24, 0.4) !important;
-    border-radius: 6px !important;
+    background: rgba(15, 17, 24, 0.4);
+    border-radius: 6px;
 }
 *::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12) !important;
-    border-radius: 6px !important;
-    border: 2px solid transparent !important;
-    background-clip: padding-box !important;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.22) !important;
-    background-clip: padding-box !important;
+    background: rgba(255, 255, 255, 0.22);
+    background-clip: padding-box;
 }
 
-/* ---------- Audio player polish ---------- */
-.gradio-audio {
-    background: var(--ace-bg-elevated) !important;
-    border: 1px solid var(--ace-border) !important;
-    border-radius: var(--ace-radius) !important;
-    padding: 8px !important;
-}
-
-/* ---------- Spacing rhythm ---------- */
-.gradio-row {
-    gap: 14px !important;
-}
-.gradio-column {
-    gap: 12px !important;
-}
-.form > * + * {
-    margin-top: 14px !important;
-}
-
-/* ---------- User mode radio (Beginner/Expert) ---------- */
-#acestep-user-mode {
-    background: linear-gradient(
-        135deg,
-        rgba(59, 130, 246, 0.08) 0%,
-        rgba(251, 191, 36, 0.06) 100%
-    ) !important;
-    border: 1px solid rgba(59, 130, 246, 0.25) !important;
-    border-radius: var(--ace-radius-lg) !important;
-    padding: 14px 18px !important;
-    margin: 4px 0 18px 0 !important;
-}
-#acestep-user-mode label {
-    color: var(--ace-accent) !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.06em !important;
-    font-size: 11px !important;
-}
-#acestep-user-mode .wrap {
-    gap: 12px !important;
-}
-
-/* ---------- Animated focus indicators for accessibility ---------- */
-:focus-visible {
-    outline: 2px solid var(--ace-accent) !important;
-    outline-offset: 2px !important;
-    transition: outline-offset 100ms ease-out !important;
+/* ---------- Accessibility focus ring (keyboard nav) ---------- */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--ace-accent);
+    outline-offset: 2px;
+    transition: outline-offset 100ms ease-out;
 }
 
 /* ---------- Responsive: tighten spacing on narrow viewports ---------- */
 @media (max-width: 1100px) {
-    .gradio-container {
-        padding: 16px 14px 40px 14px !important;
+    .block:has(> .label-wrap),
+    .block:has(> button.label-wrap) {
+        margin: 10px 0;
     }
-    .gradio-accordion {
-        margin: 10px 0 !important;
+    #acestep-generate-btn {
+        min-width: 100%;
     }
 }
 """

@@ -71,7 +71,9 @@
     "language_info": "Selects the **interface language** used across the Gradio UI.\n\n### Notes\n\n- Affects labels, tooltips, and messages.\n- Does not affect generated lyrics or model behavior.",
     "gpu_auto_tier": "Auto-detected Tier",
     "tier_label": "GPU Tier Override",
-    "tier_info": "Overrides the **auto-detected GPU capability tier**.\n\n### What the tier controls\n\n- Defaults for **CPU offload**, **quantization**, and **backend** selection.\n- Tuned to match your available **VRAM** budget.\n\n### When to override\n\n- Auto-detection picks the wrong tier for your setup.\n- You want to **force specific optimization settings** (e.g. disable offload on a large GPU).\n- Leave on `Auto` unless you have a clear reason to change it."
+    "tier_info": "Overrides the **auto-detected GPU capability tier**.\n\n### What the tier controls\n\n- Defaults for **CPU offload**, **quantization**, and **backend** selection.\n- Tuned to match your available **VRAM** budget.\n\n### When to override\n\n- Auto-detection picks the wrong tier for your setup.\n- You want to **force specific optimization settings** (e.g. disable offload on a large GPU).\n- Leave on `Auto` unless you have a clear reason to change it.",
+    "toggles_init_group": "Initialization",
+    "toggles_memory_group": "Memory optimization"
   },
   "generation": {
     "tab_title": "🎵 Generation",

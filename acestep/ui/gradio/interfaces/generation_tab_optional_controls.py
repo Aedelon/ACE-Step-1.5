@@ -28,7 +28,12 @@ def build_optional_parameter_controls(
 
     with gr.Accordion(
         t("generation.optional_params"),
-        open=True,
+        # Closed by default — these fields are gated behind their Auto
+        # toggles and showing them grayed out at first paint sends a
+        # contradictory signal ("here are controls" + "but you can't
+        # touch them"). The user opens this section only when they want
+        # to override Auto-detected values.
+        open=False,
         visible=True,
         elem_classes=["acestep-tt"],
     ) as optional_params_accordion:
@@ -59,7 +64,10 @@ def build_optional_parameter_controls(
                 interactive=False,
             )
             vocal_language = gr.Dropdown(
-                choices=[(lang if lang != "unknown" else "Instrumental / auto", lang) for lang in VALID_LANGUAGES],
+                choices=[
+                    (lang if lang != "unknown" else "Instrumental / auto", lang)
+                    for lang in VALID_LANGUAGES
+                ],
                 value="unknown",
                 label=t("generation.vocal_language_label"),
                 info=t("generation.vocal_language_info"),
@@ -122,7 +130,9 @@ def build_optional_parameter_controls(
                 elem_classes=["auto-toggle"],
             )
             gr.HTML("<span></span>")
-        reset_all_auto_btn = gr.Button(t("generation.reset_all_auto"), variant="secondary", size="sm")
+        reset_all_auto_btn = gr.Button(
+            t("generation.reset_all_auto"), variant="secondary", size="sm"
+        )
 
     return {
         "optional_params_accordion": optional_params_accordion,

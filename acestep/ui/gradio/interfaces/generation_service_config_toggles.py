@@ -46,6 +46,11 @@ def build_service_toggles(
         A component map for all service toggles (LLM, flash attention, offload, compile, quantization, MLX).
     """
 
+    # Group 1 — Initialization (decisions that affect what gets loaded)
+    gr.Markdown(
+        "##### " + t("service.toggles_init_group"),
+        elem_classes=["no-tooltip"],
+    )
     with gr.Row():
         lm_info_text = t("service.init_llm_info")
         if not gpu_config.available_lm_models:
@@ -71,6 +76,13 @@ def build_service_toggles(
             else t("service.flash_attention_info_disabled"),
             elem_classes=["acestep-tt"],
         )
+
+    # Group 2 — Memory optimization (how the loaded models live in VRAM)
+    gr.Markdown(
+        "##### " + t("service.toggles_memory_group"),
+        elem_classes=["no-tooltip"],
+    )
+    with gr.Row():
         offload_to_cpu_checkbox = gr.Checkbox(
             label=t("service.offload_cpu_label"),
             value=params.get("offload_to_cpu", default_offload)

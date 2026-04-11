@@ -21,7 +21,7 @@ def build_dit_controls(ui_config: dict[str, Any]) -> dict[str, Any]:
 
     with gr.Accordion(
         t("generation.advanced_dit_section"),
-        open=True,
+        open=False,
         elem_classes=["acestep-tt"],
     ) as dit_accordion:
         create_help_button("generation_advanced")

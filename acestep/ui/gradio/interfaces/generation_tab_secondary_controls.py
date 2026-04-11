@@ -57,18 +57,20 @@ def build_custom_mode_controls() -> dict[str, Any]:
         A component map containing custom-mode text/audio inputs and formatting actions.
     """
 
-    with gr.Group(
-        visible=True, elem_classes=["acestep-tt"]
-    ) as custom_mode_group:
+    with gr.Group(visible=True, elem_classes=["acestep-tt"]) as custom_mode_group:
         create_help_button("generation_custom")
         with gr.Row(equal_height=True):
-            with gr.Column(scale=2, min_width=200):
+            # Reference audio compressed from scale=2 to scale=1 — 95% of
+            # sessions don't upload a reference, the previous 20% width
+            # was wasted screen real estate. Caption + lyrics get the
+            # extra room.
+            with gr.Column(scale=1, min_width=180):
                 reference_audio = gr.Audio(
                     label=t("generation.reference_audio"),
                     type="filepath",
                     show_label=True,
                 )
-            with gr.Column(scale=8):
+            with gr.Column(scale=9):
                 with gr.Row(equal_height=True):
                     with gr.Column(scale=1):
                         captions = gr.Textbox(
