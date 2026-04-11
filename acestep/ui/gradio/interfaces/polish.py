@@ -1024,32 +1024,45 @@ input[type="number"] {
    The Service Config accordion packs 7 checkboxes across two Rows
    (Initialization: 2, Memory optimization: 5). In plain Rows the
    cells get squeezed, labels wrap mid-word, info text crams into a
-   narrow column. Wrapping the Row in .acestep-checkbox-grid turns
-   each checkbox into a tile:
+   narrow column.
 
-     - min-width so cells don't collapse below a readable size
-     - flex-wrap so tiles reflow onto a second line when the viewport
-       is tight (better than horizontal overflow)
-     - individual tile: padded card, soft border, hover highlight
-     - :checked state lights up the border + background in accent
-       soft so the user sees the toggle state from across the room
+   We use CSS Grid (not flex-wrap) so every tile in the row has:
+     - identical width (1fr — no flex-grow irregularity)
+     - identical height (grid row stretch aligns all rows)
+     - automatic reflow onto a second row when the viewport can't
+       fit another 240px column
+
+   Gradio's Row component renders as ``display: flex``. We override
+   to grid ONLY when the .acestep-checkbox-grid class is present,
+   so the rest of the app is untouched.
 */
-.acestep-checkbox-grid {
-    flex-wrap: wrap;
+.acestep-checkbox-grid,
+.row.acestep-checkbox-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 10px !important;
     align-items: stretch;
 }
 .acestep-checkbox-grid > .block {
-    flex: 1 1 220px;
-    min-width: 220px;
-    max-width: 100%;
+    /* Override Gradio flex sizing — grid owns the width now */
+    flex: none;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    /* Tile itself — column layout so checkbox header is anchored top
+       and info text grows from the bottom up, aligning all tiles on
+       their label baseline even when info spans differ in length. */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
     padding: 12px 14px !important;
     border: 1px solid var(--ace-border-subtle);
     border-radius: var(--ace-radius-md);
     background: rgba(255, 255, 255, 0.012);
     box-shadow: none;
     transition: background var(--ace-duration-fast) var(--ace-easing-out),
-                border-color var(--ace-duration-fast) var(--ace-easing-out);
+                border-color var(--ace-duration-fast) var(--ace-easing-out),
+                box-shadow var(--ace-duration-fast) var(--ace-easing-out);
 }
 .acestep-checkbox-grid > .block:hover {
     background: rgba(255, 255, 255, 0.035);
@@ -1076,11 +1089,12 @@ input[type="number"] {
 .acestep-checkbox-grid > .block:has(input[type="checkbox"]:disabled):hover {
     background: rgba(255, 255, 255, 0.008);
     border-color: var(--ace-border-subtle);
+    box-shadow: none;
 }
-/* Label layout inside a tile: checkbox on the left, label text
-   stretched across the remaining width so long labels
-   ("Offload DiT to CPU") wrap under themselves rather than pushing
-   the info text to the next column. */
+/* Label row inside a tile: checkbox on the left, label text
+   stretched across the remaining width. Fixed-height row so all
+   tiles on a grid line share the same label baseline even if one
+   label wraps to two lines and another fits on one. */
 .acestep-checkbox-grid > .block > label {
     display: flex;
     align-items: flex-start;
@@ -1088,6 +1102,7 @@ input[type="number"] {
     cursor: pointer;
     padding: 0;
     margin: 0;
+    min-height: 38px;  /* accommodates a 2-line wrapped label */
 }
 .acestep-checkbox-grid > .block > label > input[type="checkbox"] {
     flex-shrink: 0;
@@ -1101,16 +1116,23 @@ input[type="number"] {
     font-weight: 600;
     line-height: 1.35;
     color: var(--ace-text-primary);
+    /* Guarantee the label text area is the same height across tiles
+       even if one wraps to two lines: reserves two lines worth of
+       vertical space so the separator between label and info sits
+       on the same baseline for every tile. */
+    min-height: calc(1.35em * 2);
 }
-/* Info line below the label — let it use the full tile width and
-   keep a muted tone so the tile still reads as a single unit. */
+/* Info line below the label — muted, indented 26px so it aligns
+   past the checkbox. The flex parent anchors it to the bottom of
+   the tile via margin-top:auto so tiles with short info and tiles
+   with long info share the same label baseline AND the same
+   bottom padding. */
 .acestep-checkbox-grid > .block > span[data-testid="block-info"] {
-    margin-top: 6px;
+    margin: 8px 0 0 26px;
     font-size: 11.5px;
     font-weight: 400;
     color: var(--ace-text-secondary);
     line-height: 1.45;
-    padding-left: 26px;  /* aligns with label text, past the checkbox */
 }
 
 /* ---------- Color-coded status via first-character / content sniffing ----------
