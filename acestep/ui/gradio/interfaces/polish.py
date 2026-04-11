@@ -813,29 +813,30 @@ input[type="number"] {
                 box-shadow var(--ace-duration-fast) var(--ace-easing-out);
 }
 
-/* ---------- Accordion body fade-in on open ----------
-   Gradio toggles the child .wrap display at open/close time with no
-   animation — the body pops into place. Target the wrap when the
-   parent's header carries the ``.open`` class and run a short
-   slide+fade so opening a section feels considered.
+/* ---------- Accordion body fade-in on open (REMOVED) ----------
+   Previous attempt added ``animation: ace-accordion-reveal 240ms
+   both`` on ``.block:has(> button.label-wrap.open) > .form`` to
+   fade the body in when the user opens an accordion.
 
-   Prefixed with ``.gradio-container`` so the rule beats Gradio's
-   scoped ``.gradio-container-6-2-0 .block.svelte-239wnu``
-   (0-3-0) via 0-3-0 + later load order. */
-.gradio-container .block:has(> button.label-wrap.open) > .wrap,
-.gradio-container .block:has(> button.label-wrap.open) > .form {
-    animation: ace-accordion-reveal 240ms var(--ace-easing-out) both;
-}
-@keyframes ace-accordion-reveal {
-    from {
-        opacity: 0;
-        transform: translateY(-4px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+   This was silently broken from day one:
+     - Phase D.4 targeted ``[aria-expanded="true"]`` which NEVER
+       matched Gradio's real DOM (the Accordion toggles a ``.open``
+       class, not an attribute). Animation never fired, nothing
+       visible broke.
+     - Phase D.5 fixed the selector to ``.label-wrap.open``, which
+       now matches. But the combination ``:has()`` + ``@keyframes``
+       + ``animation-fill-mode: both`` leaves the element stuck at
+       the ``from`` state (``opacity: 0``) in Chromium-based
+       browsers: the animation is added via a selector-match
+       transition, not a property change, so the keyframe playback
+       never kicks off. Result: the entire Service Configuration
+       body became invisible after opening.
+
+   Fix: drop the animation entirely. The fade-in was a nice-to-
+   have; visibility is not. Gradio's default open = "content is
+   immediately visible" is the safe behaviour. If we want this
+   back later, do it via a pure ``transition`` on a CSS variable
+   rather than an ``@keyframes``. */
 
 /* ---------- Section headings inside accordions (Markdown h3/h4) ----------
    Subsections inside a long accordion (DiT body, LM body, Output body)
