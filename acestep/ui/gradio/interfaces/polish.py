@@ -1020,6 +1020,99 @@ input[type="number"] {
     letter-spacing: -0.025em;
 }
 
+/* ---------- Checkbox grid (service config toggles) ----------
+   The Service Config accordion packs 7 checkboxes across two Rows
+   (Initialization: 2, Memory optimization: 5). In plain Rows the
+   cells get squeezed, labels wrap mid-word, info text crams into a
+   narrow column. Wrapping the Row in .acestep-checkbox-grid turns
+   each checkbox into a tile:
+
+     - min-width so cells don't collapse below a readable size
+     - flex-wrap so tiles reflow onto a second line when the viewport
+       is tight (better than horizontal overflow)
+     - individual tile: padded card, soft border, hover highlight
+     - :checked state lights up the border + background in accent
+       soft so the user sees the toggle state from across the room
+*/
+.acestep-checkbox-grid {
+    flex-wrap: wrap;
+    gap: 10px !important;
+    align-items: stretch;
+}
+.acestep-checkbox-grid > .block {
+    flex: 1 1 220px;
+    min-width: 220px;
+    max-width: 100%;
+    padding: 12px 14px !important;
+    border: 1px solid var(--ace-border-subtle);
+    border-radius: var(--ace-radius-md);
+    background: rgba(255, 255, 255, 0.012);
+    box-shadow: none;
+    transition: background var(--ace-duration-fast) var(--ace-easing-out),
+                border-color var(--ace-duration-fast) var(--ace-easing-out);
+}
+.acestep-checkbox-grid > .block:hover {
+    background: rgba(255, 255, 255, 0.035);
+    border-color: var(--ace-border-strong);
+}
+/* Tile lights up when its checkbox is checked. Uses :has() against
+   the nested input so no Python state change is needed — CSS-only. */
+.acestep-checkbox-grid > .block:has(input[type="checkbox"]:checked) {
+    background: rgba(59, 130, 246, 0.07);
+    border-color: rgba(59, 130, 246, 0.45);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.22);
+}
+.acestep-checkbox-grid > .block:has(input[type="checkbox"]:checked:hover) {
+    background: rgba(59, 130, 246, 0.11);
+}
+/* Disabled / non-interactive tile (e.g. flash_attention when the GPU
+   cannot do it). Dim the whole tile so the user understands it's
+   not something they can toggle. */
+.acestep-checkbox-grid > .block:has(input[type="checkbox"]:disabled) {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.008);
+}
+.acestep-checkbox-grid > .block:has(input[type="checkbox"]:disabled):hover {
+    background: rgba(255, 255, 255, 0.008);
+    border-color: var(--ace-border-subtle);
+}
+/* Label layout inside a tile: checkbox on the left, label text
+   stretched across the remaining width so long labels
+   ("Offload DiT to CPU") wrap under themselves rather than pushing
+   the info text to the next column. */
+.acestep-checkbox-grid > .block > label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+}
+.acestep-checkbox-grid > .block > label > input[type="checkbox"] {
+    flex-shrink: 0;
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+}
+.acestep-checkbox-grid > .block > label > span {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ace-text-primary);
+}
+/* Info line below the label — let it use the full tile width and
+   keep a muted tone so the tile still reads as a single unit. */
+.acestep-checkbox-grid > .block > span[data-testid="block-info"] {
+    margin-top: 6px;
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--ace-text-secondary);
+    line-height: 1.45;
+    padding-left: 26px;  /* aligns with label text, past the checkbox */
+}
+
 /* ---------- Color-coded status via first-character / content sniffing ----------
    The generation status panel pushes strings starting with ✅ / ❌ /
    ⚠️ / ⏳ but Markdown renders them as plain text. CSS can't parse
