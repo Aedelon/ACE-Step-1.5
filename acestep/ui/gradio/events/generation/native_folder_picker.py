@@ -109,15 +109,59 @@ def pick_folder(title: str = "Select a folder") -> str:
 # --- Single-file picker ------------------------------------------------
 
 
+#: Map of file extensions to their macOS Uniform Type Identifiers.
+#: AppleScript's ``choose file of type {…}`` requires UTIs (not raw
+#: extensions like "json") on modern macOS — passing ``"json"`` grays
+#: out every JSON file in the dialog so the user cannot pick one.
+#:
+#: Reference: Apple's Uniform Type Identifier Reference
+#: (https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/UTIRef/Articles/System-DeclaredUniformTypeIdentifiers.html).
+#: Extensions without a well-known system UTI fall back to no filter
+#: (user can still navigate to any file) — safer than a silent
+#: empty dialog.
+_MACOS_EXT_TO_UTI: dict[str, str] = {
+    "json": "public.json",
+    "txt": "public.plain-text",
+    "csv": "public.comma-separated-values-text",
+    "yaml": "public.yaml",
+    "yml": "public.yaml",
+    "xml": "public.xml",
+    "html": "public.html",
+    "py": "public.python-script",
+    "sh": "public.shell-script",
+    "md": "net.daringfireball.markdown",
+    "pdf": "com.adobe.pdf",
+    "wav": "com.microsoft.waveform-audio",
+    "mp3": "public.mp3",
+    "flac": "org.xiph.flac",
+    "png": "public.png",
+    "jpg": "public.jpeg",
+    "jpeg": "public.jpeg",
+}
+
+
 def _pick_file_macos(title: str, extensions: tuple[str, ...]) -> str:
-    """Open the macOS native file picker, optionally filtering by extension."""
-    if extensions:
-        of_type = (
-            "of type {" + ", ".join(f'"{ext.lstrip(".")}"' for ext in extensions) + "}"
-        )
+    """Open the macOS native file picker, optionally filtering by extension.
+
+    The ``extensions`` tuple is translated to Uniform Type Identifiers
+    via ``_MACOS_EXT_TO_UTI`` because ``choose file of type`` expects
+    UTIs, not raw extensions. Extensions without a known UTI are
+    dropped from the filter so the user can still pick them.
+    """
+    utis: list[str] = []
+    for ext in extensions:
+        clean = ext.lstrip(".").lower()
+        uti = _MACOS_EXT_TO_UTI.get(clean)
+        if uti:
+            utis.append(uti)
+    if utis:
+        of_type = "of type {" + ", ".join(f'"{uti}"' for uti in utis) + "}"
     else:
         of_type = ""
-    script = f'POSIX path of (choose file with prompt "{title}"{" " + of_type if of_type else ""})'
+    script = (
+        f'POSIX path of (choose file with prompt "{title}"'
+        f"{' ' + of_type if of_type else ''})"
+    )
     return _run(["osascript", "-e", script])
 
 
