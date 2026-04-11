@@ -113,7 +113,7 @@ def register_generation_service_handlers(
         ],
     )
 
-    generation_section["init_btn"].click(
+    init_click = generation_section["init_btn"].click(
         fn=lambda *args: gen_h.init_service_wrapper(dit_handler, llm_handler, *args),
         inputs=[
             generation_section["checkpoint_dropdown"],
@@ -149,6 +149,69 @@ def register_generation_service_handlers(
             generation_section["think_checkbox"],
         ],
     )
+
+    # Hero pills refresh — after init_service_wrapper returns, rebuild
+    # the hero HTML so the model pill flips amber → green with the
+    # actual model name. Chained via ``.then()`` instead of extending
+    # init_service_wrapper's already 15-wide return tuple, which would
+    # require touching every caller / test.
+    hero_html = generation_section.get("hero_html")
+    user_mode_radio = generation_section.get("user_mode_radio")
+    ui_language = generation_section.get("_ui_language", "en")
+    if hero_html is not None:
+        import os
+
+        from acestep.ui.gradio.interfaces.hero import rebuild_hero_html
+
+        def _derive_display_name(config_value: Any) -> str | None:
+            """Turn a raw config path into a human-readable pill label.
+
+            Strips the directory and ``.json`` suffix so the pill says
+            ``config_1_5_xl_turbo`` rather than the full filesystem path.
+            Returns ``None`` when no config was supplied so the hero
+            falls back to its "Model not loaded" default.
+            """
+            if not config_value:
+                return None
+            base = os.path.basename(str(config_value))
+            if base.endswith(".json"):
+                base = base[: -len(".json")]
+            return base or None
+
+        if user_mode_radio is not None:
+
+            def _refresh_hero_after_init(config_value: Any, mode_value: Any) -> str:
+                return rebuild_hero_html(
+                    initialized=dit_handler.model is not None,
+                    model_name=_derive_display_name(config_value)
+                    if dit_handler.model is not None
+                    else None,
+                    language_code=ui_language,
+                    user_mode=str(mode_value or "beginner"),
+                )
+
+            init_click.then(
+                fn=_refresh_hero_after_init,
+                inputs=[generation_section["config_path"], user_mode_radio],
+                outputs=[hero_html],
+            )
+        else:
+            # Service mode: no user_mode_radio, always render as beginner.
+            def _refresh_hero_after_init_service(config_value: Any) -> str:
+                return rebuild_hero_html(
+                    initialized=dit_handler.model is not None,
+                    model_name=_derive_display_name(config_value)
+                    if dit_handler.model is not None
+                    else None,
+                    language_code=ui_language,
+                    user_mode="beginner",
+                )
+
+            init_click.then(
+                fn=_refresh_hero_after_init_service,
+                inputs=[generation_section["config_path"]],
+                outputs=[hero_html],
+            )
 
     # ========== Multi-LoRA Handlers ==========
     from ..generation.lora_actions import (

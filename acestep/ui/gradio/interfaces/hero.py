@@ -104,6 +104,47 @@ def render_hero_html(
 """.strip()
 
 
+def _resolve_hero_strings() -> tuple[str, str]:
+    """Return ``(title, subtitle)`` used across every hero rebuild.
+
+    Centralised so ``build_hero_section`` and ``rebuild_hero_html`` stay
+    in sync — otherwise an init refresh would silently overwrite the
+    title with whatever the last caller guessed.
+    """
+    title = t("app.title").lstrip("🎛️").strip() or "Generate music from text and lyrics."
+    if title.startswith("ACE"):
+        title = "Generate music from text and lyrics."
+    subtitle = t("app.subtitle") or (
+        "Powered by ACE-Step v1.5 — open-source latent diffusion music model."
+    )
+    return title, subtitle
+
+
+def rebuild_hero_html(
+    *,
+    initialized: bool,
+    model_name: str | None,
+    language_code: str,
+    user_mode: str,
+) -> str:
+    """Produce a fresh ``<section>`` string to push into the hero HTML.
+
+    Used by event handlers (``init_btn.click`` / ``user_mode_radio.change``)
+    to refresh the status pills after the underlying state changes. The
+    title/subtitle are pulled from i18n so the pills update without a
+    full page reload.
+    """
+    title, subtitle = _resolve_hero_strings()
+    return render_hero_html(
+        title=title,
+        subtitle=subtitle,
+        model_name=model_name,
+        model_loaded=initialized,
+        language_code=language_code,
+        user_mode=user_mode,
+    )
+
+
 def build_hero_section(
     *,
     initialized: bool = False,
@@ -117,19 +158,10 @@ def build_hero_section(
     handler that touches the underlying state (init service, change
     language, switch user mode).
     """
-    title = t("app.title").lstrip("🎛️").strip() or "Generate music from text and lyrics."
-    if title.startswith("ACE"):
-        title = "Generate music from text and lyrics."
-    subtitle = t("app.subtitle") or (
-        "Powered by ACE-Step v1.5 — open-source latent diffusion music model."
-    )
-
     hero_html = gr.HTML(
-        value=render_hero_html(
-            title=title,
-            subtitle=subtitle,
+        value=rebuild_hero_html(
+            initialized=initialized,
             model_name=model_name,
-            model_loaded=initialized,
             language_code=language_code,
             user_mode=user_mode,
         ),

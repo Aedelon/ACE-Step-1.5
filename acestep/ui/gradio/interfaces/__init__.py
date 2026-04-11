@@ -190,9 +190,21 @@ def create_gradio_interface(
         # ═══════════════════════════════════════════
         # The event handlers expect a single "generation_section" dict with all
         # components from settings (service config + advanced) and generation tab.
+        # The hero section is also merged in so handlers can push fresh HTML into
+        # ``hero_html`` after init / mode toggle (status pills stay in sync).
         generation_section = {}
+        generation_section.update(hero_section)
         generation_section.update(settings_section)
         generation_section.update(gen_section)
+        # Stash the active language so hero refresh handlers can re-render
+        # the language pill with the correct code without reading i18n state.
+        generation_section["_ui_language"] = language
+        # Stash the DiT handler too so the user_mode refresh handler can
+        # read ``dit_handler.model`` at runtime to decide whether the
+        # status pill should stay amber or flip green. Using an underscore
+        # prefix keeps it out of the way of any loop that treats the dict
+        # as a component collection.
+        generation_section["_dit_handler_ref"] = dit_handler
 
         # Connect event handlers
         setup_event_handlers(
