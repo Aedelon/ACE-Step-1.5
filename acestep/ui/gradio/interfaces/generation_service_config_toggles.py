@@ -51,7 +51,10 @@ def build_service_toggles(
         "##### " + t("service.toggles_init_group"),
         elem_classes=["acestep-subsection-heading", "no-tooltip"],
     )
-    with gr.Row(elem_classes=["acestep-checkbox-grid"]):
+    with gr.Row(
+        elem_id="acestep-init-checkbox-grid",
+        elem_classes=["acestep-checkbox-grid"],
+    ):
         lm_info_text = t("service.init_llm_info")
         if not gpu_config.available_lm_models:
             lm_info_text += " " + t("service.lm_unavailable_vram")
@@ -82,7 +85,10 @@ def build_service_toggles(
         "##### " + t("service.toggles_memory_group"),
         elem_classes=["acestep-subsection-heading", "no-tooltip"],
     )
-    with gr.Row(elem_classes=["acestep-checkbox-grid"]):
+    with gr.Row(
+        elem_id="acestep-memory-checkbox-grid",
+        elem_classes=["acestep-checkbox-grid"],
+    ):
         offload_to_cpu_checkbox = gr.Checkbox(
             label=t("service.offload_cpu_label"),
             value=params.get("offload_to_cpu", default_offload)

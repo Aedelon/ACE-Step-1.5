@@ -1021,45 +1021,51 @@ input[type="number"] {
 }
 
 /* ---------- Checkbox grid (service config toggles) ----------
-   Gradio 6 renders a ``gr.Row`` as a flex container with
-   ``flex-direction: row`` and the children sharing horizontal
-   space via ``flex-grow``. For 5+ checkboxes this produces cells
-   that get squeezed, labels that wrap mid-word, and ragged bottom
-   edges. CSS Grid is the right tool — every cell gets the same
-   width, every row the same height, and auto-fill reflows
-   extras onto a new line when the viewport tightens.
+   Previous attempts used ``div.acestep-checkbox-grid`` which has
+   specificity 0-1-1 (1 class + 1 tag). Gradio 6 ships
+   ``.gradio-container-6-2-0 .flex.svelte-239wnu`` = 0-3-0 which
+   WINS the cascade even with !important (specificity beats
+   !important ties). That's why the grid layout never applied —
+   Daisy's screenshot showed a 500px flex row instead of a full-
+   width grid.
 
-   The row is promoted from Gradio's default flex to grid via a
-   high-specificity override:
-     - the ``div.acestep-checkbox-grid`` selector matches the
-       Row element regardless of its svelte-hashed class
-     - ``!important`` beats Gradio's own inline / svelte rules
-     - ``width: 100%`` guarantees the grid spans the parent even
-       if the Row wrapper had ``flex: initial`` from an ancestor
-     - ``flex-wrap / flex-direction: initial`` cancel any leaked
-       flex properties so the browser treats the grid as pristine
+   Fix: target the Row via elem_id — an ID selector has
+   specificity 1-0-0, which beats any Gradio class combo.
+   Two ids so we can evolve each group independently later:
+     - #acestep-init-checkbox-grid (2 tiles)
+     - #acestep-memory-checkbox-grid (5 tiles)
+
+   Every cell gets the same width (1fr), every row the same
+   height (align-items: stretch), auto-fill reflows extras onto
+   a new line when the viewport can't fit another 240px column.
 */
-div.acestep-checkbox-grid,
-.acestep-checkbox-grid {
+#acestep-init-checkbox-grid,
+#acestep-memory-checkbox-grid {
     display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
     width: 100% !important;
+    max-width: none !important;
     gap: 10px !important;
     align-items: stretch !important;
+    align-self: stretch !important;
+    flex: 1 1 100% !important;
     flex-wrap: initial !important;
     flex-direction: initial !important;
+    box-sizing: border-box !important;
 }
 /* Every direct child becomes a grid item. We target both ``.block``
    (the common case for gr.Checkbox) and ``> *`` (anything Gradio
    might wrap in, e.g. a Column or a plain div) so no sizing leaks
    from the Gradio flex defaults reach the tile. */
-div.acestep-checkbox-grid > * {
+#acestep-init-checkbox-grid > *,
+#acestep-memory-checkbox-grid > * {
     width: auto !important;
     min-width: 0 !important;
     max-width: none !important;
     flex: initial !important;
 }
-div.acestep-checkbox-grid > .block {
+#acestep-init-checkbox-grid > .block,
+#acestep-memory-checkbox-grid > .block {
     /* Tile itself — column layout so the checkbox header sits at
        the top and the info line grows beneath. Fixed padding +
        border so every tile has an identical frame. */
@@ -1082,29 +1088,34 @@ div.acestep-checkbox-grid > .block {
     min-width: 0 !important;
     width: auto !important;
 }
-div.acestep-checkbox-grid > .block:hover {
+#acestep-init-checkbox-grid > .block:hover,
+#acestep-memory-checkbox-grid > .block:hover {
     background: rgba(255, 255, 255, 0.035) !important;
     border-color: var(--ace-border-strong) !important;
 }
 /* Tile lights up when its checkbox is checked. Uses :has() against
    the nested input so no Python state change is needed — CSS-only. */
-div.acestep-checkbox-grid > .block:has(input[type="checkbox"]:checked) {
+#acestep-init-checkbox-grid > .block:has(input[type="checkbox"]:checked),
+#acestep-memory-checkbox-grid > .block:has(input[type="checkbox"]:checked) {
     background: rgba(59, 130, 246, 0.07) !important;
     border-color: rgba(59, 130, 246, 0.45) !important;
     box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.22) !important;
 }
-div.acestep-checkbox-grid > .block:has(input[type="checkbox"]:checked:hover) {
+#acestep-init-checkbox-grid > .block:has(input[type="checkbox"]:checked:hover),
+#acestep-memory-checkbox-grid > .block:has(input[type="checkbox"]:checked:hover) {
     background: rgba(59, 130, 246, 0.11) !important;
 }
 /* Disabled / non-interactive tile (e.g. flash_attention when the GPU
    cannot do it). Dim the whole tile so the user understands it's
    not something they can toggle. */
-div.acestep-checkbox-grid > .block:has(input[type="checkbox"]:disabled) {
+#acestep-init-checkbox-grid > .block:has(input[type="checkbox"]:disabled),
+#acestep-memory-checkbox-grid > .block:has(input[type="checkbox"]:disabled) {
     opacity: 0.5 !important;
     cursor: not-allowed !important;
     background: rgba(255, 255, 255, 0.008) !important;
 }
-div.acestep-checkbox-grid > .block:has(input[type="checkbox"]:disabled):hover {
+#acestep-init-checkbox-grid > .block:has(input[type="checkbox"]:disabled),
+#acestep-memory-checkbox-grid > .block:has(input[type="checkbox"]:disabled):hover {
     background: rgba(255, 255, 255, 0.008) !important;
     border-color: var(--ace-border-subtle) !important;
     box-shadow: none !important;
@@ -1113,7 +1124,8 @@ div.acestep-checkbox-grid > .block:has(input[type="checkbox"]:disabled):hover {
    stretched across the remaining width. Fixed-height row so all
    tiles on a grid line share the same label baseline even if one
    label wraps to two lines and another fits on one. */
-div.acestep-checkbox-grid > .block > label {
+#acestep-init-checkbox-grid > .block > label,
+#acestep-memory-checkbox-grid > .block > label {
     display: flex !important;
     align-items: flex-start !important;
     gap: 10px !important;
@@ -1122,13 +1134,15 @@ div.acestep-checkbox-grid > .block > label {
     margin: 0 !important;
     min-height: 38px !important;  /* accommodates a 2-line wrapped label */
 }
-div.acestep-checkbox-grid > .block > label > input[type="checkbox"] {
+#acestep-init-checkbox-grid > .block > label > input[type="checkbox"],
+#acestep-memory-checkbox-grid > .block > label > input[type="checkbox"] {
     flex-shrink: 0 !important;
     margin-top: 2px !important;
     width: 16px !important;
     height: 16px !important;
 }
-div.acestep-checkbox-grid > .block > label > span {
+#acestep-init-checkbox-grid > .block > label > span,
+#acestep-memory-checkbox-grid > .block > label > span {
     flex: 1 !important;
     font-size: 13px !important;
     font-weight: 600 !important;
@@ -1142,7 +1156,8 @@ div.acestep-checkbox-grid > .block > label > span {
 }
 /* Info line below the label — muted, indented 26px so it aligns
    past the checkbox. */
-div.acestep-checkbox-grid > .block > span[data-testid="block-info"] {
+#acestep-init-checkbox-grid > .block > span[data-testid="block-info"],
+#acestep-memory-checkbox-grid > .block > span[data-testid="block-info"] {
     margin: 8px 0 0 26px !important;
     font-size: 11.5px !important;
     font-weight: 400 !important;
