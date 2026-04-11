@@ -12,6 +12,7 @@ def _create_audio_column(n, visible=True):
     """Create a single audio sample column with all its sub-components.
 
     Layout:
+        Micro-header "SAMPLE {n}"
         Audio player
         Row: [Send To Cover] [Send To Repaint] [Save]
         Accordion (Score & LRC & LM Codes):
@@ -19,7 +20,22 @@ def _create_audio_column(n, visible=True):
             Row: score_display + score_btn
             Row: lrc_display + lrc_btn
     """
-    with gr.Column(visible=visible) as audio_col:
+    with gr.Column(
+        visible=visible,
+        elem_classes=["acestep-sample-col", "no-tooltip"],
+    ) as audio_col:
+        # Micro-header — same uppercase letter-spaced treatment as the
+        # subsection headings, applied per sample so the results grid
+        # feels like a set of numbered cards instead of a raw wall of
+        # audio players.
+        gr.Markdown(
+            f"SAMPLE {n}",
+            elem_classes=[
+                "acestep-sample-label",
+                "acestep-subsection-heading",
+                "no-tooltip",
+            ],
+        )
         generated_audio = gr.Audio(
             label=t("results.generated_music", n=n),
             type="filepath",

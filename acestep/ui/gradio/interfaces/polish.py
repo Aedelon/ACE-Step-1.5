@@ -967,19 +967,42 @@ input[type="number"] {
     padding: 14px 36px 14px 16px !important;
 }
 
-/* ---------- Results grid polish ---------- */
-/* Each generated-audio column already sits in a .column with a
-   sub-block for the audio + metadata. Add a hover frame that
-   hints "this sample is a unit" without relying on elem_classes.
-   We scope via :has() so only columns that actually contain a
-   waveform (generated samples, not empty placeholders) get the
-   treatment. */
-.column:has(> .block > .component-wrapper:has(.waveform-wrapper)) {
+/* ---------- Results grid polish ----------
+   Each generated-audio column is wrapped in .acestep-sample-col
+   (applied via elem_classes in result.py::_create_audio_column)
+   plus a .acestep-sample-label micro-header. Treat the whole
+   column as a sample card: subtle bg + border on hover, tight
+   padding so 4 cards fit across the tab width. */
+.acestep-sample-col {
+    padding: 12px 10px 8px 10px;
+    border-radius: var(--ace-radius-md);
+    border: 1px solid transparent;
+    transition: background var(--ace-duration-fast) var(--ace-easing-out),
+                border-color var(--ace-duration-fast) var(--ace-easing-out);
+}
+.acestep-sample-col:hover {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: var(--ace-border-subtle);
+}
+/* Sample number micro-label: tighten the margin so it hugs the
+   player above. Inherits uppercase / accent underline from
+   .acestep-subsection-heading. */
+.acestep-sample-label {
+    margin-top: 0 !important;
+    margin-bottom: 6px !important;
+    padding-bottom: 4px !important;
+    font-size: 10.5px !important;
+    opacity: 0.75;
+}
+/* Fallback for columns that don't carry the elem_classes (e.g.
+   older builds) — still catch them via :has() on waveforms so
+   no sample stays visually bare. */
+.column:has(> .block > .component-wrapper:has(.waveform-wrapper)):not(.acestep-sample-col) {
     padding: 10px 8px;
     border-radius: var(--ace-radius-md);
     transition: background var(--ace-duration-fast) var(--ace-easing-out);
 }
-.column:has(> .block > .component-wrapper:has(.waveform-wrapper)):hover {
+.column:has(> .block > .component-wrapper:has(.waveform-wrapper)):not(.acestep-sample-col):hover {
     background: rgba(255, 255, 255, 0.015);
 }
 

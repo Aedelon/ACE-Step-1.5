@@ -32,6 +32,11 @@ from acestep.ui.gradio.events.results.audio_playback_updates import (
 )
 from acestep.ui.gradio.events.results.scoring import calculate_score_handler
 from acestep.ui.gradio.events.results.lrc_utils import lrc_to_vtt_file
+from acestep.ui.gradio.events.results.status_format import (
+    format_status_busy,
+    format_status_err,
+    format_status_ok,
+)
 
 
 def generate_with_progress(
@@ -289,7 +294,12 @@ def generate_with_progress(
     if not result.success:
         yield (
             (None,) * 8
-            + (None, generation_info, result.status_message, gr.skip())
+            + (
+                None,
+                generation_info,
+                format_status_err(result.status_message),
+                gr.skip(),
+            )
             + (gr.skip(),) * 8  # scores
             + (gr.skip(),) * 8  # codes_display
             + (gr.skip(),) * 8  # details_accordion
@@ -313,7 +323,7 @@ def generate_with_progress(
         *dump_audio,
         None,
         generation_info,
-        t("progress.phase_preparing"),
+        format_status_busy(t("progress.phase_preparing")),
         gr.skip(),
         *clear_scores,
         *clear_codes,
@@ -503,7 +513,7 @@ def generate_with_progress(
         *audio_playback_updates,
         all_audio_paths,
         generation_info,
-        t("progress.complete"),
+        format_status_ok(t("progress.complete")),
         seed_value_for_ui,
         *final_scores_list,
         *final_codes_display,
