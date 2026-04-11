@@ -302,6 +302,7 @@
     "lrc_placeholder": "点击'LRC'生成时间戳",
     "details_accordion": "📊 评分与LRC与LM代码",
     "generation_status": "生成状态",
+    "status_idle_placeholder": "等待生成…",
     "current_batch": "当前批次",
     "batch_indicator": "批次 {current} / {total}",
     "next_batch_status": "下一批次状态",

@@ -133,13 +133,24 @@ def create_results_section(dit_handler) -> dict:
 
         all_cols = cols_1_4 + cols_5_8
 
-        status_output = gr.Textbox(
-            label=t("results.generation_status"),
-            interactive=False,
-            lines=2,
-            max_lines=3,
-            elem_id="acestep-status-output",
-        )
+        # Generation status panel.
+        # Previously a gr.Textbox, now a gr.Markdown so status strings
+        # carrying emojis (✅ / ❌ / ⏳) and bold markers render with
+        # proper typography instead of being displayed raw. A sibling
+        # heading Markdown preserves the "label" affordance because
+        # gr.Markdown has no ``label=`` parameter in Gradio 6.
+        # Every caller pushes plain strings via the wiring outputs,
+        # so the swap is a pure visual upgrade — no signature change.
+        with gr.Group(elem_classes=["acestep-status-panel", "no-tooltip"]):
+            gr.Markdown(
+                f"##### {t('results.generation_status')}",
+                elem_classes=["acestep-status-label", "no-tooltip"],
+            )
+            status_output = gr.Markdown(
+                value="_" + t("results.status_idle_placeholder") + "_",
+                elem_id="acestep-status-output",
+                elem_classes=["acestep-status-body", "no-tooltip"],
+            )
 
         # Batch navigation controls
         with gr.Row(equal_height=True):

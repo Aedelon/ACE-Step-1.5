@@ -313,6 +313,7 @@
     "lrc_placeholder": "לחץ על 'קבל LRC' ליצירת חותמות זמן",
     "details_accordion": "📊 ציון, LRC וקודי LM",
     "generation_status": "סטטוס יצירה",
+    "status_idle_placeholder": "ממתין ליצירה…",
     "current_batch": "אצווה נוכחית",
     "batch_indicator": "אצווה {current} / {total}",
     "next_batch_status": "סטטוס אצווה הבאה",

@@ -302,6 +302,7 @@
     "lrc_placeholder": "'LRC'をクリックしてタイムスタンプを生成",
     "details_accordion": "📊 スコア & LRC & LM コード",
     "generation_status": "生成ステータス",
+    "status_idle_placeholder": "生成を待機中…",
     "current_batch": "現在のバッチ",
     "batch_indicator": "バッチ {current} / {total}",
     "next_batch_status": "次のバッチステータス",

@@ -317,6 +317,7 @@
     "lrc_placeholder": "Click 'LRC' to generate timestamps",
     "details_accordion": "📊 Score & LRC & LM Codes",
     "generation_status": "Generation Status",
+    "status_idle_placeholder": "Waiting for generation…",
     "current_batch": "Current Batch",
     "batch_indicator": "Batch {current} / {total}",
     "next_batch_status": "Next Batch Status",

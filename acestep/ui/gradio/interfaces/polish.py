@@ -429,13 +429,12 @@ select:focus-visible,
    they target actually get styled.
    ============================================================ */
 
-/* Service init + status output: bigger, prominent, centred so the
-   first-time user notices the init feedback. */
-#acestep-status-output,
+/* Service init output: bigger, prominent, centred so the first-time
+   user notices the init feedback. Still a Textbox so the textarea
+   selector stays valid. */
 #acestep-init-status {
     min-height: 100px;
 }
-#acestep-status-output textarea,
 #acestep-init-status textarea {
     font-size: 1.05rem;
     font-weight: 600;
@@ -443,6 +442,44 @@ select:focus-visible,
     padding: 14px 16px;
     letter-spacing: 0.015em;
     min-height: 80px;
+}
+
+/* Generation status panel — now a gr.Markdown inside a gr.Group so
+   status strings can render emojis + bold. The panel mimics a
+   readonly card: soft border, subtle background, centred text. The
+   heading sits on top with a muted uppercase label. */
+.acestep-status-panel {
+    background: var(--block-background-fill);
+    border: 1px solid var(--border-color-primary);
+    border-radius: 10px;
+    padding: 10px 14px 14px 14px;
+    margin-top: 8px;
+}
+.acestep-status-panel .acestep-status-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.65;
+    margin-bottom: 4px;
+}
+.acestep-status-panel .acestep-status-label h5 {
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+}
+#acestep-status-output {
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+    padding: 6px 4px 2px 4px;
+}
+#acestep-status-output p {
+    margin: 4px 0;
 }
 
 /* Auto-toggle row under metadata fields (BPM Auto, Key Auto, …).
