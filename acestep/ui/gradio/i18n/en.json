@@ -133,6 +133,8 @@
     "format_caption_btn": "Enhance Caption",
     "format_lyrics_btn": "Enhance Lyrics",
     "optional_params": "⚙️ Optional Parameters",
+    "section_track_metadata": "Track metadata",
+    "section_output": "Output",
     "optional_music_props": "🎵 Music Properties",
     "optional_gen_settings": "📐 Generation Settings",
     "advanced_dit_section": "🎛️ DiT Diffusion",

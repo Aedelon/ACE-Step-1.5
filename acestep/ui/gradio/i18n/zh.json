@@ -133,6 +133,8 @@
     "format_caption_btn": "增强描述",
     "format_lyrics_btn": "增强歌词",
     "optional_params": "⚙️ 可选参数",
+    "section_track_metadata": "曲目元数据",
+    "section_output": "输出",
     "optional_music_props": "🎵 音乐属性",
     "optional_gen_settings": "📐 生成设置",
     "advanced_dit_section": "🎛️ DiT 扩散参数",

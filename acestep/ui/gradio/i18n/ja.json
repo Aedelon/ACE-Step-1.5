@@ -133,6 +133,8 @@
     "format_caption_btn": "キャプションを強化",
     "format_lyrics_btn": "歌詞を強化",
     "optional_params": "⚙️ オプションパラメータ",
+    "section_track_metadata": "トラックのメタデータ",
+    "section_output": "出力",
     "optional_music_props": "🎵 音楽プロパティ",
     "optional_gen_settings": "📐 生成設定",
     "advanced_dit_section": "🎛️ DiT 拡散パラメータ",

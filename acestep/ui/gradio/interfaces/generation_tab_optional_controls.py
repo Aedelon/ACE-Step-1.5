@@ -37,6 +37,13 @@ def build_optional_parameter_controls(
         visible=True,
         elem_classes=["acestep-tt"],
     ) as optional_params_accordion:
+        # Micro-heading — groups BPM / Key / Time Sig / Vocal Lang
+        # visually as "track metadata" so the accordion body reads
+        # as two distinct chunks (metadata, then output).
+        gr.Markdown(
+            t("generation.section_track_metadata"),
+            elem_classes=["acestep-subsection-heading", "no-tooltip"],
+        )
         with gr.Row():
             bpm = gr.Number(
                 label=t("generation.bpm_label"),
@@ -100,6 +107,11 @@ def build_optional_parameter_controls(
                 container=False,
                 elem_classes=["auto-toggle"],
             )
+        # Second chunk — output-level controls (duration + batch).
+        gr.Markdown(
+            t("generation.section_output"),
+            elem_classes=["acestep-subsection-heading", "no-tooltip"],
+        )
         with gr.Row():
             audio_duration = gr.Number(
                 label=t("generation.duration_label"),
