@@ -29,6 +29,15 @@ _HEAD_CSS = """
    ACE-Step Phase D — Head-injected polish (bypasses prefix_css)
    ============================================================ */
 
+/* ---------- Display font import ----------
+   Space Grotesk is a display-weight grotesk used only on the
+   hero title (see .ace-hero-title in polish.py). Imported here
+   via @import because Gradio's prefix_css scopes css= rules
+   under .gradio-container .contain, which breaks @font-face /
+   @import. head= is injected literally so the rule works.
+   Falls back to Inter / system sans if the network import fails. */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap");
+
 /* ---------- Body backdrop ---------- */
 body {
     background: radial-gradient(

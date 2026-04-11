@@ -664,4 +664,376 @@ select:focus-visible,
     border-color: var(--ace-accent);
     transform: scale(1.1);
 }
+
+/* ============================================================
+   Phase D.4 — "Fais tout" polish additions
+   ============================================================
+   Everything below was added in response to a "what else would
+   you improve" exchange. All selectors verified against Gradio
+   6.2.0 frontend bundles:
+     - Dropdown classes from Index-cUEohYhS.css (.select-wrap,
+       .dropdown-arrow, .dropdown-filter-options, .filter-option)
+     - Audio classes from StaticAudio-CCIOWZuh.css (.waveform-
+       wrapper, .waveform-container, .play-pause-button,
+       .component-wrapper, .controls)
+*/
+
+/* ---------- Dropdown / select polish ----------
+   Gradio 6 renders gr.Dropdown as a .select-wrap div containing
+   a text input (for the searchable variant) + a portal list
+   (.dropdown-filter-options) populated with .filter-option items.
+   The native HTML <select> is NOT used — which is why targeting
+   `select {…}` had no effect in the previous polish pass.
+*/
+.select-wrap {
+    background: var(--ace-bg-surface);
+    border: 1px solid var(--ace-border-default);
+    border-radius: var(--ace-radius-sm);
+    transition: border-color var(--ace-duration-fast) var(--ace-easing-out),
+                box-shadow var(--ace-duration-fast) var(--ace-easing-out);
+}
+.select-wrap:hover {
+    border-color: var(--ace-border-strong);
+}
+.select-wrap:focus-within {
+    border-color: var(--ace-accent);
+    box-shadow: 0 0 0 3px var(--ace-accent-ring);
+}
+.select-wrap > input {
+    /* The searchable text field inside the dropdown already matches
+       the text-input rules above, but we want a tighter padding so
+       the chevron sits flush on the right. */
+    background: transparent;
+    border: none;
+    padding: 9px 34px 9px 12px;
+    font-size: 13px;
+    color: var(--ace-text-primary);
+}
+.select-wrap > input:focus {
+    outline: none;
+    box-shadow: none;
+    border: none;
+}
+.dropdown-arrow {
+    color: var(--ace-text-secondary);
+    transition: transform var(--ace-duration-fast) var(--ace-easing-out),
+                color var(--ace-duration-fast) var(--ace-easing-out);
+    right: 10px;
+}
+.select-wrap:hover .dropdown-arrow,
+.select-wrap:focus-within .dropdown-arrow {
+    color: var(--ace-accent);
+}
+.dropdown-filter-options {
+    background: var(--ace-bg-elevated);
+    border: 1px solid var(--ace-border-default);
+    border-radius: var(--ace-radius-sm);
+    box-shadow: var(--ace-shadow-floating);
+    padding: 4px;
+    margin-top: 4px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+.dropdown-filter-options > .filter-option {
+    padding: 8px 12px;
+    border-radius: var(--ace-radius-xs);
+    font-size: 13px;
+    color: var(--ace-text-primary);
+    cursor: pointer;
+    transition: background var(--ace-duration-fast) var(--ace-easing-out),
+                color var(--ace-duration-fast) var(--ace-easing-out);
+}
+.dropdown-filter-options > .filter-option:hover {
+    background: var(--ace-accent-soft);
+    color: var(--ace-text-primary);
+}
+.dropdown-filter-options > .filter-option.selected {
+    background: var(--ace-accent);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* ---------- Number input steppers — hide the native spinner ----------
+   The up/down micro-arrows next to <input type="number"> look cheap
+   on a dark theme and conflict with Gradio's own +/- buttons on the
+   slider variant. Hide them; users who need precision can type.
+*/
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* ---------- Monospace for numeric fields (slider values, seed) ----------
+   Parameter values benefit from a monospaced readout so 1000 and 999
+   visually align at the same width. Target only type="number" inputs;
+   text inputs stay on the body font. */
+input[type="number"] {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+/* ---------- Accordion closed-state hover lift ----------
+   Closed accordions sit flat on the page with nothing telling the
+   user they are clickable. A small 1px translateY on hover + a
+   slightly stronger shadow adds just enough affordance without
+   jumping the whole layout. Gradio sets aria-expanded="false" on
+   the header button when the accordion is closed. */
+.block:has(> button.label-wrap[aria-expanded="false"]):hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: transform var(--ace-duration-fast) var(--ace-easing-out),
+                box-shadow var(--ace-duration-fast) var(--ace-easing-out);
+}
+
+/* ---------- Accordion body fade-in on open ----------
+   Gradio toggles the child .wrap display at open/close time with no
+   animation — the body pops into place. Target the wrap when the
+   parent's header is open and run a short slide+fade so opening a
+   section feels considered. */
+.block:has(> button.label-wrap[aria-expanded="true"]) > .wrap,
+.block:has(> button.label-wrap[aria-expanded="true"]) > .form {
+    animation: ace-accordion-reveal 240ms var(--ace-easing-out) both;
+}
+@keyframes ace-accordion-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ---------- Section headings inside accordions (Markdown h3/h4) ----------
+   Subsections inside a long accordion (DiT body, LM body, Output body)
+   use Markdown headings like `### Sampling` or `### Velocity tricks`.
+   Default Markdown styling renders them as plain bold text, which
+   blends with the surrounding sliders. Give them a distinct micro-
+   label look: uppercase, letter-spaced, accent underline 2px. */
+.tabitem h3,
+.tabitem h4,
+.acestep-subsection-heading {
+    position: relative;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--ace-text-secondary);
+    padding: 0 0 6px 0;
+    margin: 18px 0 10px 0;
+    border: none;
+}
+.tabitem h3::after,
+.tabitem h4::after,
+.acestep-subsection-heading::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        var(--ace-accent) 0%,
+        rgba(59, 130, 246, 0.2) 100%
+    );
+    border-radius: 1px;
+}
+
+/* ---------- Section dividers between grouped rows ----------
+   Long forms (DiT accordion, Output accordion) have 10+ sliders
+   stacked on top of each other with no breathing room. Use a thin
+   dashed divider between every .form > .block pair beyond the
+   first so the eye can chunk them. Opted-out via `.no-divider`
+   if the hierarchy calls for it. */
+.form > .block + .block:not(.no-divider) {
+    position: relative;
+}
+.form > .block + .block:not(.no-divider)::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 12px;
+    right: 12px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.035);
+    pointer-events: none;
+}
+
+/* ---------- Audio player polish ----------
+   StaticAudio-CCIOWZuh.css ships the structure: .component-wrapper
+   holds the whole player, .waveform-container hosts the canvas,
+   .controls holds the play/pause + time + volume. Re-tint without
+   touching the canvas drawing (that's JS-side). */
+.component-wrapper:has(> .waveform-wrapper),
+.component-wrapper:has(> .waveform-container) {
+    background: var(--ace-bg-elevated);
+    border: 1px solid var(--ace-border-subtle);
+    border-radius: var(--ace-radius-md);
+    padding: 8px;
+    transition: border-color var(--ace-duration-fast) var(--ace-easing-out);
+}
+.component-wrapper:has(> .waveform-wrapper):hover,
+.component-wrapper:has(> .waveform-container):hover {
+    border-color: var(--ace-border-strong);
+}
+.waveform-container,
+.waveform-wrapper {
+    border-radius: var(--ace-radius-sm);
+    overflow: hidden;
+}
+.play-pause-button {
+    color: var(--ace-accent) !important;
+    transition: transform var(--ace-duration-fast) var(--ace-easing-out);
+}
+.play-pause-button:hover {
+    transform: scale(1.08);
+}
+.timestamps,
+.timestamp {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+    font-size: 11.5px;
+    color: var(--ace-text-secondary);
+    letter-spacing: 0;
+}
+.controls .volume input[type="range"] {
+    /* The volume slider inherits our global range styling, but
+       the track here is narrower and benefits from a thinner thumb. */
+    max-width: 80px;
+}
+
+/* ---------- Init service status — terminal / log viewer look ----------
+   The init Textbox is where the ~30s of first-run feedback lives.
+   The textbox rendering is fine, but the surrounding block needs to
+   feel more like a pro log viewer: monospace content, dim scanlines,
+   and a subtle pulsing dot in the top-right so users know something
+   is happening even while no new line is printed. */
+#acestep-init-status {
+    border-radius: var(--ace-radius-md);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(15, 17, 24, 0.65) 0%,
+            rgba(10, 11, 15, 0.65) 100%
+        );
+    border: 1px solid var(--ace-border-subtle);
+    position: relative;
+    overflow: hidden;
+}
+#acestep-init-status::before {
+    /* 8px dot in the top-right that pulses while the init is running.
+       We have no "is running" class pushed from Python, so the dot is
+       always rendered — the pulse is cheap enough that it can stay
+       on at rest without feeling noisy. */
+    content: "";
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ace-emerald);
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+    animation: ace-pulse-dot 1.8s ease-in-out infinite;
+    z-index: 2;
+}
+@keyframes ace-pulse-dot {
+    0%, 100% {
+        opacity: 0.4;
+        transform: scale(0.9);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+#acestep-init-status textarea {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, ui-monospace, monospace !important;
+    font-size: 12.5px !important;
+    line-height: 1.55 !important;
+    letter-spacing: 0 !important;
+    text-align: left !important;
+    background: transparent !important;
+    color: var(--ace-text-primary) !important;
+    padding: 14px 36px 14px 16px !important;
+}
+
+/* ---------- Results grid polish ---------- */
+/* Each generated-audio column already sits in a .column with a
+   sub-block for the audio + metadata. Add a hover frame that
+   hints "this sample is a unit" without relying on elem_classes.
+   We scope via :has() so only columns that actually contain a
+   waveform (generated samples, not empty placeholders) get the
+   treatment. */
+.column:has(> .block > .component-wrapper:has(.waveform-wrapper)) {
+    padding: 10px 8px;
+    border-radius: var(--ace-radius-md);
+    transition: background var(--ace-duration-fast) var(--ace-easing-out);
+}
+.column:has(> .block > .component-wrapper:has(.waveform-wrapper)):hover {
+    background: rgba(255, 255, 255, 0.015);
+}
+
+/* ---------- Display font on the hero title ----------
+   The body uses Gradio's default Inter via the theme.py font list.
+   The hero title deserves something with a bit more character —
+   Space Grotesk is a display-friendly grotesk that pairs with
+   Inter for body without clashing. Imported via polish_head.py
+   (same file that carries the body backdrop + container rules)
+   so @import and @font-face reach the browser unscoped. The
+   class name ace-hero-title is applied in hero.py. */
+.ace-hero-title {
+    font-family: "Space Grotesk", "Inter", system-ui, -apple-system, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+/* ---------- Color-coded status via first-character / content sniffing ----------
+   The generation status panel pushes strings starting with ✅ / ❌ /
+   ⚠️ / ⏳ but Markdown renders them as plain text. CSS can't parse
+   text directly, but we can use a clever trick: each status string
+   becomes a first paragraph inside #acestep-status-output, so we
+   tint the whole paragraph based on explicit marker classes that
+   handlers can opt into later. For now, give the default paragraph
+   a soft outline to feel like a real "status chip".
+
+   Until handlers start wrapping their strings with .status-ok /
+   .status-err / .status-warn classes, the base rule just provides
+   a consistent visual treatment for every status line. */
+#acestep-status-output p {
+    display: inline-block;
+    max-width: 100%;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--ace-border-subtle);
+    margin: 4px auto;
+}
+#acestep-status-output p:has(> .status-ok),
+#acestep-status-output .status-ok {
+    background: rgba(52, 211, 153, 0.08);
+    border-color: rgba(52, 211, 153, 0.28);
+    color: var(--ace-emerald);
+}
+#acestep-status-output p:has(> .status-err),
+#acestep-status-output .status-err {
+    background: rgba(244, 63, 94, 0.08);
+    border-color: rgba(244, 63, 94, 0.28);
+    color: var(--ace-rose);
+}
+#acestep-status-output p:has(> .status-warn),
+#acestep-status-output .status-warn {
+    background: rgba(251, 191, 36, 0.08);
+    border-color: rgba(251, 191, 36, 0.28);
+    color: var(--ace-amber);
+}
 """
