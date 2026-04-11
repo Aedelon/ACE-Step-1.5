@@ -52,6 +52,7 @@ from acestep.ui.gradio.interfaces.tooltip_head import (
 )
 from acestep.ui.gradio.interfaces.polish import get_polish_css
 from acestep.ui.gradio.interfaces.polish_head import get_polish_head
+from acestep.ui.gradio.interfaces.hero import build_hero_section, render_hero_html
 
 
 def get_acestep_head_html(service_mode: bool = False) -> str:
@@ -241,12 +242,16 @@ def create_gradio_interface(
         """
         + HELP_MODAL_CSS,
     ) as demo:
-        gr.HTML(f"""
-        <div class="main-header">
-            <h1>{t("app.title")}</h1>
-            <p>{t("app.subtitle")}</p>
-        </div>
-        """)
+        # Hero section: rich app header with eyebrow + title + subtitle
+        # + status pills (model state, language, beginner/expert mode).
+        # Replaces the previous bare <div class="main-header"><h1>…</h1>
+        # which was hard to style and gave no at-a-glance state info.
+        hero_section = build_hero_section(
+            initialized=bool(init_params and init_params.get("pre_initialized")),
+            model_name=(init_params or {}).get("config_path"),
+            language_code=language,
+            user_mode="beginner",
+        )
         create_help_button("getting_started")
 
         # Dataset Explorer Section (hidden)
