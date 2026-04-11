@@ -27,10 +27,15 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
                     label=t("training.load_dataset_label"),
                     placeholder="./datasets/my_lora_dataset.json",
                     info=t("training.load_dataset_info"),
-                    elem_classes=["has-info-container"],
+                    elem_classes=["acestep-tt"],
                     scale=3,
                 )
-                load_json_btn = gr.Button(t("training.load_btn"), variant="primary", scale=1)
+                load_json_path_browse_btn = gr.Button(
+                    t("common.browse_btn"), variant="secondary", scale=0, min_width=120
+                )
+                load_json_btn = gr.Button(
+                    t("training.load_btn"), variant="primary", scale=1
+                )
             load_json_status = gr.Textbox(
                 label=t("training.load_status"),
                 interactive=False,
@@ -43,10 +48,15 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
                     label=t("training.scan_label"),
                     placeholder="/path/to/your/audio/folder",
                     info=t("training.scan_info"),
-                    elem_classes=["has-info-container"],
+                    elem_classes=["acestep-tt"],
                     scale=3,
                 )
-                scan_btn = gr.Button(t("training.scan_btn"), variant="secondary", scale=1)
+                audio_directory_browse_btn = gr.Button(
+                    t("common.browse_btn"), variant="secondary", scale=0, min_width=120
+                )
+                scan_btn = gr.Button(
+                    t("training.scan_btn"), variant="secondary", scale=1
+                )
             scan_status = gr.Textbox(
                 label=t("training.scan_status"),
                 interactive=False,
@@ -57,7 +67,16 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
     with gr.Row():
         with gr.Column(scale=2):
             audio_files_table = gr.Dataframe(
-                headers=["#", "Filename", "Duration", "Lyrics", "Labeled", "BPM", "Key", "Caption"],
+                headers=[
+                    "#",
+                    "Filename",
+                    "Duration",
+                    "Lyrics",
+                    "Labeled",
+                    "BPM",
+                    "Key",
+                    "Caption",
+                ],
                 datatype=["number", "str", "str", "str", "str", "str", "str", "str"],
                 label=t("training.found_audio_files"),
                 interactive=False,
@@ -77,14 +96,14 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
                 label=t("training.all_instrumental"),
                 value=True,
                 info=t("training.all_instrumental_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
             format_lyrics = gr.Checkbox(
                 label="Format Lyrics (LM)",
                 value=False,
                 info="Use LM to format/structure user-provided lyrics from .txt files (coming soon)",
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
 
@@ -92,7 +111,7 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
                 label="Transcribe Lyrics (LM)",
                 value=False,
                 info="Use LM to transcribe lyrics from audio (coming soon)",
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
 
@@ -100,7 +119,7 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
                 label=t("training.custom_tag"),
                 placeholder="e.g., 8bit_retro, my_style",
                 info=t("training.custom_tag_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
             tag_position = gr.Radio(
@@ -112,7 +131,7 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
                 value="replace",
                 label=t("training.tag_position"),
                 info=t("training.tag_position_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
             genre_ratio = gr.Slider(
@@ -122,14 +141,16 @@ def build_dataset_scan_and_settings_controls() -> dict[str, object]:
                 value=0,
                 label=t("training.genre_ratio"),
                 info=t("training.genre_ratio_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
     return {
         "load_json_path": load_json_path,
+        "load_json_path_browse_btn": load_json_path_browse_btn,
         "load_json_btn": load_json_btn,
         "load_json_status": load_json_status,
         "audio_directory": audio_directory,
+        "audio_directory_browse_btn": audio_directory_browse_btn,
         "scan_btn": scan_btn,
         "scan_status": scan_status,
         "audio_files_table": audio_files_table,

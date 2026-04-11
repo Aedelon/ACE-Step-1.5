@@ -22,7 +22,7 @@ def build_lora_run_and_export_controls(
             label=t("training.learning_rate"),
             value=3e-4,
             info=t("training.learning_rate_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         train_epochs = gr.Slider(
@@ -40,7 +40,7 @@ def build_lora_run_and_export_controls(
             value=1,
             label=t("training.batch_size"),
             info=t("training.batch_size_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         gradient_accumulation = gr.Slider(
@@ -50,7 +50,7 @@ def build_lora_run_and_export_controls(
             value=1,
             label=t("training.gradient_accumulation"),
             info=t("training.gradient_accumulation_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
     with gr.Row():
@@ -69,7 +69,7 @@ def build_lora_run_and_export_controls(
             value=3.0,
             label=t("training.shift"),
             info=t("training.shift_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         training_seed = gr.Number(
@@ -84,7 +84,11 @@ def build_lora_run_and_export_controls(
             value="./lora_output",
             placeholder="./lora_output",
             info=t("training.output_dir_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
+            scale=4,
+        )
+        lora_output_dir_browse_btn = gr.Button(
+            t("common.browse_btn"), variant="secondary", scale=0, min_width=120
         )
 
     with gr.Row():
@@ -92,7 +96,11 @@ def build_lora_run_and_export_controls(
             label="Resume Checkpoint",
             placeholder="./lora_output/checkpoints/epoch_200",
             info="Directory of a saved LoRA checkpoint to resume from",
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
+            scale=4,
+        )
+        resume_checkpoint_dir_browse_btn = gr.Button(
+            t("common.browse_btn"), variant="secondary", scale=0, min_width=120
         )
 
     gr.HTML("<hr>")
@@ -137,8 +145,14 @@ def build_lora_run_and_export_controls(
             label=t("training.export_path"),
             value="./lora_output/final_lora",
             placeholder="./lora_output/my_lora",
+            scale=3,
         )
-        export_lora_btn = gr.Button(t("training.export_lora_btn"), variant="secondary")
+        export_path_browse_btn = gr.Button(
+            t("common.browse_btn"), variant="secondary", scale=0, min_width=120
+        )
+        export_lora_btn = gr.Button(
+            t("training.export_lora_btn"), variant="secondary", scale=1
+        )
 
     export_status = gr.Textbox(
         label=t("training.export_status"),
@@ -154,13 +168,16 @@ def build_lora_run_and_export_controls(
         "training_shift": training_shift,
         "training_seed": training_seed,
         "lora_output_dir": lora_output_dir,
+        "lora_output_dir_browse_btn": lora_output_dir_browse_btn,
         "resume_checkpoint_dir": resume_checkpoint_dir,
+        "resume_checkpoint_dir_browse_btn": resume_checkpoint_dir_browse_btn,
         "start_training_btn": start_training_btn,
         "stop_training_btn": stop_training_btn,
         "training_progress": training_progress,
         "training_log": training_log,
         "training_loss_plot": training_loss_plot,
         "export_path": export_path,
+        "export_path_browse_btn": export_path_browse_btn,
         "export_lora_btn": export_lora_btn,
         "export_status": export_status,
     }

@@ -5,6 +5,7 @@ outputs, runs batched generation, and schedules background pre-generation.
 """
 
 from .. import results_handlers as res_h
+from ..generation.smart_generate import smart_generate_pre_handler
 from .context import GenerationWiringContext
 
 
@@ -44,7 +45,38 @@ def register_generation_run_handlers(context: GenerationWiringContext) -> None:
 
         yield from res_h.generate_with_batch_management(dit_handler, llm_handler, *args)
 
+    # Smart Generate: auto-run AI Draft in Simple mode before generating
     generation_section["generate_btn"].click(
+        fn=lambda *args: smart_generate_pre_handler(*args, llm_handler=llm_handler),
+        inputs=[
+            generation_section["generation_mode"],
+            generation_section["simple_sample_created"],
+            generation_section["simple_query_input"],
+            generation_section["simple_instrumental_checkbox"],
+            generation_section["simple_vocal_language"],
+            generation_section["lm_temperature"],
+            generation_section["lm_top_k"],
+            generation_section["lm_top_p"],
+            generation_section["constrained_decoding_debug"],
+        ],
+        outputs=[
+            generation_section["captions"],
+            generation_section["lyrics"],
+            generation_section["bpm"],
+            generation_section["audio_duration"],
+            generation_section["key_scale"],
+            generation_section["vocal_language"],
+            generation_section["simple_vocal_language"],
+            generation_section["time_signature"],
+            generation_section["instrumental_checkbox"],
+            generation_section["generate_btn"],
+            generation_section["simple_sample_created"],
+            generation_section["think_checkbox"],
+            results_section["is_format_caption_state"],
+            results_section["status_output"],
+            generation_section["generation_mode"],
+        ],
+    ).then(
         fn=res_h.clear_audio_outputs_for_new_generation,
         outputs=[
             results_section["generated_audio_1"],
@@ -119,6 +151,9 @@ def register_generation_run_handlers(context: GenerationWiringContext) -> None:
             generation_section["latent_rescale"],
             generation_section["repaint_mode"],
             generation_section["repaint_strength"],
+            generation_section["chunk_mask_mode"],
+            generation_section["repaint_latent_crossfade_frames"],
+            generation_section["repaint_wav_crossfade_sec"],
             generation_section["autogen_checkbox"],
             results_section["current_batch_index"],
             results_section["total_batches"],
@@ -183,7 +218,9 @@ def register_generation_run_handlers(context: GenerationWiringContext) -> None:
             results_section["restore_params_btn"],
         ],
     ).then(
-        fn=lambda *args: res_h.generate_next_batch_background(dit_handler, llm_handler, *args),
+        fn=lambda *args: res_h.generate_next_batch_background(
+            dit_handler, llm_handler, *args
+        ),
         inputs=[
             generation_section["autogen_checkbox"],
             results_section["generation_params_state"],

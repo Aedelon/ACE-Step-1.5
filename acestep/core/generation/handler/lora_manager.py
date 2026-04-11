@@ -1,10 +1,26 @@
 """LoRA management mixin for AceStepHandler."""
 
 from .lora.adapter_discovery import collect_adapter_names
-from .lora.controls import get_lora_status, set_active_lora_adapter, set_lora_scale, set_use_lora
-from .lora.lifecycle import add_lora, add_voice_lora, load_lora, remove_lora, unload_lora
+from .lora.controls import (
+    clear_active_lora_adapter,
+    get_lora_status,
+    set_active_lora_adapter,
+    set_lora_scale,
+    set_use_lora,
+)
+from .lora.lifecycle import (
+    add_lora,
+    add_voice_lora,
+    load_lora,
+    remove_lora,
+    unload_lora,
+)
 from .lora.registry_builder import rebuild_lora_registry
-from .lora.registry_state import debug_lora_registry_snapshot, ensure_lora_registry, sync_lora_state_from_service
+from .lora.registry_state import (
+    debug_lora_registry_snapshot,
+    ensure_lora_registry,
+    sync_lora_state_from_service,
+)
 from .lora.scale_apply import apply_scale_to_adapter
 
 
@@ -33,4 +49,5 @@ class LoraManagerMixin:
     set_use_lora = set_use_lora
     set_lora_scale = set_lora_scale
     set_active_lora_adapter = set_active_lora_adapter
+    clear_active_lora_adapter = clear_active_lora_adapter
     get_lora_status = get_lora_status

@@ -9,7 +9,12 @@ from typing import Any
 import gradio as gr
 
 from .. import generation_handlers as gen_h
-from ...i18n import get_i18n, reset_language_context, set_language_context
+from ...i18n import (
+    get_i18n,
+    reset_language_context,
+    save_language,
+    set_language_context,
+)
 from .context import (
     GenerationWiringContext,
     build_auto_checkbox_inputs,
@@ -46,11 +51,37 @@ def register_generation_service_handlers(
         fn=lambda language: _apply_runtime_language(language),
         inputs=[generation_section["language_dropdown"]],
         outputs=[generation_section["language_dropdown"]],
+    ).then(
+        fn=None,
+        # The Python handler re-execs the process. Give the new server time
+        # to bind its port, then reload the page to pick up the fresh UI.
+        # If the first reload hits a dead socket, retry every 800 ms.
+        js=(
+            "() => {"
+            "  const banner = document.createElement('div');"
+            "  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;"
+            "z-index:99999;background:#1f2937;color:#f9fafb;padding:14px 20px;"
+            "text-align:center;font:600 14px system-ui,sans-serif;"
+            "box-shadow:0 2px 8px rgba(0,0,0,.4)';"
+            "  banner.textContent = '⟳ Switching language — restarting UI…';"
+            "  document.body.appendChild(banner);"
+            "  const tryReload = () => {"
+            "    fetch(window.location.href, {cache: 'no-store'})"
+            "      .then(r => { if (r.ok) window.location.reload(); "
+            "                   else setTimeout(tryReload, 800); })"
+            "      .catch(() => setTimeout(tryReload, 800));"
+            "  };"
+            "  setTimeout(tryReload, 2500);"
+            "}"
+        ),
     )
 
     generation_section["config_path"].change(
         fn=gen_h.update_model_type_settings,
-        inputs=[generation_section["config_path"], generation_section["generation_mode"]],
+        inputs=[
+            generation_section["config_path"],
+            generation_section["generation_mode"],
+        ],
         outputs=[
             generation_section["inference_steps"],
             generation_section["guidance_scale"],
@@ -82,7 +113,7 @@ def register_generation_service_handlers(
         ],
     )
 
-    generation_section["init_btn"].click(
+    init_click = generation_section["init_btn"].click(
         fn=lambda *args: gen_h.init_service_wrapper(dit_handler, llm_handler, *args),
         inputs=[
             generation_section["checkpoint_dropdown"],
@@ -119,40 +150,258 @@ def register_generation_service_handlers(
         ],
     )
 
-    # ========== LoRA Handlers ==========
+    # Hero pills refresh — after init_service_wrapper returns, rebuild
+    # the hero HTML so the model pill flips amber → green with the
+    # actual model name. Chained via ``.then()`` instead of extending
+    # init_service_wrapper's already 15-wide return tuple, which would
+    # require touching every caller / test.
+    hero_html = generation_section.get("hero_html")
+    user_mode_radio = generation_section.get("user_mode_radio")
+    ui_language = generation_section.get("_ui_language", "en")
+    if hero_html is not None:
+        from acestep.ui.gradio.interfaces.hero import (
+            derive_config_display_name,
+            rebuild_hero_html,
+        )
+
+        if user_mode_radio is not None:
+
+            def _refresh_hero_after_init(config_value: Any, mode_value: Any) -> str:
+                initialized = dit_handler.model is not None
+                return rebuild_hero_html(
+                    initialized=initialized,
+                    model_name=(
+                        derive_config_display_name(config_value)
+                        if initialized
+                        else None
+                    ),
+                    language_code=ui_language,
+                    user_mode=str(mode_value or "beginner"),
+                )
+
+            init_click.then(
+                fn=_refresh_hero_after_init,
+                inputs=[generation_section["config_path"], user_mode_radio],
+                outputs=[hero_html],
+            )
+        else:
+            # Service mode: no user_mode_radio, always render as beginner.
+            def _refresh_hero_after_init_service(config_value: Any) -> str:
+                initialized = dit_handler.model is not None
+                return rebuild_hero_html(
+                    initialized=initialized,
+                    model_name=(
+                        derive_config_display_name(config_value)
+                        if initialized
+                        else None
+                    ),
+                    language_code=ui_language,
+                    user_mode="beginner",
+                )
+
+            init_click.then(
+                fn=_refresh_hero_after_init_service,
+                inputs=[generation_section["config_path"]],
+                outputs=[hero_html],
+            )
+
+    # ========== Multi-LoRA Handlers ==========
+    from ..generation.lora_actions import (
+        ACTIVE_MARKER,
+        handle_add_lora,
+        handle_remove_by_name,
+        handle_set_active_by_name,
+        handle_set_scale_by_name,
+        handle_unload_all,
+        status_to_rows,
+    )
+
+    lora_status_out = generation_section["lora_status"]
+    lora_state_out = generation_section["lora_state"]
+
+    # Add a new adapter from path + optional name, then refresh state.
     generation_section["load_lora_btn"].click(
-        fn=dit_handler.load_lora,
-        inputs=[generation_section["lora_path"]],
-        outputs=[generation_section["lora_status"]],
+        fn=lambda path, name: handle_add_lora(path, name, dit_handler),
+        inputs=[
+            generation_section["lora_path"],
+            generation_section["lora_adapter_name"],
+        ],
+        outputs=[lora_status_out, lora_state_out],
     ).then(
         fn=lambda: gr.update(value=True),
         outputs=[generation_section["use_lora_checkbox"]],
     )
 
+    # Unload every adapter and clear the list.
     generation_section["unload_lora_btn"].click(
-        fn=dit_handler.unload_lora,
-        outputs=[generation_section["lora_status"]],
+        fn=lambda: handle_unload_all(dit_handler),
+        outputs=[lora_status_out, lora_state_out],
     ).then(
         fn=lambda: gr.update(value=False),
         outputs=[generation_section["use_lora_checkbox"]],
     )
 
+    # Master toggle (enable/disable the active adapter).
     generation_section["use_lora_checkbox"].change(
         fn=dit_handler.set_use_lora,
         inputs=[generation_section["use_lora_checkbox"]],
-        outputs=[generation_section["lora_status"]],
+        outputs=[lora_status_out],
     )
 
-    generation_section["lora_scale_slider"].change(
-        fn=dit_handler.set_lora_scale,
-        inputs=[generation_section["lora_scale_slider"]],
-        outputs=[generation_section["lora_status"]],
+    # ---- Dynamic per-row UI via @gr.render ------------------------------
+    # The render block is attached to the container created by
+    # build_lora_controls. It redraws itself every time lora_state
+    # changes — when we add/remove/activate/scale an adapter the state
+    # updates and @gr.render re-runs, emitting one full row per adapter
+    # with its own Slider + Activate/Deactivate + Remove button.
+    container = generation_section["lora_rows_container"]
+
+    # @gr.render must be declared INSIDE the target container's ``with``
+    # context so the dynamically-created children attach to the right
+    # parent. Without this, Gradio inserts them at the Blocks root.
+    with container:
+
+        @gr.render(inputs=[lora_state_out])
+        def _render_lora_rows(rows):  # noqa: D401 - Gradio render hook
+            if not rows:
+                gr.Markdown(
+                    "_No LoRA adapter loaded. Add one above to get started._",
+                    elem_classes=["no-tooltip"],
+                )
+                return
+
+            for row in rows:
+                if not isinstance(row, (list, tuple)) or len(row) < 3:
+                    continue
+                marker = row[0]
+                name = str(row[1])
+                try:
+                    current_scale = float(row[2])
+                except (TypeError, ValueError):
+                    current_scale = 1.0
+                badge = str(row[3]) if len(row) >= 4 else "LoRA"
+                is_active = marker == ACTIVE_MARKER
+                badge_class = (
+                    "acestep-lora-badge-lokr"
+                    if badge.lower() == "lokr"
+                    else "acestep-lora-badge-lora"
+                )
+
+                with gr.Row(equal_height=True, variant="panel"):
+                    # Header column: marker + name + badge on a single line.
+                    with gr.Column(scale=3, min_width=200):
+                        gr.Markdown(
+                            f"### {marker} &nbsp; **{name}** &nbsp; `{badge}`",
+                            elem_classes=[
+                                "no-tooltip",
+                                "acestep-lora-row-header",
+                                badge_class,
+                            ],
+                        )
+
+                    # Intensity slider.
+                    with gr.Column(scale=4, min_width=240):
+                        row_slider = gr.Slider(
+                            minimum=0.0,
+                            maximum=1.0,
+                            step=0.05,
+                            value=current_scale,
+                            label="Intensity",
+                            interactive=True,
+                            elem_classes=["no-tooltip"],
+                        )
+
+                    # Action buttons, side by side with visible text.
+                    with gr.Column(scale=3, min_width=300):
+                        with gr.Row():
+                            if is_active:
+                                toggle_btn = gr.Button(
+                                    "⭕ Deactivate",
+                                    variant="secondary",
+                                    size="sm",
+                                )
+                                toggle_btn.click(
+                                    fn=lambda: (
+                                        dit_handler.clear_active_lora_adapter(),
+                                        status_to_rows(dit_handler),
+                                    ),
+                                    outputs=[lora_status_out, lora_state_out],
+                                )
+                            else:
+                                toggle_btn = gr.Button(
+                                    "⭐ Activate",
+                                    variant="primary",
+                                    size="sm",
+                                )
+                                toggle_btn.click(
+                                    fn=lambda n=name: handle_set_active_by_name(
+                                        n, dit_handler
+                                    ),
+                                    outputs=[lora_status_out, lora_state_out],
+                                )
+                            remove_btn = gr.Button(
+                                "🗑️ Remove",
+                                variant="stop",
+                                size="sm",
+                            )
+
+                    row_slider.release(
+                        fn=lambda val, n=name: handle_set_scale_by_name(
+                            n, val, dit_handler
+                        ),
+                        inputs=[row_slider],
+                        outputs=[lora_status_out, lora_state_out],
+                    )
+                    remove_btn.click(
+                        fn=lambda n=name: handle_remove_by_name(n, dit_handler),
+                        outputs=[lora_status_out, lora_state_out],
+                    )
+
+    # Refresh the state on page load so reconnecting to an already
+    # initialized server shows the adapters that were loaded beforehand.
+    context.demo.load(
+        fn=lambda: status_to_rows(dit_handler),
+        outputs=[lora_state_out],
+    )
+
+    # ---- LoRA folder picker (native OS dialog) -------------------------
+    # Shell out to the platform's native folder chooser (osascript on
+    # macOS, zenity/kdialog on Linux, PowerShell on Windows). Only works
+    # when Gradio is accessed on the same machine that serves it — the
+    # expected localhost dev usage for ACE-Step.
+    from ..generation.native_folder_picker import pick_folder as _native_pick_folder
+
+    def _browse_lora_folder(current_path: str) -> Any:
+        picked = _native_pick_folder(title="Select a LoRA adapter folder")
+        if not picked:
+            # User cancelled or picker unavailable: leave the existing
+            # path untouched.
+            return gr.update()
+        return gr.update(value=picked)
+
+    generation_section["lora_browse_btn"].click(
+        fn=_browse_lora_folder,
+        inputs=[generation_section["lora_path"]],
+        outputs=[generation_section["lora_path"]],
     )
 
     # ========== MLX VAE Chunk Size ==========
     generation_section["mlx_vae_chunk_size"].change(
         fn=lambda val: setattr(dit_handler, "mlx_vae_chunk_size", int(val)),
         inputs=[generation_section["mlx_vae_chunk_size"]],
+    )
+
+    # ========== DiT Quality Preset ==========
+    from acestep.ui.gradio.events.generation.dit_presets import handle_dit_preset_change
+
+    generation_section["dit_preset"].change(
+        fn=handle_dit_preset_change,
+        inputs=[generation_section["dit_preset"]],
+        outputs=[
+            generation_section["inference_steps"],
+            generation_section["shift"],
+            generation_section["sampler_mode"],
+        ],
     )
 
     # ========== Auto Checkbox Handlers ==========
@@ -165,7 +414,9 @@ def register_generation_service_handlers(
     }
     for auto_key, (field_name, comp_key) in auto_field_map.items():
         generation_section[auto_key].change(
-            fn=lambda checked, fn=field_name: gen_h.on_auto_checkbox_change(checked, fn),
+            fn=lambda checked, fn=field_name: gen_h.on_auto_checkbox_change(
+                checked, fn
+            ),
             inputs=[generation_section[auto_key]],
             outputs=[generation_section[comp_key]],
         )
@@ -205,13 +456,16 @@ def register_generation_service_handlers(
 
 
 def _apply_runtime_language(language: str) -> dict[str, Any]:
-    """Update i18n language at the Gradio request boundary.
+    """Persist the selected UI language and restart the server.
 
-    Sets a per-request ``ContextVar`` so any ``t()`` calls within this
-    handler use *language*, then updates the shared instance default so
-    future requests without an explicit context inherit it.  The
-    ``ContextVar`` is reset on exit to avoid poisoning reused
-    thread-pool workers with a stale language value.
+    Gradio builds component labels once at startup via ``t()`` — dynamic
+    switching would require updating ~280 components individually. The
+    pragmatic fix: persist the choice to disk and re-exec the Python
+    process so the fresh startup reads the new language via
+    ``load_language()`` and rebuilds the interface.
+
+    The in-memory language is also updated synchronously so any handler
+    running concurrently during the restart window sees the new value.
 
     Args:
         language: Selected UI language code from the language dropdown.
@@ -219,12 +473,42 @@ def _apply_runtime_language(language: str) -> dict[str, Any]:
     Returns:
         A ``gr.update`` payload preserving the selected dropdown value.
     """
-    # Set ContextVar for this handler's scope.  No t() calls happen here
-    # today, but the pattern establishes the request-boundary convention
-    # for future handlers that adopt per-request language isolation.
+    import os
+    import sys
+    import threading
+
+    # Persist for the next startup.
+    try:
+        save_language(language)
+    except Exception as exc:  # noqa: BLE001 - best-effort persistence
+        print(f"[language] failed to persist UI language: {exc}")
+
+    # Update in-memory i18n for any still-running handlers.
     token = set_language_context(language)
     try:
         get_i18n(language)
-        return gr.update(value=language)
     finally:
         reset_language_context(token)
+
+    # Schedule a re-exec after the handler has returned so the client
+    # receives the dropdown ack before the server dies. The JS chained
+    # on ``.then()`` reloads the page, which will reconnect once the
+    # restarted server is back up.
+    def _restart_process() -> None:
+        import time
+
+        time.sleep(0.5)
+        try:
+            sys.stdout.flush()
+            sys.stderr.flush()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            os.execv(sys.executable, [sys.executable, *sys.argv])
+        except Exception as exc:  # noqa: BLE001
+            print(f"[language] os.execv failed: {exc}; forcing exit")
+            os._exit(0)
+
+    threading.Thread(target=_restart_process, daemon=True).start()
+
+    return gr.update(value=language)

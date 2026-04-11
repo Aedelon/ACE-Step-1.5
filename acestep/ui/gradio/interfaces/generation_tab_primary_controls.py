@@ -27,7 +27,7 @@ def build_mode_selector_controls(initial_mode_choices: list[str]) -> dict[str, A
             value="Custom",
             label=t("generation.mode_label"),
             info=t("generation.mode_info_custom"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
             scale=10,
         )
         with gr.Column(scale=1, min_width=80, elem_classes="icon-btn-wrap") as load_file_col:
@@ -62,7 +62,7 @@ def build_hidden_generation_state() -> dict[str, Any]:
         interactive=False,
         lines=1,
         info=t("generation.instruction_info"),
-        elem_classes=["has-info-container"],
+        elem_classes=["acestep-tt"],
         visible=False,
     )
     simple_sample_created = gr.State(value=False)

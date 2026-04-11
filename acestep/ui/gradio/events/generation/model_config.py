@@ -42,7 +42,9 @@ def is_pure_base_model(config_path_lower: str) -> bool:
     )
 
 
-def update_model_type_settings(config_path: str | None, current_mode: str | None = None) -> tuple:
+def update_model_type_settings(
+    config_path: str | None, current_mode: str | None = None
+) -> tuple:
     """Update UI settings based on model type (fallback when handler not initialized yet).
 
     Args:
@@ -64,7 +66,9 @@ def update_model_type_settings(config_path: str | None, current_mode: str | None
     is_pure_base = is_pure_base_model(config_path_lower)
     is_sft = is_sft_model(config_path_lower)
 
-    return get_model_type_ui_settings(is_turbo, current_mode=current_mode, is_pure_base=is_pure_base, is_sft=is_sft)
+    return get_model_type_ui_settings(
+        is_turbo, current_mode=current_mode, is_pure_base=is_pure_base, is_sft=is_sft
+    )
 
 
 def is_sft_model(config_path_lower: str) -> bool:
@@ -76,7 +80,9 @@ def is_sft_model(config_path_lower: str) -> bool:
     Returns:
         ``True`` when the path contains ``"sft"`` and excludes ``"turbo"``.
     """
-    return _has_token("sft", config_path_lower) and not _has_token("turbo", config_path_lower)
+    return _has_token("sft", config_path_lower) and not _has_token(
+        "turbo", config_path_lower
+    )
 
 
 def is_xl_model(config_path_lower: str) -> bool:
@@ -91,7 +97,9 @@ def is_xl_model(config_path_lower: str) -> bool:
     return _has_token("xl", config_path_lower)
 
 
-def get_ui_control_config(is_turbo: bool, is_pure_base: bool = False, is_sft: bool = False) -> dict:
+def get_ui_control_config(
+    is_turbo: bool, is_pure_base: bool = False, is_sft: bool = False
+) -> dict:
     """Return UI control configuration (values, limits, visibility) for model type.
 
     Args:
@@ -103,25 +111,32 @@ def get_ui_control_config(is_turbo: bool, is_pure_base: bool = False, is_sft: bo
 
     Used by both interactive init and service-mode startup so controls stay consistent.
     """
-    # Precedence: turbo > SFT > pure base > fallback.
-    if is_pure_base:
-        task_choices = TASK_TYPES_BASE
-        mode_choices = GENERATION_MODES_BASE
-    else:
-        task_choices = TASK_TYPES_TURBO
-        mode_choices = GENERATION_MODES_TURBO
+    # Always show ALL modes (base set) so users see what's available.
+    # Turbo-incompatible modes (Extract/Lego/Complete) are blocked at runtime
+    # by handle_generation_mode_change, which reverts the selection and warns.
+    task_choices = TASK_TYPES_BASE
+    mode_choices = GENERATION_MODES_BASE
+
+    # Base-only params are ALWAYS visible but disabled (greyed out) on turbo
+    # so users can see what's available without switching models.
+    base_only_interactive = not is_turbo
 
     if is_turbo:
         return {
             "inference_steps_value": 8,
             "inference_steps_maximum": 20,
             "inference_steps_minimum": 1,
-            "guidance_scale_visible": False,
-            "use_adg_visible": False,
+            "guidance_scale_visible": True,
+            "guidance_scale_interactive": base_only_interactive,
+            "use_adg_visible": True,
+            "use_adg_interactive": base_only_interactive,
             "shift_value": 3.0,
             "shift_visible": True,
-            "cfg_interval_start_visible": False,
-            "cfg_interval_end_visible": False,
+            "shift_interactive": True,
+            "cfg_interval_start_visible": True,
+            "cfg_interval_start_interactive": base_only_interactive,
+            "cfg_interval_end_visible": True,
+            "cfg_interval_end_interactive": base_only_interactive,
             "task_type_choices": task_choices,
             "generation_mode_choices": mode_choices,
         }
@@ -134,17 +149,27 @@ def get_ui_control_config(is_turbo: bool, is_pure_base: bool = False, is_sft: bo
             "inference_steps_maximum": 200,
             "inference_steps_minimum": 1,
             "guidance_scale_visible": True,
+            "guidance_scale_interactive": True,
             "use_adg_visible": True,
+            "use_adg_interactive": True,
             "shift_value": 3.0,
             "shift_visible": True,
+            "shift_interactive": True,
             "cfg_interval_start_visible": True,
+            "cfg_interval_start_interactive": True,
             "cfg_interval_end_visible": True,
+            "cfg_interval_end_interactive": True,
             "task_type_choices": task_choices,
             "generation_mode_choices": mode_choices,
         }
 
 
-def get_model_type_ui_settings(is_turbo: bool, current_mode: str | None = None, is_pure_base: bool = False, is_sft: bool = False):
+def get_model_type_ui_settings(
+    is_turbo: bool,
+    current_mode: str | None = None,
+    is_pure_base: bool = False,
+    is_sft: bool = False,
+):
     """Get gr.update() tuple for model-type controls.
 
     Args:
@@ -171,11 +196,27 @@ def get_model_type_ui_settings(is_turbo: bool, current_mode: str | None = None, 
             maximum=cfg["inference_steps_maximum"],
             minimum=cfg["inference_steps_minimum"],
         ),
-        gr.update(visible=cfg["guidance_scale_visible"]),
-        gr.update(visible=cfg["use_adg_visible"]),
-        gr.update(value=cfg["shift_value"], visible=cfg["shift_visible"]),
-        gr.update(visible=cfg["cfg_interval_start_visible"]),
-        gr.update(visible=cfg["cfg_interval_end_visible"]),
+        gr.update(
+            visible=cfg["guidance_scale_visible"],
+            interactive=cfg["guidance_scale_interactive"],
+        ),
+        gr.update(
+            visible=cfg["use_adg_visible"],
+            interactive=cfg["use_adg_interactive"],
+        ),
+        gr.update(
+            value=cfg["shift_value"],
+            visible=cfg["shift_visible"],
+            interactive=cfg["shift_interactive"],
+        ),
+        gr.update(
+            visible=cfg["cfg_interval_start_visible"],
+            interactive=cfg["cfg_interval_start_interactive"],
+        ),
+        gr.update(
+            visible=cfg["cfg_interval_end_visible"],
+            interactive=cfg["cfg_interval_end_interactive"],
+        ),
         gr.update(),  # task_type
         mode_update,
         init_llm_update,

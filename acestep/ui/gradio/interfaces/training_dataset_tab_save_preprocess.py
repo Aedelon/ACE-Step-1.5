@@ -14,13 +14,21 @@ def build_dataset_save_and_preprocess_controls() -> dict[str, object]:
 
     with gr.Row():
         with gr.Column(scale=3):
-            save_path = gr.Textbox(
-                label=t("training.save_path"),
-                value="./datasets/my_lora_dataset.json",
-                placeholder="./datasets/dataset_name.json",
-                info=t("training.save_path_info"),
-                elem_classes=["has-info-container"],
-            )
+            with gr.Row():
+                save_path = gr.Textbox(
+                    label=t("training.save_path"),
+                    value="./datasets/my_lora_dataset.json",
+                    placeholder="./datasets/dataset_name.json",
+                    info=t("training.save_path_info"),
+                    elem_classes=["acestep-tt"],
+                    scale=4,
+                )
+                save_path_browse_btn = gr.Button(
+                    t("common.browse_btn"),
+                    variant="secondary",
+                    scale=0,
+                    min_width=120,
+                )
         with gr.Column(scale=1):
             save_dataset_btn = gr.Button(
                 t("training.save_dataset_btn"),
@@ -40,12 +48,20 @@ def build_dataset_save_and_preprocess_controls() -> dict[str, object]:
 
     with gr.Row():
         with gr.Column(scale=3):
-            load_existing_dataset_path = gr.Textbox(
-                label=t("training.load_existing_label"),
-                placeholder="./datasets/my_lora_dataset.json",
-                info=t("training.load_existing_info"),
-                elem_classes=["has-info-container"],
-            )
+            with gr.Row():
+                load_existing_dataset_path = gr.Textbox(
+                    label=t("training.load_existing_label"),
+                    placeholder="./datasets/my_lora_dataset.json",
+                    info=t("training.load_existing_info"),
+                    elem_classes=["acestep-tt"],
+                    scale=4,
+                )
+                load_existing_dataset_path_browse_btn = gr.Button(
+                    t("common.browse_btn"),
+                    variant="secondary",
+                    scale=0,
+                    min_width=120,
+                )
         with gr.Column(scale=1):
             load_existing_dataset_btn = gr.Button(
                 t("training.load_dataset_btn"),
@@ -66,18 +82,26 @@ def build_dataset_save_and_preprocess_controls() -> dict[str, object]:
             choices=["LoRA", "LoKr"],
             value="LoRA",
             info="LoRA keeps compatibility mode; LoKr uses per-sample source-style context.",
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
     with gr.Row():
         with gr.Column(scale=3):
-            preprocess_output_dir = gr.Textbox(
-                label=t("training.tensor_output_dir"),
-                value="./datasets/preprocessed_tensors",
-                placeholder="./datasets/preprocessed_tensors",
-                info=t("training.tensor_output_info"),
-                elem_classes=["has-info-container"],
-            )
+            with gr.Row():
+                preprocess_output_dir = gr.Textbox(
+                    label=t("training.tensor_output_dir"),
+                    value="./datasets/preprocessed_tensors",
+                    placeholder="./datasets/preprocessed_tensors",
+                    info=t("training.tensor_output_info"),
+                    elem_classes=["acestep-tt"],
+                    scale=4,
+                )
+                preprocess_output_dir_browse_btn = gr.Button(
+                    t("common.browse_btn"),
+                    variant="secondary",
+                    scale=0,
+                    min_width=120,
+                )
         with gr.Column(scale=1):
             preprocess_btn = gr.Button(
                 t("training.preprocess_btn"),
@@ -93,13 +117,16 @@ def build_dataset_save_and_preprocess_controls() -> dict[str, object]:
 
     return {
         "save_path": save_path,
+        "save_path_browse_btn": save_path_browse_btn,
         "save_dataset_btn": save_dataset_btn,
         "save_status": save_status,
         "load_existing_dataset_path": load_existing_dataset_path,
+        "load_existing_dataset_path_browse_btn": load_existing_dataset_path_browse_btn,
         "load_existing_dataset_btn": load_existing_dataset_btn,
         "load_existing_status": load_existing_status,
         "preprocess_mode": preprocess_mode,
         "preprocess_output_dir": preprocess_output_dir,
+        "preprocess_output_dir_browse_btn": preprocess_output_dir_browse_btn,
         "preprocess_btn": preprocess_btn,
         "preprocess_progress": preprocess_progress,
     }

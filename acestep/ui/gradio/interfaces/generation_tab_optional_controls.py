@@ -28,17 +28,29 @@ def build_optional_parameter_controls(
 
     with gr.Accordion(
         t("generation.optional_params"),
-        open=True,
+        # Closed by default — these fields are gated behind their Auto
+        # toggles and showing them grayed out at first paint sends a
+        # contradictory signal ("here are controls" + "but you can't
+        # touch them"). The user opens this section only when they want
+        # to override Auto-detected values.
+        open=False,
         visible=True,
-        elem_classes=["has-info-container"],
+        elem_classes=["acestep-tt"],
     ) as optional_params_accordion:
+        # Micro-heading — groups BPM / Key / Time Sig / Vocal Lang
+        # visually as "track metadata" so the accordion body reads
+        # as two distinct chunks (metadata, then output).
+        gr.Markdown(
+            t("generation.section_track_metadata"),
+            elem_classes=["acestep-subsection-heading", "no-tooltip"],
+        )
         with gr.Row():
             bpm = gr.Number(
                 label=t("generation.bpm_label"),
                 value=None,
                 step=1,
                 info=t("generation.bpm_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
             key_scale = gr.Textbox(
@@ -46,7 +58,7 @@ def build_optional_parameter_controls(
                 placeholder=t("generation.keyscale_placeholder"),
                 value="",
                 info=t("generation.keyscale_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
             time_signature = gr.Dropdown(
@@ -55,16 +67,19 @@ def build_optional_parameter_controls(
                 label=t("generation.timesig_label"),
                 allow_custom_value=True,
                 info=t("generation.timesig_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
             vocal_language = gr.Dropdown(
-                choices=[(lang if lang != "unknown" else "Instrumental / auto", lang) for lang in VALID_LANGUAGES],
+                choices=[
+                    (lang if lang != "unknown" else "Instrumental / auto", lang)
+                    for lang in VALID_LANGUAGES
+                ],
                 value="unknown",
                 label=t("generation.vocal_language_label"),
                 info=t("generation.vocal_language_info"),
                 allow_custom_value=True,
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
         with gr.Row(elem_classes=["auto-toggles-row"]):
@@ -92,6 +107,11 @@ def build_optional_parameter_controls(
                 container=False,
                 elem_classes=["auto-toggle"],
             )
+        # Second chunk — output-level controls (duration + batch).
+        gr.Markdown(
+            t("generation.section_output"),
+            elem_classes=["acestep-subsection-heading", "no-tooltip"],
+        )
         with gr.Row():
             audio_duration = gr.Number(
                 label=t("generation.duration_label"),
@@ -101,7 +121,7 @@ def build_optional_parameter_controls(
                 step=0.1,
                 info=t("generation.duration_info")
                 + f" (Max: {max_duration}s / {max_duration // 60} min)",
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=False,
             )
             batch_size_input = gr.Number(
@@ -111,7 +131,7 @@ def build_optional_parameter_controls(
                 maximum=max_batch_size,
                 step=1,
                 info=t("generation.batch_size_info") + f" (Max: {max_batch_size})",
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 interactive=not service_mode,
             )
         with gr.Row(elem_classes=["auto-toggles-row"]):
@@ -122,7 +142,9 @@ def build_optional_parameter_controls(
                 elem_classes=["auto-toggle"],
             )
             gr.HTML("<span></span>")
-        reset_all_auto_btn = gr.Button(t("generation.reset_all_auto"), variant="secondary", size="sm")
+        reset_all_auto_btn = gr.Button(
+            t("generation.reset_all_auto"), variant="secondary", size="sm"
+        )
 
     return {
         "optional_params_accordion": optional_params_accordion,

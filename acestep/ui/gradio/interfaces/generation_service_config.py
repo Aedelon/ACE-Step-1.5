@@ -47,7 +47,7 @@ def create_service_config_content(
         t("service.title"),
         open=not service_pre_initialized,
         visible=not service_mode,
-        elem_classes=["has-info-container"],
+        elem_classes=["acestep-tt"],
     ) as service_config_accordion:
         create_help_button("service_config")
         language_controls = build_language_selector(defaults["current_language"])

@@ -16,7 +16,9 @@ REQUIRED_PEFT_CONFIG_KEYS = ("peft_type",)
 
 def _is_lokr_safetensors(weights_path: str) -> bool:
     """Return whether ``weights_path`` looks like a LoKr/LyCORIS safetensors file."""
-    if not os.path.isfile(weights_path) or not weights_path.lower().endswith(".safetensors"):
+    if not os.path.isfile(weights_path) or not weights_path.lower().endswith(
+        ".safetensors"
+    ):
         return False
     if os.path.basename(weights_path) == LOKR_WEIGHTS_FILENAME:
         return True
@@ -90,7 +92,9 @@ def _load_lokr_config(weights_path: str) -> LoKRConfig:
     try:
         from safetensors import safe_open
     except ImportError:
-        logger.warning("safetensors metadata reader unavailable; using default LoKr config.")
+        logger.warning(
+            "safetensors metadata reader unavailable; using default LoKr config."
+        )
         return config
 
     try:
@@ -121,7 +125,9 @@ def _load_lokr_config(weights_path: str) -> LoKRConfig:
     try:
         return LoKRConfig(**filtered)
     except Exception as exc:
-        logger.warning(f"Failed to apply LoKr metadata config from {weights_path}: {exc}")
+        logger.warning(
+            f"Failed to apply LoKr metadata config from {weights_path}: {exc}"
+        )
         return config
 
 
@@ -130,7 +136,9 @@ def _load_lokr_adapter(decoder: Any, weights_path: str) -> Any:
     try:
         from lycoris import LycorisNetwork, create_lycoris
     except ImportError as exc:
-        raise ImportError("LyCORIS library not installed. Please install with: pip install lycoris-lora") from exc
+        raise ImportError(
+            "LyCORIS library not installed. Please install with: pip install lycoris-lora"
+        ) from exc
 
     lokr_config = _load_lokr_config(weights_path)
     LycorisNetwork.apply_preset(
@@ -227,10 +235,16 @@ def add_lora(self, lora_path: str, adapter_name: str | None = None) -> str:
         from peft import PeftModel
     except ImportError:
         if lokr_weights_path is None:
-            return "❌ PEFT library not installed. Please install with: pip install peft"
+            return (
+                "❌ PEFT library not installed. Please install with: pip install peft"
+            )
         PeftModel = None  # type: ignore[assignment]
 
-    effective_name = adapter_name.strip() if isinstance(adapter_name, str) and adapter_name.strip() else _default_adapter_name_from_path(lora_path)
+    effective_name = (
+        adapter_name.strip()
+        if isinstance(adapter_name, str) and adapter_name.strip()
+        else _default_adapter_name_from_path(lora_path)
+    )
     _active_loras = getattr(self, "_active_loras", None)
     if _active_loras is None:
         self._active_loras = {}
@@ -252,20 +266,30 @@ def add_lora(self, lora_path: str, adapter_name: str | None = None) -> str:
                     state_dict = decoder.state_dict()
                     if not state_dict:
                         raise ValueError("state_dict is empty - cannot backup decoder")
-                    self._base_decoder = {k: v.detach().cpu().clone() for k, v in state_dict.items()}
+                    self._base_decoder = {
+                        k: v.detach().cpu().clone() for k, v in state_dict.items()
+                    }
                 except Exception as e:
                     logger.error(f"Failed to create state_dict backup: {e}")
                     raise
-                backup_size_mb = sum(v.numel() * v.element_size() for v in self._base_decoder.values()) / (1024**2)
-                logger.info(f"Base decoder state_dict backed up to CPU ({backup_size_mb:.1f}MB)")
+                backup_size_mb = sum(
+                    v.numel() * v.element_size() for v in self._base_decoder.values()
+                ) / (1024**2)
+                logger.info(
+                    f"Base decoder state_dict backed up to CPU ({backup_size_mb:.1f}MB)"
+                )
 
             if lokr_weights_path is not None:
-                logger.info(f"Loading LoKr adapter from {lokr_weights_path} as '{effective_name}'")
+                logger.info(
+                    f"Loading LoKr adapter from {lokr_weights_path} as '{effective_name}'"
+                )
                 _load_lokr_adapter(decoder, lokr_weights_path)
                 self.model.decoder = decoder
                 self._adapter_type = "lokr"
             else:
-                logger.info(f"Loading LoRA adapter from {lora_path} as '{effective_name}'")
+                logger.info(
+                    f"Loading LoRA adapter from {lora_path} as '{effective_name}'"
+                )
                 self.model.decoder = PeftModel.from_pretrained(
                     decoder, lora_path, adapter_name=effective_name, is_trainable=False
                 )
@@ -274,7 +298,9 @@ def add_lora(self, lora_path: str, adapter_name: str | None = None) -> str:
             # Already PEFT: load additional adapter (no base restore). LoKr not supported as second adapter.
             if lokr_weights_path is not None:
                 return "❌ LoKr cannot be added as a second adapter when PEFT is already loaded."
-            logger.info(f"Loading additional LoRA from {lora_path} as '{effective_name}'")
+            logger.info(
+                f"Loading additional LoRA from {lora_path} as '{effective_name}'"
+            )
             self.model.decoder.load_adapter(lora_path, adapter_name=effective_name)
             self._adapter_type = "lora"
 
@@ -291,10 +317,14 @@ def add_lora(self, lora_path: str, adapter_name: str | None = None) -> str:
         self._ensure_lora_registry()
         self._lora_active_adapter = None
         target_count, adapters = self._rebuild_lora_registry(lora_path=lora_path)
-        # Set the newly added adapter as active
+        # Set the newly added adapter as active. We always mark it
+        # active on our side (``_lora_active_adapter``) because the
+        # PEFT-registry check below is False for LoKr, whose adapters
+        # live in ``_active_loras`` only — without this the multi-LoRA
+        # dataframe would show the row as inactive right after loading.
+        self._lora_active_adapter = effective_name
         if effective_name in (getattr(self._lora_service, "registry", {}) or {}):
             self._lora_service.set_active_adapter(effective_name)
-            self._lora_active_adapter = effective_name
         if hasattr(self.model.decoder, "set_adapter"):
             try:
                 self.model.decoder.set_adapter(effective_name)
@@ -318,7 +348,11 @@ def add_lora(self, lora_path: str, adapter_name: str | None = None) -> str:
 
 def load_lora(self, lora_path: str) -> str:
     """Load a single adapter (backward-compat), including LyCORIS LoKr paths."""
-    lokr_weights_path = _resolve_lokr_weights_path(lora_path.strip()) if isinstance(lora_path, str) else None
+    lokr_weights_path = (
+        _resolve_lokr_weights_path(lora_path.strip())
+        if isinstance(lora_path, str)
+        else None
+    )
     message = self.add_lora(lora_path, adapter_name=None)
     if lokr_weights_path is not None and message.startswith("✅"):
         return f"✅ LoKr loaded from {lokr_weights_path}"
@@ -340,7 +374,9 @@ def remove_lora(self, adapter_name: str) -> str:
 
     _active_loras = getattr(self, "_active_loras", None) or {}
     if adapter_name not in _active_loras:
-        return f"❌ Unknown adapter: {adapter_name}. Loaded: {list(_active_loras.keys())}"
+        return (
+            f"❌ Unknown adapter: {adapter_name}. Loaded: {list(_active_loras.keys())}"
+        )
 
     try:
         from peft import PeftModel
@@ -389,11 +425,17 @@ def remove_lora(self, adapter_name: str) -> str:
                 mem_before = self._memory_allocated() / (1024**3)
                 logger.info(f"VRAM before LoRA unload: {mem_before:.2f}GB")
             self.model.decoder = decoder.get_base_model()
-            load_result = self.model.decoder.load_state_dict(self._base_decoder, strict=False)
+            load_result = self.model.decoder.load_state_dict(
+                self._base_decoder, strict=False
+            )
             if load_result.missing_keys:
-                logger.warning(f"Missing keys when restoring decoder: {load_result.missing_keys[:5]}")
+                logger.warning(
+                    f"Missing keys when restoring decoder: {load_result.missing_keys[:5]}"
+                )
             if load_result.unexpected_keys:
-                logger.warning(f"Unexpected keys when restoring decoder: {load_result.unexpected_keys[:5]}")
+                logger.warning(
+                    f"Unexpected keys when restoring decoder: {load_result.unexpected_keys[:5]}"
+                )
             self.model.decoder = self.model.decoder.to(self.device).to(self.dtype)
             self.model.decoder.eval()
             self.lora_loaded = False
@@ -410,7 +452,9 @@ def remove_lora(self, adapter_name: str) -> str:
             self._lora_scale_state = {}
             if mem_before is not None and hasattr(self, "_memory_allocated"):
                 mem_after = self._memory_allocated() / (1024**3)
-                logger.info(f"VRAM after LoRA unload: {mem_after:.2f}GB (freed: {mem_before - mem_after:.2f}GB)")
+                logger.info(
+                    f"VRAM after LoRA unload: {mem_after:.2f}GB (freed: {mem_before - mem_after:.2f}GB)"
+                )
             logger.info("LoRA unloaded, base decoder restored")
             return "✅ LoRA unloaded, using base model"
         # Else: set another adapter active and rebuild registry
@@ -456,7 +500,9 @@ def unload_lora(self) -> str:
                 logger.info("Restoring decoder structure from LyCORIS adapter")
                 restore_fn()
             else:
-                logger.warning("Decoder has _lycoris_net but no restore() method; continuing with state_dict restore")
+                logger.warning(
+                    "Decoder has _lycoris_net but no restore() method; continuing with state_dict restore"
+                )
             self.model.decoder._lycoris_net = None
 
         try:
@@ -467,18 +513,30 @@ def unload_lora(self) -> str:
         if PeftModel is not None and isinstance(self.model.decoder, PeftModel):
             logger.info("Extracting base model from PEFT wrapper")
             self.model.decoder = self.model.decoder.get_base_model()
-            load_result = self.model.decoder.load_state_dict(self._base_decoder, strict=False)
+            load_result = self.model.decoder.load_state_dict(
+                self._base_decoder, strict=False
+            )
             if load_result.missing_keys:
-                logger.warning(f"Missing keys when restoring decoder: {load_result.missing_keys[:5]}")
+                logger.warning(
+                    f"Missing keys when restoring decoder: {load_result.missing_keys[:5]}"
+                )
             if load_result.unexpected_keys:
-                logger.warning(f"Unexpected keys when restoring decoder: {load_result.unexpected_keys[:5]}")
+                logger.warning(
+                    f"Unexpected keys when restoring decoder: {load_result.unexpected_keys[:5]}"
+                )
         else:
             logger.info("Restoring base decoder from state_dict backup")
-            load_result = self.model.decoder.load_state_dict(self._base_decoder, strict=False)
+            load_result = self.model.decoder.load_state_dict(
+                self._base_decoder, strict=False
+            )
             if load_result.missing_keys:
-                logger.warning(f"Missing keys when restoring decoder: {load_result.missing_keys[:5]}")
+                logger.warning(
+                    f"Missing keys when restoring decoder: {load_result.missing_keys[:5]}"
+                )
             if load_result.unexpected_keys:
-                logger.warning(f"Unexpected keys when restoring decoder: {load_result.unexpected_keys[:5]}")
+                logger.warning(
+                    f"Unexpected keys when restoring decoder: {load_result.unexpected_keys[:5]}"
+                )
 
         self.model.decoder = self.model.decoder.to(self.device).to(self.dtype)
         self.model.decoder.eval()
@@ -501,7 +559,9 @@ def unload_lora(self) -> str:
 
         if mem_before is not None and hasattr(self, "_memory_allocated"):
             mem_after = self._memory_allocated() / (1024**3)
-            logger.info(f"VRAM after LoRA unload: {mem_after:.2f}GB (freed: {mem_before - mem_after:.2f}GB)")
+            logger.info(
+                f"VRAM after LoRA unload: {mem_after:.2f}GB (freed: {mem_before - mem_after:.2f}GB)"
+            )
 
         logger.info("LoRA unloaded, base decoder restored")
         return "✅ LoRA unloaded, using base model"

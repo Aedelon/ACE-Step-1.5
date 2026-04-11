@@ -3,6 +3,7 @@
 import gc
 import os
 import platform
+
 try:
     import resource
 except ImportError:
@@ -22,6 +23,7 @@ def _get_libc():
     if _LIBC is None and platform.system() == "Linux":
         try:
             import ctypes
+
             _LIBC = ctypes.CDLL("libc.so.6")
         except Exception:
             pass
@@ -47,7 +49,9 @@ def _apply_malloc_mmap_threshold() -> None:
         # M_MMAP_THRESHOLD = -3; 128 KB threshold
         libc.mallopt(-3, 131072)
         _MALLOPT_APPLIED = True
-        logger.debug("[memory] Set M_MMAP_THRESHOLD=131072 for immediate OS reclaim of large frees")
+        logger.debug(
+            "[memory] Set M_MMAP_THRESHOLD=131072 for immediate OS reclaim of large frees"
+        )
     except Exception as exc:
         logger.debug("[memory] mallopt not available: {}", exc)
 
@@ -63,9 +67,15 @@ class InitServiceMemoryBasicMixin:
         device_type = self._device_type()
         if device_type == "cuda" and torch.cuda.is_available():
             torch.cuda.empty_cache()
-        elif device_type == "xpu" and hasattr(torch, "xpu") and torch.xpu.is_available():
+        elif (
+            device_type == "xpu" and hasattr(torch, "xpu") and torch.xpu.is_available()
+        ):
             torch.xpu.empty_cache()
-        elif device_type == "mps" and hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        elif (
+            device_type == "mps"
+            and hasattr(torch.backends, "mps")
+            and torch.backends.mps.is_available()
+        ):
             torch.mps.empty_cache()
 
     def _synchronize(self):
@@ -73,9 +83,15 @@ class InitServiceMemoryBasicMixin:
         device_type = self._device_type()
         if device_type == "cuda" and torch.cuda.is_available():
             torch.cuda.synchronize()
-        elif device_type == "xpu" and hasattr(torch, "xpu") and torch.xpu.is_available():
+        elif (
+            device_type == "xpu" and hasattr(torch, "xpu") and torch.xpu.is_available()
+        ):
             torch.xpu.synchronize()
-        elif device_type == "mps" and hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        elif (
+            device_type == "mps"
+            and hasattr(torch.backends, "mps")
+            and torch.backends.mps.is_available()
+        ):
             torch.mps.synchronize()
 
     def _memory_allocated(self):
@@ -83,6 +99,23 @@ class InitServiceMemoryBasicMixin:
         device_type = self._device_type()
         if device_type == "cuda" and torch.cuda.is_available():
             return torch.cuda.memory_allocated()
+        if (
+            device_type == "mps"
+            and hasattr(torch.backends, "mps")
+            and torch.backends.mps.is_available()
+        ):
+            # PyTorch >= 2.0 exposes per-process allocated MPS memory.
+            # On Apple Silicon this reflects the unified-memory footprint
+            # reserved by the current Python process for MPS tensors.
+            try:
+                return int(torch.mps.current_allocated_memory())
+            except (AttributeError, RuntimeError):
+                return 0
+        if device_type == "xpu" and hasattr(torch, "xpu") and torch.xpu.is_available():
+            try:
+                return int(torch.xpu.memory_allocated())
+            except (AttributeError, RuntimeError):
+                return 0
         return 0
 
     def _max_memory_allocated(self):
@@ -90,6 +123,22 @@ class InitServiceMemoryBasicMixin:
         device_type = self._device_type()
         if device_type == "cuda" and torch.cuda.is_available():
             return torch.cuda.max_memory_allocated()
+        if (
+            device_type == "mps"
+            and hasattr(torch.backends, "mps")
+            and torch.backends.mps.is_available()
+        ):
+            # MPS does not expose a "peak" counter — use the driver's
+            # current allocation as a reasonable approximation.
+            try:
+                return int(torch.mps.driver_allocated_memory())
+            except (AttributeError, RuntimeError):
+                return 0
+        if device_type == "xpu" and hasattr(torch, "xpu") and torch.xpu.is_available():
+            try:
+                return int(torch.xpu.max_memory_allocated())
+            except (AttributeError, RuntimeError):
+                return 0
         return 0
 
     def _is_on_target_device(self, tensor, target_device):
@@ -116,6 +165,7 @@ class InitServiceMemoryBasicMixin:
         """Return the AffineQuantizedTensor class from torchao, or None if unavailable."""
         try:
             from torchao.dtypes.affine_quantized_tensor import AffineQuantizedTensor
+
             return AffineQuantizedTensor
         except Exception as exc:
             logger.debug(
@@ -124,6 +174,7 @@ class InitServiceMemoryBasicMixin:
             )
         try:
             from torchao.quantization.affine_quantized import AffineQuantizedTensor
+
             return AffineQuantizedTensor
         except Exception as exc:
             logger.debug(
@@ -172,7 +223,7 @@ class InitServiceMemoryBasicMixin:
                     rss_pages = int(f.read().split()[1])
                 # Try os.sysconf for page size, fallback to resource or 4096
                 try:
-                    page_size = os.sysconf('SC_PAGE_SIZE')
+                    page_size = os.sysconf("SC_PAGE_SIZE")
                 except (AttributeError, ValueError):
                     page_size = resource.getpagesize() if resource else 4096
                 return rss_pages * page_size / (1024 * 1024)
@@ -202,7 +253,9 @@ class InitServiceMemoryBasicMixin:
                 GetCurrentProcess = ctypes.windll.kernel32.GetCurrentProcess
                 counters = PROCESS_MEMORY_COUNTERS()
                 counters.cb = ctypes.sizeof(PROCESS_MEMORY_COUNTERS)
-                if GetProcessMemoryInfo(GetCurrentProcess(), ctypes.byref(counters), ctypes.sizeof(counters)):
+                if GetProcessMemoryInfo(
+                    GetCurrentProcess(), ctypes.byref(counters), ctypes.sizeof(counters)
+                ):
                     return counters.WorkingSetSize / (1024 * 1024)
             except Exception:
                 pass

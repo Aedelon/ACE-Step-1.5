@@ -27,7 +27,9 @@ class FakeSetScaleModule:
         self.r = {"main": 2.0}
 
     def set_scale(self, adapter_name, factor):
-        raise AssertionError(f"set_scale should be skipped for {adapter_name} with factor={factor}")
+        raise AssertionError(
+            f"set_scale should be skipped for {adapter_name} with factor={factor}"
+        )
 
 
 class MinimalHandler(LoraManagerMixin):
@@ -44,7 +46,9 @@ class MinimalHandler(LoraManagerMixin):
 
 class LoraHandlerIntegrationTests(unittest.TestCase):
     def test_handler_state_snapshot_does_not_mutate_service(self):
-        decoder = FakeDecoder(modules=[("lora_block", FakeSetScaleModule())], adapter_names=["main"])
+        decoder = FakeDecoder(
+            modules=[("lora_block", FakeSetScaleModule())], adapter_names=["main"]
+        )
         handler = MinimalHandler(decoder)
 
         _, adapters = handler._rebuild_lora_registry()
@@ -58,7 +62,9 @@ class LoraHandlerIntegrationTests(unittest.TestCase):
         self.assertIn("main", handler._lora_service.registry)
 
     def test_set_lora_scale_reports_skipped_targets(self):
-        decoder = FakeDecoder(modules=[("lora_block", FakeSetScaleModule())], adapter_names=["main"])
+        decoder = FakeDecoder(
+            modules=[("lora_block", FakeSetScaleModule())], adapter_names=["main"]
+        )
         handler = MinimalHandler(decoder)
         handler._rebuild_lora_registry()
 
@@ -102,6 +108,58 @@ class LoraHandlerIntegrationTests(unittest.TestCase):
         message = handler.set_use_lora(False)
 
         self.assertEqual(message, "✅ LoRA disabled")
+
+    def test_set_active_lora_adapter_falls_back_to_active_loras_dict(self):
+        """Multi-LoRA UI: Set Active must work for adapters that live in
+        ``_active_loras`` even when the PEFT registry never saw them
+        (LoKr case, or PEFT introspection miss). This used to raise
+        "❌ Unknown adapter" because we only checked the PEFT registry.
+        """
+        decoder = FakeDecoder(modules=[], adapter_names=[])
+        handler = MinimalHandler(decoder)
+        # Simulate a LoKr adapter tracked only in _active_loras.
+        handler._active_loras = {"lokr_weights": 0.8, "final": 1.0}
+        handler._adapter_type = "lokr"
+
+        message = handler.set_active_lora_adapter("lokr_weights")
+
+        self.assertTrue(
+            message.startswith("✅"),
+            f"expected success, got: {message}",
+        )
+        self.assertEqual(handler._lora_active_adapter, "lokr_weights")
+
+        # And it still rejects names we don't know at all.
+        message = handler.set_active_lora_adapter("ghost_adapter")
+        self.assertIn("Unknown adapter", message)
+
+    def test_clear_active_lora_adapter_resets_pointer(self):
+        """Clear Active must drop the pointer but keep adapters loaded."""
+        decoder = FakeDecoder(modules=[], adapter_names=[])
+        handler = MinimalHandler(decoder)
+        handler._active_loras = {"voice": 1.0, "style": 0.7}
+        handler._adapter_type = "lora"
+        handler._lora_active_adapter = "voice"
+
+        message = handler.clear_active_lora_adapter()
+
+        self.assertTrue(
+            message.startswith("✅"),
+            f"expected success, got: {message}",
+        )
+        self.assertIsNone(handler._lora_active_adapter)
+        # Adapters stay in the bookkeeping dict — nothing was unloaded.
+        self.assertIn("voice", handler._active_loras)
+        self.assertIn("style", handler._active_loras)
+
+    def test_clear_active_lora_adapter_no_op_when_nothing_active(self):
+        decoder = FakeDecoder(modules=[], adapter_names=[])
+        handler = MinimalHandler(decoder)
+        handler._lora_active_adapter = None
+
+        message = handler.clear_active_lora_adapter()
+
+        self.assertIn("No adapter was active", message)
 
 
 if __name__ == "__main__":

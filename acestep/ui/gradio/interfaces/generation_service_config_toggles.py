@@ -9,6 +9,7 @@ from acestep.ui.gradio.i18n import t
 try:
     from acestep.models.mlx import mlx_available as _mlx_avail
 except ImportError:
+
     def _mlx_avail() -> bool:
         """Return False when MLX dependency is unavailable."""
 
@@ -45,15 +46,25 @@ def build_service_toggles(
         A component map for all service toggles (LLM, flash attention, offload, compile, quantization, MLX).
     """
 
-    with gr.Row():
+    # Group 1 — Initialization (decisions that affect what gets loaded)
+    gr.Markdown(
+        "##### " + t("service.toggles_init_group"),
+        elem_classes=["acestep-subsection-heading", "no-tooltip"],
+    )
+    with gr.Row(
+        elem_id="acestep-init-checkbox-grid",
+        elem_classes=["acestep-checkbox-grid"],
+    ):
         lm_info_text = t("service.init_llm_info")
         if not gpu_config.available_lm_models:
             lm_info_text += " " + t("service.lm_unavailable_vram")
         init_llm_checkbox = gr.Checkbox(
             label=t("service.init_llm_label"),
-            value=params.get("init_llm", init_lm_default) if service_pre_initialized else init_lm_default,
+            value=params.get("init_llm", init_lm_default)
+            if service_pre_initialized
+            else init_lm_default,
             info=lm_info_text,
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
 
         flash_attn_available = dit_handler.is_flash_attention_available(device_value)
@@ -66,14 +77,30 @@ def build_service_toggles(
             info=t("service.flash_attention_info_enabled")
             if flash_attn_available
             else t("service.flash_attention_info_disabled"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
+
+    # Group 2 — Memory optimization (how the loaded models live in VRAM)
+    gr.Markdown(
+        "##### " + t("service.toggles_memory_group"),
+        elem_classes=["acestep-subsection-heading", "no-tooltip"],
+    )
+    with gr.Row(
+        elem_id="acestep-memory-checkbox-grid",
+        elem_classes=["acestep-checkbox-grid"],
+    ):
         offload_to_cpu_checkbox = gr.Checkbox(
             label=t("service.offload_cpu_label"),
-            value=params.get("offload_to_cpu", default_offload) if service_pre_initialized else default_offload,
+            value=params.get("offload_to_cpu", default_offload)
+            if service_pre_initialized
+            else default_offload,
             info=t("service.offload_cpu_info")
-            + (" (recommended for this tier)" if default_offload else " (optional for this tier)"),
-            elem_classes=["has-info-container"],
+            + (
+                " (recommended for this tier)"
+                if default_offload
+                else " (optional for this tier)"
+            ),
+            elem_classes=["acestep-tt"],
         )
         offload_dit_to_cpu_checkbox = gr.Checkbox(
             label=t("service.offload_dit_cpu_label"),
@@ -81,21 +108,33 @@ def build_service_toggles(
             if service_pre_initialized
             else default_offload_dit,
             info=t("service.offload_dit_cpu_info")
-            + (" (recommended for this tier)" if default_offload_dit else " (optional for this tier)"),
-            elem_classes=["has-info-container"],
+            + (
+                " (recommended for this tier)"
+                if default_offload_dit
+                else " (optional for this tier)"
+            ),
+            elem_classes=["acestep-tt"],
         )
         compile_model_checkbox = gr.Checkbox(
             label=t("service.compile_model_label"),
-            value=params.get("compile_model", default_compile) if service_pre_initialized else default_compile,
+            value=params.get("compile_model", default_compile)
+            if service_pre_initialized
+            else default_compile,
             info=t("service.compile_model_info"),
-            elem_classes=["has-info-container"],
+            elem_classes=["acestep-tt"],
         )
         quantization_checkbox = gr.Checkbox(
             label=t("service.quantization_label"),
-            value=params.get("quantization", default_quantization) if service_pre_initialized else default_quantization,
+            value=params.get("quantization", default_quantization)
+            if service_pre_initialized
+            else default_quantization,
             info=t("service.quantization_info")
-            + (" (recommended for this tier)" if default_quantization else " (optional for this tier)"),
-            elem_classes=["has-info-container"],
+            + (
+                " (recommended for this tier)"
+                if default_quantization
+                else " (optional for this tier)"
+            ),
+            elem_classes=["acestep-tt"],
         )
 
         mlx_ok = _mlx_avail()
@@ -103,8 +142,10 @@ def build_service_toggles(
             label=t("service.mlx_dit_label"),
             value=params.get("mlx_dit", mlx_ok) if service_pre_initialized else mlx_ok,
             interactive=mlx_ok,
-            info=t("service.mlx_dit_info_enabled") if mlx_ok else t("service.mlx_dit_info_disabled"),
-            elem_classes=["has-info-container"],
+            info=t("service.mlx_dit_info_enabled")
+            if mlx_ok
+            else t("service.mlx_dit_info_disabled"),
+            elem_classes=["acestep-tt"],
         )
     return {
         "init_llm_checkbox": init_llm_checkbox,
@@ -117,7 +158,9 @@ def build_service_toggles(
     }
 
 
-def build_service_init_controls(service_pre_initialized: bool, params: dict[str, Any]) -> dict[str, Any]:
+def build_service_init_controls(
+    service_pre_initialized: bool, params: dict[str, Any]
+) -> dict[str, Any]:
     """Create service initialization action and status controls.
 
     Args:
@@ -131,8 +174,12 @@ def build_service_init_controls(service_pre_initialized: bool, params: dict[str,
     init_btn = gr.Button(t("service.init_btn"), variant="primary", size="lg")
     init_status = gr.Textbox(
         label=t("service.status_label"),
+        info=t("service.status_info"),
         interactive=False,
-        lines=3,
+        lines=5,
+        max_lines=10,
         value=params.get("init_status", "") if service_pre_initialized else "",
+        elem_id="acestep-init-status",
+        elem_classes=["acestep-tt"],
     )
     return {"init_btn": init_btn, "init_status": init_status}

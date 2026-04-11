@@ -18,7 +18,9 @@ def _copy_registry(registry: dict[str, dict[str, Any]]) -> dict[str, dict[str, A
             target_copy = dict(target)
             module = target_copy.pop("module", None)
             if "module_class" not in target_copy:
-                target_copy["module_class"] = module.__class__.__name__ if module is not None else None
+                target_copy["module_class"] = (
+                    module.__class__.__name__ if module is not None else None
+                )
             targets.append(target_copy)
         copied[adapter_name] = {
             "path": meta.get("path"),
@@ -28,10 +30,27 @@ def _copy_registry(registry: dict[str, dict[str, Any]]) -> dict[str, dict[str, A
 
 
 def sync_lora_state_from_service(self) -> None:
-    """Sync handler-visible snapshots from the authoritative service state."""
+    """Sync handler-visible snapshots from the authoritative service state.
+
+    The PEFT ``LoraService`` does not see LoKr / LyCORIS adapters — its
+    ``active_adapter`` is always ``None`` when the loaded adapter is a
+    LoKr. To avoid clobbering a valid handler-side pointer (set via
+    ``set_active_lora_adapter`` or ``add_lora``), we only adopt the
+    service's value when the service actually has one. The handler then
+    remains authoritative for LoKr adapters that live solely in
+    ``_active_loras``.
+    """
     self._lora_adapter_registry = _copy_registry(self._lora_service.registry)
     self._lora_scale_state = dict(self._lora_service.scale_state)
-    self._lora_active_adapter = self._lora_service.active_adapter
+
+    service_active = self._lora_service.active_adapter
+    if service_active is not None:
+        self._lora_active_adapter = service_active
+    else:
+        # Preserve the existing handler value unless it doesn't exist yet.
+        if not hasattr(self, "_lora_active_adapter"):
+            self._lora_active_adapter = None
+
     self._lora_last_scale_report = dict(self._lora_service.last_scale_report)
 
 
@@ -56,7 +75,11 @@ def ensure_lora_registry(self) -> None:
     sync_lora_state_from_service(self)
 
 
-def debug_lora_registry_snapshot(self, max_targets_per_adapter: int = 20) -> dict[str, Any]:
+def debug_lora_registry_snapshot(
+    self, max_targets_per_adapter: int = 20
+) -> dict[str, Any]:
     """Return debugger-friendly snapshot of LoRA adapter registry."""
     self._ensure_lora_registry()
-    return self._lora_service.registry_snapshot(max_targets_per_adapter=max_targets_per_adapter)
+    return self._lora_service.registry_snapshot(
+        max_targets_per_adapter=max_targets_per_adapter
+    )

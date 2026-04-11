@@ -45,12 +45,13 @@ def register_generation_mode_handlers(
     generation_section = context.generation_section
     results_section = context.results_section
     llm_handler = context.llm_handler
+    dit_handler = context.dit_handler
 
     # Shared handler for mode-change and initial page load — extracted to
     # avoid duplicating the lambda and to keep both call sites in sync.
     def _handle_mode_change(mode: str, prev: str | None):
         """Proxy mode-change handling for both .change() and .load() events."""
-        return gen_h.handle_generation_mode_change(mode, prev, llm_handler)
+        return gen_h.handle_generation_mode_change(mode, prev, llm_handler, dit_handler)
 
     mode_change_inputs = [
         generation_section["generation_mode"],
@@ -126,7 +127,13 @@ def register_generation_mode_handlers(
 
     # ========== Create Sample Button (Simple Mode) ==========
     generation_section["create_sample_btn"].click(
-        fn=lambda query, instrumental, vocal_lang, temp, top_k, top_p, debug: gen_h.handle_create_sample(
+        fn=lambda query,
+        instrumental,
+        vocal_lang,
+        temp,
+        top_k,
+        top_p,
+        debug: gen_h.handle_create_sample(
             llm_handler, query, instrumental, vocal_lang, temp, top_k, top_p, debug
         ),
         inputs=[

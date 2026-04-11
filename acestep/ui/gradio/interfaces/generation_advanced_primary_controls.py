@@ -8,41 +8,95 @@ from acestep.ui.gradio.i18n import t
 
 
 def build_lora_controls() -> dict[str, Any]:
-    """Create LoRA adapter controls for loading and scaling inference adapters.
+    """Create the multi-LoRA adapter management UI.
 
-    Args:
-        None.
+    The "loaded adapters" area is a dynamic ``@gr.render`` block driven
+    by a hidden ``gr.State`` holding ``list[[marker, name, scale]]``
+    rows. Each row gets its own Slider + Activate/Deactivate + Remove
+    controls — no dataframe, because ``gr.Dataframe`` cannot embed
+    interactive sliders per cell.
 
-    Returns:
-        A component map containing LoRA path, action buttons, toggles, and status controls.
+    The bulk actions area (``lora_set_active_btn`` / ``lora_remove_btn``
+    etc.) is kept around for API compatibility with existing wiring
+    contracts, but the buttons are hidden — per-row controls replace
+    them. ``lora_selected_idx`` is similarly kept as a no-op state for
+    the same reason.
     """
 
-    with gr.Accordion(t("generation.lora_accordion_title"), open=False, elem_classes=["has-info-container"]):
+    with gr.Accordion(
+        t("generation.lora_accordion_title"), open=False, elem_classes=["acestep-tt"]
+    ):
+        gr.Markdown(
+            t("generation.lora_lokr_warning"),
+            elem_classes=["no-tooltip"],
+        )
+
+        # --- Section 1: Add adapter form -------------------------------
+        gr.Markdown(
+            "### " + t("generation.lora_section_add"),
+            elem_classes=["no-tooltip"],
+        )
         with gr.Row():
             lora_path = gr.Textbox(
                 label=t("generation.lora_path_label"),
                 placeholder=t("generation.lora_path_placeholder"),
                 info=t("generation.lora_path_info"),
                 scale=3,
+                elem_classes=["acestep-tt"],
             )
-            load_lora_btn = gr.Button(t("generation.load_lora_btn"), variant="secondary", scale=1)
-            unload_lora_btn = gr.Button(t("generation.unload_lora_btn"), variant="secondary", scale=1)
+            lora_browse_btn = gr.Button(
+                t("generation.lora_browse_btn"),
+                variant="secondary",
+                scale=0,
+                min_width=140,
+            )
         with gr.Row():
+            lora_adapter_name = gr.Textbox(
+                label=t("generation.lora_adapter_name_label"),
+                placeholder=t("generation.lora_adapter_name_placeholder"),
+                info=t("generation.lora_adapter_name_info"),
+                scale=3,
+                elem_classes=["acestep-tt"],
+            )
+            load_lora_btn = gr.Button(
+                t("generation.add_lora_btn"),
+                variant="primary",
+                scale=0,
+                min_width=140,
+            )
+
+        # --- Section 2: Dynamic per-adapter rows -----------------------
+        gr.Markdown(
+            "### " + t("generation.lora_section_loaded"),
+            elem_classes=["no-tooltip"],
+        )
+
+        # Shared state: list of [marker, name, scale] rows. Every
+        # add/remove/set-active/scale handler reads + writes this state,
+        # and @gr.render below listens to it to redraw the per-row UI.
+        lora_state = gr.State(value=[])
+
+        # The @gr.render block is wired by the service wiring layer (it
+        # needs access to dit_handler which lives there). We expose the
+        # state here and the wiring layer attaches the render decorator.
+        # For now we create a placeholder container; the wiring layer
+        # will populate it via a deferred @gr.render call.
+        lora_rows_container = gr.Column(elem_classes=["acestep-lora-rows"])
+
+        with gr.Row():
+            unload_lora_btn = gr.Button(
+                t("generation.lora_unload_all_btn"),
+                variant="secondary",
+                scale=1,
+            )
             use_lora_checkbox = gr.Checkbox(
                 label=t("generation.use_lora_label"),
                 value=False,
                 info=t("generation.use_lora_info"),
-                scale=1,
-            )
-            lora_scale_slider = gr.Slider(
-                minimum=0.0,
-                maximum=1.0,
-                value=1.0,
-                step=0.05,
-                label=t("generation.lora_scale_label"),
-                info=t("generation.lora_scale_info"),
                 scale=2,
+                elem_classes=["acestep-tt"],
             )
+
         lora_status = gr.Textbox(
             label=t("generation.lora_status_label"),
             value=t("generation.lora_status_default"),
@@ -50,12 +104,29 @@ def build_lora_controls() -> dict[str, Any]:
             lines=1,
             elem_classes=["no-tooltip"],
         )
+
+        # --- Legacy bulk-action buttons (hidden, kept for contract) ----
+        # The wiring layer still references these keys in older code
+        # paths; we render them invisibly so the contract tests stay
+        # green without asking every caller to stop using them.
+        lora_set_active_btn = gr.Button("set_active", visible=False)
+        lora_clear_active_btn = gr.Button("clear_active", visible=False)
+        lora_remove_btn = gr.Button("remove", visible=False)
+        lora_selected_idx = gr.State(value=-1)
+
     return {
         "lora_path": lora_path,
+        "lora_adapter_name": lora_adapter_name,
+        "lora_browse_btn": lora_browse_btn,
         "load_lora_btn": load_lora_btn,
         "unload_lora_btn": unload_lora_btn,
+        "lora_state": lora_state,
+        "lora_rows_container": lora_rows_container,
+        "lora_set_active_btn": lora_set_active_btn,
+        "lora_clear_active_btn": lora_clear_active_btn,
+        "lora_remove_btn": lora_remove_btn,
+        "lora_selected_idx": lora_selected_idx,
         "use_lora_checkbox": use_lora_checkbox,
-        "lora_scale_slider": lora_scale_slider,
         "lora_status": lora_status,
     }
 
@@ -70,7 +141,9 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
         A component map containing LM sampling, CoT, negative prompt, and batch controls.
     """
 
-    with gr.Accordion(t("generation.advanced_lm_section"), open=False, elem_classes=["has-info-container"]):
+    with gr.Accordion(
+        t("generation.advanced_lm_section"), open=False, elem_classes=["acestep-tt"]
+    ) as lm_accordion:
         with gr.Row():
             lm_temperature = gr.Slider(
                 label=t("generation.lm_temperature_label"),
@@ -80,7 +153,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 step=0.1,
                 scale=1,
                 info=t("generation.lm_temperature_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             lm_cfg_scale = gr.Slider(
                 label=t("generation.lm_cfg_scale_label"),
@@ -90,7 +163,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 step=0.1,
                 scale=1,
                 info=t("generation.lm_cfg_scale_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
             lm_top_k = gr.Slider(
@@ -101,7 +174,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 step=1,
                 scale=1,
                 info=t("generation.lm_top_k_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             lm_top_p = gr.Slider(
                 label=t("generation.lm_top_p_label"),
@@ -111,7 +184,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 step=0.01,
                 scale=1,
                 info=t("generation.lm_top_p_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
             lm_negative_prompt = gr.Textbox(
@@ -119,7 +192,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 value="NO USER INPUT",
                 placeholder=t("generation.lm_negative_prompt_placeholder"),
                 info=t("generation.lm_negative_prompt_info"),
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
                 lines=2,
             )
         with gr.Row():
@@ -128,14 +201,14 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 value=True,
                 info=t("generation.cot_metas_info"),
                 scale=1,
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             use_cot_language = gr.Checkbox(
                 label=t("generation.cot_language_label"),
                 value=True,
                 info=t("generation.cot_language_info"),
                 scale=1,
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             constrained_decoding_debug = gr.Checkbox(
                 label=t("generation.constrained_debug_label"),
@@ -143,6 +216,7 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 info=t("generation.constrained_debug_info"),
                 scale=1,
                 interactive=not service_mode,
+                elem_classes=["acestep-tt"],
             )
         with gr.Row():
             allow_lm_batch = gr.Checkbox(
@@ -150,17 +224,18 @@ def build_lm_controls(service_mode: bool) -> dict[str, Any]:
                 value=True,
                 info=t("generation.parallel_thinking_info"),
                 scale=1,
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
             use_cot_caption = gr.Checkbox(
                 label=t("generation.caption_rewrite_label"),
                 value=False,
                 info=t("generation.caption_rewrite_info"),
                 scale=1,
-                elem_classes=["has-info-container"],
+                elem_classes=["acestep-tt"],
             )
 
     return {
+        "lm_accordion": lm_accordion,
         "lm_temperature": lm_temperature,
         "lm_cfg_scale": lm_cfg_scale,
         "lm_top_k": lm_top_k,

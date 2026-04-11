@@ -24,7 +24,7 @@ def build_simple_input_controls() -> tuple[gr.Textbox, gr.Dropdown, gr.Checkbox]
         placeholder=t("generation.simple_query_placeholder"),
         lines=2,
         info=t("generation.simple_query_info"),
-        elem_classes=["has-info-container"],
+        elem_classes=["acestep-tt"],
         scale=9,
     )
     with gr.Column(scale=1):
@@ -88,7 +88,7 @@ def build_simple_mode_controls() -> dict[str, Any]:
         A component map containing simple-mode query inputs, language toggles, and action buttons.
     """
 
-    with gr.Group(visible=False, elem_classes=["has-info-container"]) as simple_mode_group:
+    with gr.Group(visible=False, elem_classes=["acestep-tt"]) as simple_mode_group:
         create_help_button("generation_simple")
         with gr.Row(equal_height=True):
             (

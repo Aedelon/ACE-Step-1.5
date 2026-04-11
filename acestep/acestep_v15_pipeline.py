@@ -70,6 +70,7 @@ except ImportError:
     from acestep.llm_inference import LLMHandler
     from acestep.dataset_handler import DatasetHandler
     from acestep.ui.gradio import create_gradio_interface
+    from acestep.ui.gradio.interfaces import get_acestep_head_html
     from acestep.ui.gradio.i18n import get_i18n, available_languages_info
     from acestep.gpu_config import (
         get_gpu_config,
@@ -328,6 +329,7 @@ def main():
         _default_quantization = "int8_weight_only"
         try:
             import torch
+
             if torch.cuda.is_available():
                 major, _ = torch.cuda.get_device_capability(0)
                 if major < 7:
@@ -389,6 +391,18 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # If the user did not explicitly pass --language, fall back to the
+    # language persisted by a previous in-UI language switch. This is what
+    # lets the language dropdown survive the process restart triggered by
+    # _apply_runtime_language().
+    _lang_passed_on_cli = any(
+        arg == "--language" or arg.startswith("--language=") for arg in sys.argv[1:]
+    )
+    if not _lang_passed_on_cli:
+        from acestep.ui.gradio.i18n import load_language
+
+        args.language = load_language(default=args.language)
 
     # Enable API requires init_service
     if args.enable_api:
@@ -650,6 +664,23 @@ def main():
             if p and p not in allowed_paths:
                 allowed_paths.append(p)
 
+        # In Gradio 6, head=/css=/js= must be passed to launch(), not Blocks().
+        # Crucially, <script> tags inside head= are NOT executed (HTML5 spec
+        # forbids script execution from innerHTML). Use js= for any JavaScript
+        # that must run on page load (e.g. our tooltip system).
+        from acestep.ui.gradio.interfaces import (
+            get_acestep_css,
+            get_acestep_head_html,
+            get_acestep_js,
+        )
+
+        _service_mode = init_params is not None and init_params.get(
+            "service_mode", False
+        )
+        head_html = get_acestep_head_html(service_mode=_service_mode)
+        custom_css = get_acestep_css()
+        custom_js = get_acestep_js(args.language)
+
         # Enable API endpoints if requested
         if args.enable_api:
             print("Enabling API endpoints...")
@@ -666,6 +697,9 @@ def main():
                 inbrowser=False,
                 auth=auth,
                 allowed_paths=allowed_paths,  # include output_dir + user-provided
+                head=head_html,
+                css=custom_css,
+                js=custom_js,
             )
 
             # Now add API routes to Gradio's FastAPI app (app is available after launch)
@@ -696,6 +730,9 @@ def main():
                 inbrowser=False,
                 auth=auth,
                 allowed_paths=allowed_paths,  # include output_dir + user-provided
+                head=head_html,
+                css=custom_css,
+                js=custom_js,
             )
     except Exception as e:
         print(f"Error launching Gradio: {e}", file=sys.stderr)
