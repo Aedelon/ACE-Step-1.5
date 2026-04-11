@@ -1053,30 +1053,76 @@ input[type="number"] {
      - !important on every declaration in case Svelte injects
        inline display:flex via its scoped style rules.
 */
+/* ---- Grid containers ----
+   Both the outer Row AND the Gradio-auto .form wrapper become
+   grid containers so the tile distribution works regardless of
+   which element actually lays out the .block children.
+
+   We use EXPLICIT column counts rather than ``auto-fill`` +
+   minmax(). auto-fill with minmax(240px, 1fr) was creating a
+   single-column layout when the parent container was narrower
+   than 480px (so 2 × 240 couldn't fit), which produced the
+   "stacking vertically" bug. Explicit ``1fr 1fr`` forces two
+   equal columns even at 320px — narrow tiles are still side by
+   side (largeur) instead of stacked (longueur).
+
+   Init group = 2 tiles → 2 columns.
+   Memory group = 5 tiles → 5 columns.
+*/
 #acestep-init-checkbox-grid,
-#acestep-memory-checkbox-grid,
-#acestep-init-checkbox-grid > .form,
-#acestep-memory-checkbox-grid > .form {
+#acestep-init-checkbox-grid > .form {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+    grid-template-columns: 1fr 1fr !important;
     width: 100% !important;
     max-width: none !important;
     gap: 10px !important;
     align-items: stretch !important;
     align-self: stretch !important;
-    /* The inline ``flex-grow: 2; min-width: min(320px, 100%)`` on
-       the .form needs to be overridden so it takes the full grid
-       cell of the outer Row, not 320px. */
     flex: 1 1 100% !important;
     min-width: 100% !important;
     flex-wrap: initial !important;
     flex-direction: initial !important;
     box-sizing: border-box !important;
-    /* Remove the padding Gradio adds via .padded; the tiles
-       themselves carry their own padding. */
     padding: 0 !important;
     border: none !important;
     background: transparent !important;
+}
+#acestep-memory-checkbox-grid,
+#acestep-memory-checkbox-grid > .form {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    width: 100% !important;
+    max-width: none !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    align-self: stretch !important;
+    flex: 1 1 100% !important;
+    min-width: 100% !important;
+    flex-wrap: initial !important;
+    flex-direction: initial !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+/* Narrow viewport — fall back to 2-column layout so tiles stay
+   readable when the window is below ~900px. Still horizontal,
+   never stacked vertically into one column. */
+@media (max-width: 900px) {
+    #acestep-memory-checkbox-grid,
+    #acestep-memory-checkbox-grid > .form {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+/* Extra-narrow fallback (phones) — still 2 columns, just less
+   padding so the text doesn't overflow. */
+@media (max-width: 500px) {
+    #acestep-init-checkbox-grid,
+    #acestep-init-checkbox-grid > .form,
+    #acestep-memory-checkbox-grid,
+    #acestep-memory-checkbox-grid > .form {
+        gap: 6px !important;
+    }
 }
 /* Every direct child becomes a grid item. Targets both the
    Row > form nesting and the form > block nesting so no sizing
