@@ -128,25 +128,69 @@ span[data-testid="block-info"] {
     border-bottom-color: var(--ace-accent);
 }
 
-/* ---------- Accordions (Accordion.svelte: button.label-wrap inside .block) ---------- */
+/* ---------- Accordions (Accordion.svelte: button.label-wrap inside .block) ----------
+   The accordion header (button.label-wrap) is the biggest "label" in
+   the whole app — there are 8+ sections and each header needs to
+   feel like a real section divider, not a flat line of text.
+
+   Design:
+   - Subtle horizontal gradient so the header has visible depth
+     against the darker block body below.
+   - Thin accent bar on the left edge (4px) that lights up on hover
+     and on open (:not([aria-expanded="false"])). Uses a box-shadow
+     inset instead of a border so nothing pushes the label text
+     horizontally when the bar turns on.
+   - Bottom divider line only shown when the accordion is open so
+     the closed state stays visually compact.
+   - Chevron (Gradio's svg) picks up the accent color on hover.
+*/
 .block:has(> .label-wrap),
 .block:has(> button.label-wrap) {
     border-radius: var(--ace-radius-lg);
     box-shadow: var(--ace-shadow-raised);
-    transition: border-color var(--ace-duration-fast) var(--ace-easing-out);
+    transition: border-color var(--ace-duration-fast) var(--ace-easing-out),
+                box-shadow var(--ace-duration-fast) var(--ace-easing-out);
 }
 .block:has(> .label-wrap):hover,
 .block:has(> button.label-wrap):hover {
     border-color: var(--ace-border-strong);
+    box-shadow: var(--ace-shadow-raised), 0 0 0 1px var(--ace-border-strong);
 }
+
 .label-wrap {
-    padding: var(--ace-space-4) var(--ace-space-5);
-    background: transparent;
+    position: relative;
+    padding: 14px 18px 14px 22px;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.04) 0%,
+        rgba(255, 255, 255, 0.015) 100%
+    );
     border: none;
-    transition: background var(--ace-duration-fast) var(--ace-easing-out);
+    border-radius: var(--ace-radius-lg) var(--ace-radius-lg) 0 0;
+    /* 3px inset accent bar on the left edge, dim by default. */
+    box-shadow: inset 3px 0 0 0 rgba(255, 255, 255, 0.08);
+    transition: background var(--ace-duration-fast) var(--ace-easing-out),
+                box-shadow var(--ace-duration-fast) var(--ace-easing-out);
 }
 .label-wrap:hover {
-    background: rgba(255, 255, 255, 0.025);
+    background: linear-gradient(
+        180deg,
+        rgba(59, 130, 246, 0.08) 0%,
+        rgba(59, 130, 246, 0.025) 100%
+    );
+    box-shadow: inset 3px 0 0 0 var(--ace-accent);
+}
+/* Accordion.svelte sets aria-expanded on the button.label-wrap.
+   Open = "true" → keep the accent bar lit + add bottom divider. */
+button.label-wrap[aria-expanded="true"] {
+    background: linear-gradient(
+        180deg,
+        rgba(59, 130, 246, 0.06) 0%,
+        rgba(59, 130, 246, 0.015) 100%
+    );
+    box-shadow:
+        inset 3px 0 0 0 var(--ace-accent),
+        inset 0 -1px 0 0 rgba(255, 255, 255, 0.06);
 }
 .label-wrap > span,
 .label-wrap > .label-text {
@@ -154,6 +198,43 @@ span[data-testid="block-info"] {
     font-weight: 600;
     color: var(--ace-text-primary);
     letter-spacing: 0.005em;
+}
+/* Accordion chevron (the <svg> Gradio ships inside button.label-wrap)
+   picks up the accent color on hover / open so the state change is
+   obvious even without animation. */
+.label-wrap svg,
+.label-wrap > .icon {
+    transition: transform var(--ace-duration-fast) var(--ace-easing-out),
+                color var(--ace-duration-fast) var(--ace-easing-out);
+}
+.label-wrap:hover svg,
+button.label-wrap[aria-expanded="true"] svg {
+    color: var(--ace-accent);
+}
+
+/* ---------- Component labels (sliders / inputs / dropdowns)
+   Gradio 6 renders <label> + a child span that carries the label
+   text, plus a separate span[data-testid="block-info"] for the
+   info= line. Lift the main label with slightly brighter text and
+   a muted info line so the hierarchy reads: "parameter name"
+   bigger, "what it does" dimmer.
+*/
+.block > label > span:not(.has-info) ,
+.block > label > span.svelte-1gfkn6j,
+label > span[data-testid="block-title"] {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--ace-text-primary);
+    text-transform: none;
+}
+span[data-testid="block-info"] {
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--ace-text-secondary);
+    letter-spacing: 0.005em;
+    line-height: 1.45;
+    margin-top: 2px;
 }
 
 /* ---------- Inputs (textarea, input[type="text"], input[type="number"]) ---------- */
