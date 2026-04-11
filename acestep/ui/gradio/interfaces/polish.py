@@ -1020,6 +1020,81 @@ input[type="number"] {
     letter-spacing: -0.025em;
 }
 
+/* ---------- Phase D — final polish layer ----------
+   Page-load intro + micro-interactions that tie the whole UI
+   together without requiring any Python change. Runs exactly
+   once per page load thanks to the ``animation-fill-mode: both``
+   + no ``infinite`` iteration.
+*/
+
+/* Hero fades in from slightly above on first paint so users
+   don't see a blank frame for the 100-200ms it takes Gradio
+   to bind events. Only the hero element animates so the rest
+   of the app paints immediately and stays interactive. */
+#acestep-hero {
+    animation: ace-hero-intro 420ms var(--ace-easing-out) both;
+}
+@keyframes ace-hero-intro {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Sober status-pill entrance in the hero — three pills slide in
+   staggered from the right with a short delay each. Nth-child
+   targets the three spans inside .ace-hero-status. */
+.ace-hero-status > .ace-status-pill {
+    animation: ace-pill-intro 380ms var(--ace-easing-out) both;
+}
+.ace-hero-status > .ace-status-pill:nth-child(1) { animation-delay: 80ms; }
+.ace-hero-status > .ace-status-pill:nth-child(2) { animation-delay: 160ms; }
+.ace-hero-status > .ace-status-pill:nth-child(3) { animation-delay: 240ms; }
+@keyframes ace-pill-intro {
+    from {
+        opacity: 0;
+        transform: translateX(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Primary and secondary buttons get a 1px lift on hover so the
+   click feels responsive. Stop variant is excluded — it's a
+   destructive action and shouldn't invite extra interaction. */
+button.primary:hover:not(:disabled),
+button.secondary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    transition: transform var(--ace-duration-fast) var(--ace-easing-out),
+                background var(--ace-duration-fast) var(--ace-easing-out),
+                border-color var(--ace-duration-fast) var(--ace-easing-out),
+                box-shadow var(--ace-duration-fast) var(--ace-easing-out);
+}
+button.primary:active:not(:disabled),
+button.secondary:active:not(:disabled) {
+    transform: translateY(0);
+    transition: transform 80ms var(--ace-easing-standard);
+}
+
+/* Info icon (?) in tile labels gets a soft pulse when hovered
+   via the parent tile — subtle cue that the tile has extra
+   help info without adding a second affordance. */
+#acestep-init-checkbox-grid .block:hover .acestep-info-icon,
+#acestep-memory-checkbox-grid .block:hover .acestep-info-icon {
+    background: var(--ace-accent-soft);
+    border-color: var(--ace-accent);
+    color: var(--ace-text-primary);
+    transition: background var(--ace-duration-fast) var(--ace-easing-out),
+                border-color var(--ace-duration-fast) var(--ace-easing-out),
+                color var(--ace-duration-fast) var(--ace-easing-out);
+}
+
 /* ---------- Checkbox grid (service config toggles) ----------
    Real DOM dug out of Daisy's live HTML snippet:
 
