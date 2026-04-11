@@ -1054,32 +1054,42 @@ input[type="number"] {
        inline display:flex via its scoped style rules.
 */
 /* ---- Grid containers ----
-   Both the outer Row AND the Gradio-auto .form wrapper become
-   grid containers so the tile distribution works regardless of
-   which element actually lays out the .block children.
+   Two-level nesting trap:
 
-   We use EXPLICIT column counts rather than ``auto-fill`` +
-   minmax(). auto-fill with minmax(240px, 1fr) was creating a
-   single-column layout when the parent container was narrower
-   than 480px (so 2 × 240 couldn't fit), which produced the
-   "stacking vertically" bug. Explicit ``1fr 1fr`` forces two
-   equal columns even at 320px — narrow tiles are still side by
-   side (largeur) instead of stacked (longueur).
+     .accordion-body (flex column, stretches children)
+       └─ #acestep-memory-checkbox-grid (the Row)
+            └─ .form (Gradio auto-wrapper)
+                 └─ 5 × .block (the actual tiles)
 
-   Init group = 2 tiles → 2 columns.
-   Memory group = 5 tiles → 5 columns.
+   Previous attempt applied ``grid-template-columns: repeat(5,1fr)``
+   to BOTH the Row and the .form. But the Row has only ONE direct
+   child (the .form), so the form went into a single 1fr cell =
+   1/5 of the Row width. The .form was then itself a 5-column grid
+   constrained to that 1/5 slice, so each tile ended up ~1/25 of
+   the row — roughly 40px. Daisy's screenshot showed exactly that.
+
+   Fix: make the Row disappear from the layout tree via
+   ``display: contents``. That promotes the .form to be a direct
+   child of the accordion body, so it stretches to 100% width
+   naturally, and THEN the grid applies with 5 equal columns.
+   ``display: contents`` is Chrome 58+, Firefox 37+, Safari 11+.
 */
 #acestep-init-checkbox-grid,
+#acestep-memory-checkbox-grid {
+    display: contents !important;
+}
+/* The real grid lives on the .form child — now a direct child of
+   the accordion body after display:contents on the Row. */
 #acestep-init-checkbox-grid > .form {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     width: 100% !important;
     max-width: none !important;
+    min-width: 100% !important;
     gap: 10px !important;
     align-items: stretch !important;
     align-self: stretch !important;
     flex: 1 1 100% !important;
-    min-width: 100% !important;
     flex-wrap: initial !important;
     flex-direction: initial !important;
     box-sizing: border-box !important;
@@ -1087,17 +1097,16 @@ input[type="number"] {
     border: none !important;
     background: transparent !important;
 }
-#acestep-memory-checkbox-grid,
 #acestep-memory-checkbox-grid > .form {
     display: grid !important;
     grid-template-columns: repeat(5, 1fr) !important;
     width: 100% !important;
     max-width: none !important;
+    min-width: 100% !important;
     gap: 10px !important;
     align-items: stretch !important;
     align-self: stretch !important;
     flex: 1 1 100% !important;
-    min-width: 100% !important;
     flex-wrap: initial !important;
     flex-direction: initial !important;
     box-sizing: border-box !important;
@@ -1105,21 +1114,16 @@ input[type="number"] {
     border: none !important;
     background: transparent !important;
 }
-/* Narrow viewport — fall back to 2-column layout so tiles stay
-   readable when the window is below ~900px. Still horizontal,
-   never stacked vertically into one column. */
+/* Narrow viewport — fall back to 2-column layout on the memory
+   group so tiles stay readable. Still horizontal, never stacked. */
 @media (max-width: 900px) {
-    #acestep-memory-checkbox-grid,
     #acestep-memory-checkbox-grid > .form {
         grid-template-columns: 1fr 1fr !important;
     }
 }
-/* Extra-narrow fallback (phones) — still 2 columns, just less
-   padding so the text doesn't overflow. */
+/* Extra-narrow fallback (phones). */
 @media (max-width: 500px) {
-    #acestep-init-checkbox-grid,
     #acestep-init-checkbox-grid > .form,
-    #acestep-memory-checkbox-grid,
     #acestep-memory-checkbox-grid > .form {
         gap: 6px !important;
     }
