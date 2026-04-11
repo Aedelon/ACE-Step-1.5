@@ -102,7 +102,13 @@ span[data-testid="block-info"] {
     letter-spacing: 0.005em;
 }
 
-/* ---------- Tabs (Tabs.svelte structure) ---------- */
+/* ---------- Tabs (Tabs.svelte structure) ----------
+   Gradio 6 already renders an animated 2px underbar via a
+   ``.selected::after`` pseudo-element on the active tab button
+   (verified in Walkthrough-CJf9hODv.css — ``svelte-11gaq1``
+   scope with ``background-color: var(--color-accent)``). Adding
+   our own ``border-bottom`` on top produced a visible double
+   line. We only tint the text + let Gradio draw the bar. */
 .tabs > .tab-wrapper > .tab-container {
     border-bottom: 1px solid var(--ace-border-default);
     padding: 0 var(--ace-space-1);
@@ -111,13 +117,11 @@ span[data-testid="block-info"] {
 .tabs > .tab-wrapper > .tab-container > button {
     background: transparent;
     border: none;
-    border-bottom: 2px solid transparent;
     color: var(--ace-text-secondary);
     padding: var(--ace-space-3) var(--ace-space-5);
     font-weight: 600;
     font-size: 14px;
-    transition: color var(--ace-duration-fast) var(--ace-easing-out),
-                border-color var(--ace-duration-fast) var(--ace-easing-out);
+    transition: color var(--ace-duration-fast) var(--ace-easing-out);
     border-radius: 0;
 }
 .tabs > .tab-wrapper > .tab-container > button:hover {
@@ -125,7 +129,6 @@ span[data-testid="block-info"] {
 }
 .tabs > .tab-wrapper > .tab-container > button.selected {
     color: var(--ace-accent);
-    border-bottom-color: var(--ace-accent);
 }
 
 /* ---------- Accordions (Accordion.svelte: button.label-wrap inside .block) ----------
@@ -137,22 +140,25 @@ span[data-testid="block-info"] {
    - Subtle horizontal gradient so the header has visible depth
      against the darker block body below.
    - Thin accent bar on the left edge (4px) that lights up on hover
-     and on open (:not([aria-expanded="false"])). Uses a box-shadow
+     and on open (``.label-wrap.open``). Uses a box-shadow
      inset instead of a border so nothing pushes the label text
      horizontally when the bar turns on.
    - Bottom divider line only shown when the accordion is open so
      the closed state stays visually compact.
    - Chevron (Gradio's svg) picks up the accent color on hover.
 */
-.block:has(> .label-wrap),
-.block:has(> button.label-wrap) {
+/* Prefixed with .gradio-container so the final specificity (0-3-0)
+   ties Gradio's ``.gradio-container-6-2-0 .block.svelte-239wnu``
+   and wins via later load order. Without the prefix Gradio wins. */
+.gradio-container .block:has(> .label-wrap),
+.gradio-container .block:has(> button.label-wrap) {
     border-radius: var(--ace-radius-lg);
     box-shadow: var(--ace-shadow-raised);
     transition: border-color var(--ace-duration-fast) var(--ace-easing-out),
                 box-shadow var(--ace-duration-fast) var(--ace-easing-out);
 }
-.block:has(> .label-wrap):hover,
-.block:has(> button.label-wrap):hover {
+.gradio-container .block:has(> .label-wrap):hover,
+.gradio-container .block:has(> button.label-wrap):hover {
     border-color: var(--ace-border-strong);
     box-shadow: var(--ace-shadow-raised), 0 0 0 1px var(--ace-border-strong);
 }
@@ -180,9 +186,13 @@ span[data-testid="block-info"] {
     );
     box-shadow: inset 3px 0 0 0 var(--ace-accent);
 }
-/* Accordion.svelte sets aria-expanded on the button.label-wrap.
-   Open = "true" → keep the accent bar lit + add bottom divider. */
-button.label-wrap[aria-expanded="true"] {
+/* Accordion.svelte toggles a ``.open`` class on the button.label-wrap
+   when the user expands it (verified by reading the compiled JS
+   bundle Index-Bl0heyt-.js: ``set_class(s,1,"label-wrap svelte-
+   e5lyqv",null,a,{open:t()})``). There is NO ``aria-expanded``
+   attribute — the previous ``[aria-expanded="true"]`` selector was
+   a hallucination and never matched. */
+button.label-wrap.open {
     background: linear-gradient(
         180deg,
         rgba(59, 130, 246, 0.06) 0%,
@@ -208,7 +218,7 @@ button.label-wrap[aria-expanded="true"] {
                 color var(--ace-duration-fast) var(--ace-easing-out);
 }
 .label-wrap:hover svg,
-button.label-wrap[aria-expanded="true"] svg {
+button.label-wrap.open svg {
     color: var(--ace-accent);
 }
 
@@ -355,11 +365,19 @@ button.sm {
     to { transform: rotate(360deg); }
 }
 
-/* ---------- Slider (input[type="range"], --range_progress is set by Gradio JS) ---------- */
-input[type="range"] {
+/* ---------- Slider (input[type="range"], --range_progress is set by Gradio JS) ----------
+   Gradio 6 scopes its slider rules via ``input[type=range].svelte-
+   8epfm4::-webkit-slider-runnable-track`` (specificity 0-1-2).
+   An unscoped ``input[type="range"]::…`` rule (0-0-2) is always
+   outgunned, so the accent gradient never reached the browser.
+
+   Fix: prefix with ``.gradio-container`` to ship 0-1-2 + later
+   load order, beating Gradio's scoped rule in the cascade. Same
+   treatment for the thumb. */
+.gradio-container input[type="range"] {
     height: 6px;
 }
-input[type="range"]::-webkit-slider-runnable-track {
+.gradio-container input[type="range"]::-webkit-slider-runnable-track {
     background: linear-gradient(
         to right,
         var(--ace-accent) 0%,
@@ -370,7 +388,7 @@ input[type="range"]::-webkit-slider-runnable-track {
     height: 6px;
     border-radius: 3px;
 }
-input[type="range"]::-webkit-slider-thumb {
+.gradio-container input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px;
@@ -383,17 +401,17 @@ input[type="range"]::-webkit-slider-thumb {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     transition: transform var(--ace-duration-fast) var(--ace-easing-out);
 }
-input[type="range"]::-webkit-slider-thumb:hover {
+.gradio-container input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.15);
     box-shadow: 0 0 0 6px var(--ace-accent-ring),
                 0 2px 8px rgba(0, 0, 0, 0.5);
 }
-input[type="range"]::-moz-range-track {
+.gradio-container input[type="range"]::-moz-range-track {
     background: rgba(255, 255, 255, 0.12);
     height: 6px;
     border-radius: 3px;
 }
-input[type="range"]::-moz-range-thumb {
+.gradio-container input[type="range"]::-moz-range-thumb {
     width: 16px;
     height: 16px;
     border-radius: 50%;
@@ -492,8 +510,8 @@ select:focus-visible,
 
 /* ---------- Responsive: tighten spacing on narrow viewports ---------- */
 @media (max-width: 1100px) {
-    .block:has(> .label-wrap),
-    .block:has(> button.label-wrap) {
+    .gradio-container .block:has(> .label-wrap),
+    .gradio-container .block:has(> button.label-wrap) {
         margin: 10px 0;
     }
     #acestep-generate-btn {
@@ -781,9 +799,12 @@ input[type="number"] {
    Closed accordions sit flat on the page with nothing telling the
    user they are clickable. A small 1px translateY on hover + a
    slightly stronger shadow adds just enough affordance without
-   jumping the whole layout. Gradio sets aria-expanded="false" on
-   the header button when the accordion is closed. */
-.block:has(> button.label-wrap[aria-expanded="false"]):hover {
+   jumping the whole layout.
+
+   Gradio toggles a ``.open`` class on the header button (not an
+   ``aria-expanded`` attribute — that was a hallucinated selector
+   in the original Phase D pass). Closed state = ``:not(.open)``. */
+.gradio-container .block:has(> button.label-wrap:not(.open)):hover {
     transform: translateY(-1px);
     box-shadow:
         0 4px 12px rgba(0, 0, 0, 0.4),
@@ -795,10 +816,14 @@ input[type="number"] {
 /* ---------- Accordion body fade-in on open ----------
    Gradio toggles the child .wrap display at open/close time with no
    animation — the body pops into place. Target the wrap when the
-   parent's header is open and run a short slide+fade so opening a
-   section feels considered. */
-.block:has(> button.label-wrap[aria-expanded="true"]) > .wrap,
-.block:has(> button.label-wrap[aria-expanded="true"]) > .form {
+   parent's header carries the ``.open`` class and run a short
+   slide+fade so opening a section feels considered.
+
+   Prefixed with ``.gradio-container`` so the rule beats Gradio's
+   scoped ``.gradio-container-6-2-0 .block.svelte-239wnu``
+   (0-3-0) via 0-3-0 + later load order. */
+.gradio-container .block:has(> button.label-wrap.open) > .wrap,
+.gradio-container .block:has(> button.label-wrap.open) > .form {
     animation: ace-accordion-reveal 240ms var(--ace-easing-out) both;
 }
 @keyframes ace-accordion-reveal {
@@ -1067,18 +1092,24 @@ input[type="number"] {
 
 /* Primary and secondary buttons get a 1px lift on hover so the
    click feels responsive. Stop variant is excluded — it's a
-   destructive action and shouldn't invite extra interaction. */
-button.primary:hover:not(:disabled),
-button.secondary:hover:not(:disabled) {
-    transform: translateY(-1px);
+   destructive action and shouldn't invite extra interaction.
+
+   Gradio 6 ships a ``button.svelte-xzq5jh:hover`` rule with
+   specificity 0-2-0 that sets ``transform: var(--button-
+   transform-hover)``. Without the ``.gradio-container`` prefix
+   (0-0-2) polish's lift was silently overridden. !important
+   makes absolutely sure the lift reaches the user. */
+.gradio-container button.primary:hover:not(:disabled),
+.gradio-container button.secondary:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
     transition: transform var(--ace-duration-fast) var(--ace-easing-out),
                 background var(--ace-duration-fast) var(--ace-easing-out),
                 border-color var(--ace-duration-fast) var(--ace-easing-out),
                 box-shadow var(--ace-duration-fast) var(--ace-easing-out);
 }
-button.primary:active:not(:disabled),
-button.secondary:active:not(:disabled) {
-    transform: translateY(0);
+.gradio-container button.primary:active:not(:disabled),
+.gradio-container button.secondary:active:not(:disabled) {
+    transform: translateY(0) !important;
     transition: transform 80ms var(--ace-easing-standard);
 }
 
@@ -1258,12 +1289,14 @@ button.secondary:active:not(:disabled) {
 }
 /* Disabled / non-interactive tile (e.g. flash_attention when the GPU
    cannot do it). Dim the whole tile so the user understands it's
-   not something they can toggle. The real DOM puts a .disabled
-   class on label.checkbox-container too — catch both signals. */
+   not something they can toggle. Gradio's Checkbox component
+   renders the disabled state as ``<label class="disabled">`` —
+   the .checkbox-container class is NOT combined with .disabled,
+   so we match on ``label.disabled`` alone. */
 #acestep-init-checkbox-grid .block:has(input[type="checkbox"]:disabled),
 #acestep-memory-checkbox-grid .block:has(input[type="checkbox"]:disabled),
-#acestep-init-checkbox-grid .block:has(label.checkbox-container.disabled),
-#acestep-memory-checkbox-grid .block:has(label.checkbox-container.disabled) {
+#acestep-init-checkbox-grid .block:has(label.disabled),
+#acestep-memory-checkbox-grid .block:has(label.disabled) {
     opacity: 0.55 !important;
     cursor: not-allowed !important;
     background: rgba(255, 255, 255, 0.008) !important;
