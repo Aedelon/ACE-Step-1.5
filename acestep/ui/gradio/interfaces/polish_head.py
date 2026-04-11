@@ -38,14 +38,38 @@ _HEAD_CSS = """
    Falls back to Inter / system sans if the network import fails. */
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap");
 
+/* ---------- Design tokens exposed on :root ----------
+   polish.py re-exports Gradio's theme tokens on .gradio-container,
+   but that scope doesn't reach ``body`` / ``html`` rules here
+   because they're ancestors of the container. We redeclare the
+   subset of tokens that head-injected rules actually need so
+   polish_head.py and polish.py stay aligned on a single source
+   of truth — change these values here and the whole backdrop
+   updates in step.
+
+   These values are duplicated by design: they must survive
+   initial paint before any Gradio-scoped var is available, and
+   must work without depending on the Gradio theme cascade. */
+:root {
+    --ace-bg-canvas-start: #0f1117;
+    --ace-bg-canvas-end: #08090d;
+    --ace-head-text-primary: #f4f4f5;
+    --ace-head-text-secondary: #d4d4d8;
+    --ace-head-text-muted: #71717a;
+    --ace-head-pill-bg: rgba(24, 24, 27, 0.85);
+    --ace-head-pill-border: rgba(255, 255, 255, 0.08);
+    --ace-head-pill-border-hover: rgba(255, 255, 255, 0.15);
+    --ace-head-hero-divider: rgba(255, 255, 255, 0.06);
+}
+
 /* ---------- Body backdrop ---------- */
 body {
     background: radial-gradient(
         ellipse at top,
-        #0f1117 0%,
-        #08090d 65%
+        var(--ace-bg-canvas-start) 0%,
+        var(--ace-bg-canvas-end) 65%
     );
-    color: #f4f4f5;
+    color: var(--ace-head-text-primary);
     font-feature-settings: "ss01", "cv11";
 }
 
@@ -69,7 +93,7 @@ body {
     margin-bottom: 16px;
 }
 .ace-hero {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid var(--ace-head-hero-divider);
     padding: 0 0 28px 0;
     margin-bottom: 0;
 }
@@ -82,7 +106,7 @@ body {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: #71717a;
+    color: var(--ace-head-text-muted);
     margin: 0 0 10px 0;
 }
 .ace-hero-title {
@@ -90,11 +114,11 @@ body {
     font-weight: 800;
     letter-spacing: -0.02em;
     margin: 0 0 6px 0;
-    color: #fafafa;
+    color: var(--ace-head-text-primary);
     line-height: 1.15;
 }
 .ace-hero-subtitle {
-    color: #a1a1aa;
+    color: var(--ace-head-text-secondary);
     font-size: 14px;
     margin: 0 0 18px 0;
     letter-spacing: 0.005em;
@@ -111,16 +135,16 @@ body {
     align-items: center;
     gap: 8px;
     padding: 6px 12px;
-    background: rgba(24, 24, 27, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--ace-head-pill-bg);
+    border: 1px solid var(--ace-head-pill-border);
     border-radius: 9999px;
     font-size: 12px;
     font-weight: 500;
-    color: #d4d4d8;
+    color: var(--ace-head-text-secondary);
     transition: border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .ace-status-pill:hover {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--ace-head-pill-border-hover);
 }
 .ace-status-pill--needs-init {
     border-color: rgba(251, 191, 36, 0.35);
@@ -147,7 +171,7 @@ body {
     box-shadow: 0 0 8px rgba(96, 165, 250, 0.55);
 }
 .ace-dot--grey {
-    background: #71717a;
+    background: var(--ace-head-text-muted);
 }
 
 /* ---------- Responsive container ---------- */

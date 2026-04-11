@@ -1380,4 +1380,44 @@ button.secondary:active:not(:disabled) {
     border-color: rgba(251, 191, 36, 0.28);
     color: var(--ace-amber);
 }
+
+/* ---------- Reduced-motion accessibility (WCAG 2.1 AA / SC 2.2.2) ----------
+   Users who opt into ``prefers-reduced-motion: reduce`` in their OS
+   (macOS: System Settings → Accessibility → Display → Reduce motion,
+   Windows: Settings → Accessibility → Visual effects → Animation
+   effects) explicitly ask the platform to avoid motion-heavy UI.
+
+   We comply by collapsing every animation and transition to ~0ms.
+   The rules still visually exist (colors / transforms in the
+   target state) but no motion is perceived. This includes:
+
+     - hero intro + pill stagger (Phase D final touch)
+     - accordion body fade-in (Phase D.4)
+     - init status pulsing dot (Phase D.4)
+     - button hover lift (Phase D final touch)
+     - LoRA badge + tile :checked transitions
+     - spinner on the Generate CTA (kept visible but frozen)
+
+   A global selector is acceptable here because it only applies
+   when the media query matches — users who want motion keep it. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    /* Hard-stop the init status pulse in particular — it has no
+       natural finish line so the generic rule above collapses its
+       duration but leaves the animation running. Explicitly set
+       ``animation: none`` to kill it entirely. */
+    #acestep-init-status::before {
+        animation: none !important;
+        opacity: 0.7 !important;
+        transform: none !important;
+    }
+}
 """

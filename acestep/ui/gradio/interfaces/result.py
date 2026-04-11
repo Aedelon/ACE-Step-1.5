@@ -135,21 +135,12 @@ def create_results_section(dit_handler) -> dict:
         generation_params_state = gr.State(value={})
         is_generating_background = gr.State(value=False)
 
-        # Row 1: samples 1-4
-        with gr.Row():
-            cols_1_4 = []
-            for i in range(1, 5):
-                cols_1_4.append(_create_audio_column(i, visible=(i <= 2)))
-
-        # Row 2: samples 5-8 (initially hidden)
-        with gr.Row(visible=False) as audio_row_5_8:
-            cols_5_8 = []
-            for i in range(5, 9):
-                cols_5_8.append(_create_audio_column(i, visible=True))
-
-        all_cols = cols_1_4 + cols_5_8
-
         # Generation status panel.
+        # Rendered BEFORE the audio grid so the ~30 s progress feedback
+        # lands at the top of the results section, right where the eye
+        # is already looking after clicking Generate. Previously the
+        # panel sat under 8 empty audio players, forcing users to scroll
+        # past blank placeholders to find the "preparing…" message.
         # Previously a gr.Textbox, now a gr.Markdown so status strings
         # carrying emojis (✅ / ❌ / ⏳) and bold markers render with
         # proper typography instead of being displayed raw. A sibling
@@ -167,6 +158,20 @@ def create_results_section(dit_handler) -> dict:
                 elem_id="acestep-status-output",
                 elem_classes=["acestep-status-body", "no-tooltip"],
             )
+
+        # Row 1: samples 1-4
+        with gr.Row():
+            cols_1_4 = []
+            for i in range(1, 5):
+                cols_1_4.append(_create_audio_column(i, visible=(i <= 2)))
+
+        # Row 2: samples 5-8 (initially hidden)
+        with gr.Row(visible=False) as audio_row_5_8:
+            cols_5_8 = []
+            for i in range(5, 9):
+                cols_5_8.append(_create_audio_column(i, visible=True))
+
+        all_cols = cols_1_4 + cols_5_8
 
         # Batch navigation controls
         with gr.Row(equal_height=True):
