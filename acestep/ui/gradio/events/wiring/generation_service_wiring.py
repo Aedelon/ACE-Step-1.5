@@ -159,33 +159,22 @@ def register_generation_service_handlers(
     user_mode_radio = generation_section.get("user_mode_radio")
     ui_language = generation_section.get("_ui_language", "en")
     if hero_html is not None:
-        import os
-
-        from acestep.ui.gradio.interfaces.hero import rebuild_hero_html
-
-        def _derive_display_name(config_value: Any) -> str | None:
-            """Turn a raw config path into a human-readable pill label.
-
-            Strips the directory and ``.json`` suffix so the pill says
-            ``config_1_5_xl_turbo`` rather than the full filesystem path.
-            Returns ``None`` when no config was supplied so the hero
-            falls back to its "Model not loaded" default.
-            """
-            if not config_value:
-                return None
-            base = os.path.basename(str(config_value))
-            if base.endswith(".json"):
-                base = base[: -len(".json")]
-            return base or None
+        from acestep.ui.gradio.interfaces.hero import (
+            derive_config_display_name,
+            rebuild_hero_html,
+        )
 
         if user_mode_radio is not None:
 
             def _refresh_hero_after_init(config_value: Any, mode_value: Any) -> str:
+                initialized = dit_handler.model is not None
                 return rebuild_hero_html(
-                    initialized=dit_handler.model is not None,
-                    model_name=_derive_display_name(config_value)
-                    if dit_handler.model is not None
-                    else None,
+                    initialized=initialized,
+                    model_name=(
+                        derive_config_display_name(config_value)
+                        if initialized
+                        else None
+                    ),
                     language_code=ui_language,
                     user_mode=str(mode_value or "beginner"),
                 )
@@ -198,11 +187,14 @@ def register_generation_service_handlers(
         else:
             # Service mode: no user_mode_radio, always render as beginner.
             def _refresh_hero_after_init_service(config_value: Any) -> str:
+                initialized = dit_handler.model is not None
                 return rebuild_hero_html(
-                    initialized=dit_handler.model is not None,
-                    model_name=_derive_display_name(config_value)
-                    if dit_handler.model is not None
-                    else None,
+                    initialized=initialized,
+                    model_name=(
+                        derive_config_display_name(config_value)
+                        if initialized
+                        else None
+                    ),
                     language_code=ui_language,
                     user_mode="beginner",
                 )

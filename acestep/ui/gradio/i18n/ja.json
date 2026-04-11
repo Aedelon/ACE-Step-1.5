@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "🎛️ ACE-Step V1.5 プレイグラウンド💡",
-    "subtitle": "オープンソース音楽生成の限界を押し広げる"
+    "subtitle": "オープンソース音楽生成の限界を押し広げる",
+    "hero_title": "テキストと歌詞から音楽を生成します。",
+    "hero_subtitle": "ACE-Step v1.5 搭載 — オープンソースの潜在拡散音楽モデル。"
   },
   "common": {
     "language_metadata": {

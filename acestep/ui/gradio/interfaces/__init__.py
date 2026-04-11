@@ -51,7 +51,7 @@ from acestep.ui.gradio.interfaces.tooltip_head import (
 )
 from acestep.ui.gradio.interfaces.polish import get_polish_css
 from acestep.ui.gradio.interfaces.polish_head import get_polish_head
-from acestep.ui.gradio.interfaces.hero import build_hero_section, render_hero_html
+from acestep.ui.gradio.interfaces.hero import build_hero_section
 
 
 def get_acestep_head_html(service_mode: bool = False) -> str:

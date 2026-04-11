@@ -188,19 +188,24 @@ def wire_user_mode(
     # Model state is looked up freshly inside the handler because we
     # don't have a gr.State tracking init status.
     hero_html = generation_section.get("hero_html")
-    if hero_html is not None:
-        import os
-
-        from acestep.ui.gradio.interfaces.hero import rebuild_hero_html
+    config_path_comp = generation_section.get("config_path")
+    # Only wire hero pill refresh when BOTH the hero element and the
+    # config_path component exist. The previous ``config_path_comp
+    # or radio`` fallback would send the radio's string value as the
+    # config path argument to the handler (basename("beginner") etc.),
+    # silently producing a bogus model_name on the pill. Early return
+    # is safer than a fallback that looks right but is wrong.
+    if hero_html is not None and config_path_comp is not None:
+        from acestep.ui.gradio.interfaces.hero import (
+            derive_config_display_name,
+            rebuild_hero_html,
+        )
 
         ui_language = generation_section.get("_ui_language", "en")
-        config_path_comp = generation_section.get("config_path")
 
-        # We need a dit_handler reference to inspect ``.model``. The
-        # user_mode module doesn't carry one, so we walk the radio's
-        # parent block graph via the demo closure: simpler to ask the
-        # caller via generation_section. init wiring already stashed it
-        # under "_dit_handler_ref" — if absent, assume not initialised.
+        # init wiring stashes the DiT handler under "_dit_handler_ref"
+        # so we can read ``.model`` at runtime. If absent, assume
+        # not-initialised — the pill will stay amber.
         dit_handler_ref = generation_section.get("_dit_handler_ref")
 
         def _refresh_hero_after_mode(mode_value: Any, config_value: Any) -> str:
@@ -208,25 +213,18 @@ def wire_user_mode(
                 dit_handler_ref is not None
                 and getattr(dit_handler_ref, "model", None) is not None
             )
-            display_name: str | None = None
-            if initialized and config_value:
-                base = os.path.basename(str(config_value))
-                if base.endswith(".json"):
-                    base = base[: -len(".json")]
-                display_name = base or None
             return rebuild_hero_html(
                 initialized=initialized,
-                model_name=display_name,
+                model_name=(
+                    derive_config_display_name(config_value) if initialized else None
+                ),
                 language_code=ui_language,
                 user_mode=str(mode_value or "beginner"),
             )
 
         mode_change.then(
             fn=_refresh_hero_after_mode,
-            inputs=[
-                radio,
-                config_path_comp if config_path_comp is not None else radio,
-            ],
+            inputs=[radio, config_path_comp],
             outputs=[hero_html],
         )
 

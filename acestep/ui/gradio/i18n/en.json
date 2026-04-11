@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "🎛️ ACE-Step V1.5 Playground💡",
-    "subtitle": "Pushing the Boundaries of Open-Source Music Generation"
+    "subtitle": "Pushing the Boundaries of Open-Source Music Generation",
+    "hero_title": "Generate music from text and lyrics.",
+    "hero_subtitle": "Powered by ACE-Step v1.5 — open-source latent diffusion music model."
   },
   "common": {
     "language_metadata": {

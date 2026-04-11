@@ -23,12 +23,33 @@ data-shape that ``status_to_rows`` already uses for the LoRA list.
 
 from __future__ import annotations
 
+import os
 from html import escape
 from typing import Any
 
 import gradio as gr
 
 from acestep.ui.gradio.i18n import t
+
+
+def derive_config_display_name(config_value: Any) -> str | None:
+    """Turn a raw config path into a human-readable pill label.
+
+    Strips the directory and ``.json`` suffix so the hero pill says
+    ``config_1_5_xl_turbo`` rather than the full filesystem path.
+    Returns ``None`` when no config was supplied (so callers can fall
+    back to the hero's "Model not loaded" default).
+
+    Centralised here (instead of duplicated in the service wiring and
+    user_mode modules) so a future rename of the config convention
+    only needs one edit.
+    """
+    if not config_value:
+        return None
+    base = os.path.basename(str(config_value))
+    if base.endswith(".json"):
+        base = base[: -len(".json")]
+    return base or None
 
 
 HERO_ELEM_ID = "acestep-hero"
@@ -107,14 +128,20 @@ def render_hero_html(
 def _resolve_hero_strings() -> tuple[str, str]:
     """Return ``(title, subtitle)`` used across every hero rebuild.
 
-    Centralised so ``build_hero_section`` and ``rebuild_hero_html`` stay
-    in sync — otherwise an init refresh would silently overwrite the
-    title with whatever the last caller guessed.
+    Uses two dedicated i18n keys — ``app.hero_title`` and
+    ``app.hero_subtitle`` — that carry the localised hero text. The
+    previous implementation tried to derive the title from
+    ``app.title`` by lstrip-ping the ``🎛️`` emoji and overwriting
+    with hardcoded English whenever the remainder started with
+    ``"ACE"``, which produced an English-only hero on all locales
+    (the stripped text always started with "ACE" because the shared
+    ``app.title`` was "🎛️ ACE-Step V1.5 Playground💡").
+
+    Fallbacks below only trigger when an i18n file is missing the
+    key entirely (which the unit tests cover).
     """
-    title = t("app.title").lstrip("🎛️").strip() or "Generate music from text and lyrics."
-    if title.startswith("ACE"):
-        title = "Generate music from text and lyrics."
-    subtitle = t("app.subtitle") or (
+    title = t("app.hero_title") or "Generate music from text and lyrics."
+    subtitle = t("app.hero_subtitle") or (
         "Powered by ACE-Step v1.5 — open-source latent diffusion music model."
     )
     return title, subtitle

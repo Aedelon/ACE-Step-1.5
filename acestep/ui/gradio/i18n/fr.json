@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "🎛️ ACE-Step V1.5 Playground💡",
-    "subtitle": "Pushing the Boundaries of Open-Source Music Generation"
+    "subtitle": "Pushing the Boundaries of Open-Source Music Generation",
+    "hero_title": "Génère de la musique à partir de texte et de paroles.",
+    "hero_subtitle": "Propulsé par ACE-Step v1.5 — modèle open-source de diffusion latente musicale."
   },
   "common": {
     "language_metadata": {

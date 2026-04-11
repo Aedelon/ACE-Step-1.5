@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "🎛️ ACE-Step V1.5 游乐场💡",
-    "subtitle": "推动开源音乐生成的边界"
+    "subtitle": "推动开源音乐生成的边界",
+    "hero_title": "从文本和歌词生成音乐。",
+    "hero_subtitle": "由 ACE-Step v1.5 驱动 — 开源潜空间扩散音乐模型。"
   },
   "common": {
     "language_metadata": {

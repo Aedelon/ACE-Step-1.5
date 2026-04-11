@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "🎛️ ACE-Step V1.5 Playground💡",
-    "subtitle": "פורצים את גבולות יצירת המוזיקה בקוד פתוח"
+    "subtitle": "פורצים את גבולות יצירת המוזיקה בקוד פתוח",
+    "hero_title": "צור מוזיקה מטקסט ומילים.",
+    "hero_subtitle": "מופעל על ידי ACE-Step v1.5 — מודל מוזיקה בקוד פתוח עם דיפוזיה סמויה."
   },
   "common": {
     "language_metadata": {
