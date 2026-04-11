@@ -78,8 +78,14 @@ def render_hero_html(
     mode_label = "Expert" if user_mode == "expert" else "Beginner"
     mode_dot_class = "ace-dot--blue" if user_mode == "expert" else "ace-dot--green"
 
+    # IMPORTANT: do NOT put id="acestep-hero" on the inner <section>.
+    # Gradio's gr.HTML(elem_id="acestep-hero") wraps our value in a
+    # <div id="acestep-hero"> already (verified against Index-*.js
+    # source: ``a.set_attribute(l, "id", s.shared.elem_id)``). Adding
+    # the same id here would create a duplicate-id HTML invariant
+    # violation and break querySelector / accessibility tools.
     return f"""
-<section id="{HERO_ELEM_ID}" class="ace-hero">
+<section class="ace-hero">
   <div class="ace-hero-eyebrow">{safe_eyebrow}</div>
   <h1 class="ace-hero-title">{safe_title}</h1>
   <p class="ace-hero-subtitle">{safe_subtitle}</p>

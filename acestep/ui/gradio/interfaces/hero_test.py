@@ -8,9 +8,13 @@ from acestep.ui.gradio.interfaces.hero import HERO_ELEM_ID, render_hero_html
 
 
 class RenderHeroHtmlTests(unittest.TestCase):
-    def test_minimal_call_includes_section_id(self) -> None:
+    def test_minimal_call_renders_section(self) -> None:
         html = render_hero_html(title="Hello", subtitle="World")
-        self.assertIn(f'id="{HERO_ELEM_ID}"', html)
+        # The inner <section> uses the .ace-hero CLASS only — the id
+        # belongs to the outer Gradio wrapper (gr.HTML(elem_id=HERO_ELEM_ID)).
+        # Putting the same id on both would be invalid HTML.
+        self.assertIn('class="ace-hero"', html)
+        self.assertNotIn(f'id="{HERO_ELEM_ID}"', html)
         self.assertIn("<h1", html)
         self.assertIn("Hello", html)
         self.assertIn("World", html)

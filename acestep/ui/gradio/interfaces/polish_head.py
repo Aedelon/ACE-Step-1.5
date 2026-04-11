@@ -48,11 +48,25 @@ body {
     padding: 24px 28px 60px 28px;
 }
 
-/* ---------- Hero section (#acestep-hero from build_hero_section) ---------- */
-#acestep-hero {
+/* ---------- Hero section ----------
+   Two layers: ``#acestep-hero`` is the Gradio wrapper div created by
+   ``gr.HTML(elem_id="acestep-hero")``. ``.ace-hero`` is the inner
+   <section> we render ourselves. Padding/border on the wrapper,
+   typography on the inner section so they don't fight.
+*/
+#acestep-hero,
+.ace-hero {
     padding: 24px 4px 28px 4px;
     margin-bottom: 16px;
+}
+.ace-hero {
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0 0 28px 0;
+    margin-bottom: 0;
+}
+#acestep-hero {
+    padding-bottom: 0;
+    border-bottom: none;
 }
 .ace-hero-eyebrow {
     font-size: 11px;

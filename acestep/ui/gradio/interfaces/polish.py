@@ -419,4 +419,131 @@ select:focus-visible,
         min-width: 100%;
     }
 }
+
+/* ============================================================
+   Migrated rules — used to live in gr.Blocks(css="…") inline
+   in interfaces/__init__.py, but Gradio 6 IGNORES the Blocks
+   constructor css= when launch(css=…) overrides it (verified
+   in gradio/blocks.py:2566). Those rules never reached the
+   browser in production. Bringing them here so the elem_classes
+   they target actually get styled.
+   ============================================================ */
+
+/* Service init + status output: bigger, prominent, centred so the
+   first-time user notices the init feedback. */
+#acestep-status-output,
+#acestep-init-status {
+    min-height: 100px;
+}
+#acestep-status-output textarea,
+#acestep-init-status textarea {
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 14px 16px;
+    letter-spacing: 0.015em;
+    min-height: 80px;
+}
+
+/* Auto-toggle row under metadata fields (BPM Auto, Key Auto, …).
+   Compact, centred, dimmed by default and full opacity on hover. */
+.auto-toggles-row {
+    margin-top: -8px !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    gap: 16px !important;
+    min-height: 0 !important;
+}
+.auto-toggle {
+    text-align: center;
+}
+.auto-toggle label {
+    font-size: 0.8rem;
+    gap: 4px;
+    white-space: nowrap;
+    cursor: pointer;
+    opacity: 0.55;
+    transition: opacity 0.15s var(--ace-easing-out);
+    justify-content: center;
+}
+.auto-toggle:hover label,
+.auto-toggle input[type="checkbox"]:checked + span {
+    opacity: 1;
+}
+.auto-toggle input[type="checkbox"] {
+    width: 13px;
+    height: 13px;
+}
+
+/* Equal-height row for the Instrumental checkbox + Enhance Lyrics
+   button so they sit on a single baseline at the bottom of the
+   lyrics editor. */
+.instrumental-row {
+    align-items: stretch !important;
+}
+.instrumental-row > div {
+    display: flex;
+    align-items: stretch;
+}
+.instrumental-row > div > div {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+.instrumental-row button,
+.instrumental-row > div > button {
+    height: 100%;
+    min-height: 42px;
+}
+
+/* Two-line icon button wrapper: emoji on top, text below. Used
+   on the small Load / Save / Sample buttons next to file inputs. */
+.icon-btn-wrap button,
+.icon-btn-wrap > button {
+    word-spacing: 100vw;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* Inline help button (?) created by help_content.create_help_button.
+   Phase A's tooltip system hijacks the click to open a unified modal,
+   but the visual chip itself still needs styling. */
+.help-inline-container {
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    max-width: 32px;
+    min-width: 32px;
+    overflow: visible;
+}
+.help-inline-wrapper {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+.help-inline-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ace-border-default);
+    background: transparent;
+    color: var(--ace-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 20px;
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.15s var(--ace-easing-out);
+    flex-shrink: 0;
+}
+.help-inline-btn:hover {
+    background: var(--ace-accent);
+    color: #fff;
+    border-color: var(--ace-accent);
+    transform: scale(1.1);
+}
 """

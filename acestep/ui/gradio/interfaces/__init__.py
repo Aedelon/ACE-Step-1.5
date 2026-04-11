@@ -43,11 +43,10 @@ from acestep.ui.gradio.interfaces.user_mode import (
 from acestep.ui.gradio.interfaces.result import create_results_section
 from acestep.ui.gradio.interfaces.training import create_training_section
 from acestep.ui.gradio.events import setup_event_handlers, setup_training_event_handlers
-from acestep.ui.gradio.help_content import create_help_button, HELP_MODAL_CSS
+from acestep.ui.gradio.help_content import create_help_button
 from acestep.ui.gradio.theme import ACEStepDark
 from acestep.ui.gradio.interfaces.tooltip_head import (
     get_tooltip_css,
-    get_tooltip_head,
     get_tooltip_js,
 )
 from acestep.ui.gradio.interfaces.polish import get_polish_css
@@ -129,118 +128,18 @@ def create_gradio_interface(
     # Check if running in service mode (hide training tab)
     service_mode = init_params is not None and init_params.get("service_mode", False)
 
+    # NOTE on Gradio 6: ``head=``, ``css=``, ``js=`` and ``theme=``
+    # passed to ``gr.Blocks(...)`` are DEPRECATED and OVERRIDDEN by
+    # whatever is passed to ``demo.launch(head=…, css=…, js=…)``
+    # at runtime (verified in gradio/blocks.py:2566). The real
+    # injection path is ``acestep_v15_pipeline.py`` which calls
+    # ``launch(head=get_acestep_head_html(...), css=get_acestep_css())``.
+    # We keep ``theme=`` here only so that smoke tests / standalone
+    # calls to ``create_gradio_interface`` still get a dark surface
+    # for visual debugging.
     with gr.Blocks(
         title=t("app.title"),
         theme=ACEStepDark(),
-        head=get_audio_player_preferences_head()
-        + ("" if service_mode else get_user_preferences_head())
-        + get_tooltip_head(),
-        css="""
-        .main-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        /* Status bars - prominent and readable */
-        #acestep-status-output,
-        #acestep-init-status {
-            min-height: 100px !important;
-        }
-        #acestep-status-output textarea,
-        #acestep-init-status textarea {
-            font-size: 1.1rem !important;
-            font-weight: 600 !important;
-            text-align: center !important;
-            padding: 16px !important;
-            letter-spacing: 0.02em !important;
-            min-height: 80px !important;
-        }
-        .section-header {
-            background: var(--block-label-background-fill);
-            color: var(--body-text-color);
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        .lm-hints-row {
-            align-items: stretch;
-        }
-        .lm-hints-col {
-            display: flex;
-        }
-        .lm-hints-col > div {
-            flex: 1;
-            display: flex;
-        }
-        .lm-hints-btn button {
-            height: 100%;
-            width: 100%;
-        }
-        /* Position Audio time labels lower to avoid scrollbar overlap */
-        .component-wrapper > .timestamps {
-            transform: translateY(15px);
-        }
-        /* Equal-height row for instrumental checkbox + enhance lyrics button */
-        .instrumental-row {
-            align-items: stretch !important;
-        }
-        .instrumental-row > div {
-            display: flex !important;
-            align-items: stretch !important;
-        }
-        .instrumental-row > div > div {
-            flex: 1;
-            display: flex;
-            align-items: center;
-        }
-        .instrumental-row button {
-            height: 100% !important;
-            min-height: 42px;
-        }
-        /* Ensure buttons in instrumental-row fill height */
-        .instrumental-row > div > button {
-            height: 100% !important;
-            min-height: 42px;
-        }
-        /* Two-line icon buttons: emoji on top, text below */
-        .icon-btn-wrap button, .icon-btn-wrap > button {
-            word-spacing: 100vw;
-            text-align: center;
-            line-height: 1.4;
-        }
-
-        /* Custom tooltip system removed — was breaking Gradio 6 component
-           rendering inside accordions. Gradio's native info= display is used. */
-
-        /* --- Auto-toggle checkbox row --- */
-        /* Compact row of Auto checkboxes that mirrors the field row above */
-        .auto-toggles-row {
-            margin-top: -8px !important;
-            margin-bottom: 0 !important;
-            padding: 0 !important;
-            gap: 16px !important;
-            min-height: 0 !important;
-        }
-        .auto-toggle {
-            text-align: center !important;
-        }
-        .auto-toggle label {
-            font-size: 0.8rem !important;
-            gap: 4px !important;
-            white-space: nowrap !important;
-            cursor: pointer !important;
-            opacity: 0.5;
-            transition: opacity 0.15s;
-            justify-content: center !important;
-        }
-        .auto-toggle:hover label {
-            opacity: 1;
-        }
-        .auto-toggle input[type="checkbox"] {
-            width: 13px !important;
-            height: 13px !important;
-        }
-        """
-        + HELP_MODAL_CSS,
     ) as demo:
         # Hero section: rich app header with eyebrow + title + subtitle
         # + status pills (model state, language, beginner/expert mode).
