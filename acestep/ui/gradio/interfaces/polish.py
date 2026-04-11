@@ -441,7 +441,32 @@ input[type="radio"] {
     padding: 20px 0;
 }
 
-/* ---------- User mode radio (Beginner/Expert) — sober card, NOT a gradient ---------- */
+/* ---------- User mode radio (Beginner/Expert) ----------
+   Real Gradio 6 DOM (from Index-BL_HMluy.css + JS inspection):
+
+     <div id="acestep-user-mode" class="block ...">
+       <span data-testid="block-info">Mode utilisateur</span>
+       <div class="wrap svelte-e4x47i">         ← radio group wrapper
+         <label class="svelte-19qdtil selected">  ← active option
+           <input type="radio">
+           <span>Débutant</span>
+         </label>
+         <label class="svelte-19qdtil">        ← inactive option
+           <input type="radio">
+           <span>Expert</span>
+         </label>
+       </div>
+     </div>
+
+   Gradio tracks the active state via a ``.selected`` class on the
+   LABEL (not via ``:checked`` on the input). The previous polish
+   targeted ``input[type="radio"]:checked + span`` which never
+   matched and accidentally styled the wrong ``> label`` child
+   with an uppercase/tiny label treatment.
+
+   We only style the outer block as a sober card and let Gradio's
+   own label styling handle the selected state. Accent tint on the
+   active label uses the real ``.selected`` class. */
 #acestep-user-mode {
     background: var(--ace-bg-surface);
     border: 1px solid var(--ace-border-subtle);
@@ -450,17 +475,10 @@ input[type="radio"] {
     margin: 12px 0 20px 0;
     box-shadow: var(--ace-shadow-raised);
 }
-#acestep-user-mode > label,
-#acestep-user-mode .label-wrap > span {
-    color: var(--ace-text-secondary);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 11px;
-}
-#acestep-user-mode input[type="radio"]:checked + span {
-    color: var(--ace-accent);
-    font-weight: 700;
+#acestep-user-mode .wrap label.selected {
+    border-color: var(--ace-accent) !important;
+    color: var(--ace-accent) !important;
+    background: var(--ace-accent-soft) !important;
 }
 
 /* ---------- LoRA empty state (no Python required) ---------- */
